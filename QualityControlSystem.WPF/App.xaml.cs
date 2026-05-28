@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using QualityControlSystem.WPF.Services;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels;
+using QualityControlSystem.WPF.Views;
 using System;
 using System.Windows;
 
@@ -15,6 +16,21 @@ namespace QualityControlSystem.WPF
 
         public App()
         {
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var ex = args.ExceptionObject as Exception;
+                MessageBox.Show($"Unhandled exception: {ex?.Message}\n{ex?.StackTrace}",
+                                "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                Environment.Exit(1);
+            };
+
+            DispatcherUnhandledException += (sender, args) =>
+            {
+                MessageBox.Show($"Dispatcher exception: {args.Exception.Message}\n{args.Exception.StackTrace}",
+                                "Ошибка UI", MessageBoxButton.OK, MessageBoxImage.Error);
+                args.Handled = false; // или true, чтобы не закрывать
+            };
+
             AppHost = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((context, config) =>
                 {
@@ -25,32 +41,47 @@ namespace QualityControlSystem.WPF
                 {
                     services.AddSingleton<IConfiguration>(context.Configuration);
 
-                    // Сервисы
+                    // Существующие сервисы
                     services.AddSingleton<IApiClientService, ApiClientService>();
                     services.AddSingleton<IEdgeDeviceService, EdgeDeviceService>();
                     services.AddSingleton<IDialogService, DialogService>();
                     services.AddSingleton<INotificationService, NotificationService>();
 
+                    // НОВЫЕ СЕРВИСЫ аутентификации
+                    services.AddSingleton<IAuthService, AuthService>();
+
                     // ViewModels
                     services.AddTransient<MainViewModel>();
+                    services.AddTransient<LoginViewModel>();
+                    services.AddTransient<DashboardViewModel>();
 
-                    // Окна
+                    // Views (UserControl и окна)
+                    services.AddTransient<LoginView>();
+                    services.AddTransient<DashboardView>();
                     services.AddSingleton<MainWindow>();
 
-                    // NavigationService регистрируем после MainWindow
+                    // NavigationService – обновлённая версия с IServiceProvider
                     services.AddSingleton<INavigationService>(sp =>
-                        new NavigationService(sp.GetRequiredService<MainWindow>()));
+                        new NavigationService(
+                            sp.GetRequiredService<MainWindow>(),
+                            sp));
                 })
                 .Build();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            await AppHost!.StartAsync();
-
-            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-            mainWindow.Show();
-
+            try
+            {
+                await AppHost!.StartAsync();
+                var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+                mainWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при запуске: {ex.Message}\n{ex.StackTrace}",
+                                "Ошибка запуска", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             base.OnStartup(e);
         }
 
@@ -60,5 +91,7 @@ namespace QualityControlSystem.WPF
             AppHost.Dispose();
             base.OnExit(e);
         }
+
+
     }
 }

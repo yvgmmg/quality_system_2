@@ -18,9 +18,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\" />
     <Folder Include="Helpers\" />
     <Folder Include="Configuration\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ViewModels\DashboardViewModel.cs">
+      <Generator>MSBuild:Compile</Generator>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

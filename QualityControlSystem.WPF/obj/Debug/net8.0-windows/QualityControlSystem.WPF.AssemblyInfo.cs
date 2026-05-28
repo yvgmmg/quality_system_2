@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QualityControlSystem.WPF")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+86ab1bfe7b9ed73f2aa900eb5269c9633a0e04bb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+77cf2a5da026adab028488941d944f31dde70e88")]
 [assembly: System.Reflection.AssemblyProductAttribute("QualityControlSystem.WPF")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QualityControlSystem.WPF")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
