@@ -1,5 +1,6 @@
 ﻿using QualityControlSystem.WPF.Services.Interfaces;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -18,34 +19,31 @@ namespace QualityControlSystem.WPF.Services
         {
             try
             {
-                var view = Activator.CreateInstance(typeof(TView)) as Window ??
-                          Activator.CreateInstance(typeof(TView)) as UserControl;
+                var instance = Activator.CreateInstance(typeof(TView));
 
-                if (view is Window window)
+                if (instance is Window window)
                 {
                     window.Show();
                 }
-                else if (view is UserControl userControl)
+                else if (instance is UserControl userControl)
                 {
-                    // Для ContentControl в MainWindow (рекомендуемый подход)
-                    if (_mainWindow.MainContent != null)
-                    {
-                        _mainWindow.MainContent.Content = userControl;
-                    }
+                    _mainWindow.MainContent.Content = userControl;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка навигации: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка навигации: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         public void GoBack()
         {
-            // Простая реализация - можно расширить позже
             if (Application.Current.Windows.Count > 1)
             {
-                var currentWindow = Application.Current.Windows.OfType<Window>().LastOrDefault();
+                var currentWindow = Application.Current.Windows
+                    .OfType<Window>()
+                    .LastOrDefault();
                 currentWindow?.Close();
             }
         }

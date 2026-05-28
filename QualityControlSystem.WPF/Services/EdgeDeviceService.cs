@@ -20,7 +20,8 @@ namespace QualityControlSystem.WPF.Services
         {
             try
             {
-                var result = await _apiClient.PostAsync<object, AnalysisResultDto>("/api/analyze", null);
+                var result = await _apiClient.PostAsync<object, AnalysisResultDto>(
+                    "/api/analyze", new object());
                 _notificationService.ShowSuccess("Анализ выполнен успешно");
                 return result;
             }
@@ -35,7 +36,8 @@ namespace QualityControlSystem.WPF.Services
         {
             try
             {
-                await _apiClient.PostAsync<object>($"/api/capture-template?number={templateNumber}");
+                await _apiClient.PostAsync(
+                    $"/api/capture-template?number={templateNumber}", new object());
                 _notificationService.ShowSuccess($"Шаблон №{templateNumber} успешно захвачен");
             }
             catch (Exception ex)

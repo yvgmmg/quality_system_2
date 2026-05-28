@@ -3,8 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using QualityControlSystem.WPF.Services;
 using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.ViewModels;
+using System;
 using System.Windows;
-using System.Windows.Navigation;
 
 namespace QualityControlSystem.WPF
 {
@@ -22,19 +23,23 @@ namespace QualityControlSystem.WPF
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    // Регистрация сервисов
                     services.AddSingleton<IConfiguration>(context.Configuration);
 
-                    // Основные сервисы
+                    // Сервисы
                     services.AddSingleton<IApiClientService, ApiClientService>();
                     services.AddSingleton<IEdgeDeviceService, EdgeDeviceService>();
-                    services.AddSingleton<INavigationService, NavigationService>();
                     services.AddSingleton<IDialogService, DialogService>();
                     services.AddSingleton<INotificationService, NotificationService>();
 
                     // ViewModels
                     services.AddTransient<MainViewModel>();
-                    // Добавляйте остальные ViewModel по мере создания
+
+                    // Окна
+                    services.AddSingleton<MainWindow>();
+
+                    // NavigationService регистрируем после MainWindow
+                    services.AddSingleton<INavigationService>(sp =>
+                        new NavigationService(sp.GetRequiredService<MainWindow>()));
                 })
                 .Build();
         }

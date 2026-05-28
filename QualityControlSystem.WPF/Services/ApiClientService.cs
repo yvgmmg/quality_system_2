@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using QualityControlSystem.WPF.Services.Interfaces;
+using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace QualityControlSystem.WPF.Services
 {
@@ -19,23 +16,34 @@ namespace QualityControlSystem.WPF.Services
         {
             var baseUrl = configuration["EdgeDevice:BaseUrl"] ?? "http://192.168.1.100:5000";
             _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>("EdgeDevice:TimeoutSeconds", 30));
+            _httpClient.Timeout = TimeSpan.FromSeconds(
+                configuration.GetValue<int>("EdgeDevice:TimeoutSeconds", 30));
         }
 
-        public async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest? request = null)
+        public async Task<TResponse> GetAsync<TResponse>(string endpoint)
         {
-            var content = request == null ? null :
-                new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync(endpoint, content);
+            var response = await _httpClient.GetAsync(endpoint);
             response.EnsureSuccessStatusCode();
-
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<TResponse>(json)!;
         }
 
-        // Реализуйте остальные методы позже
-        public Task<TResponse> GetAsync<TResponse>(string endpoint) => throw new NotImplementedException();
-        public Task PostAsync<TRequest>(string endpoint, TRequest? request = null) => throw new NotImplementedException();
+        public async Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint, TRequest request)
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(endpoint, content);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<TResponse>(json)!;
+        }
+
+        public async Task PostAsync<TRequest>(string endpoint, TRequest request)
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(endpoint, content);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

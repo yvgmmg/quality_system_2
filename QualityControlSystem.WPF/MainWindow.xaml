@@ -3,10 +3,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:QualityControlSystem.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Система контроля качества" 
+        Height="768" Width="1280"
+        WindowStartupLocation="CenterScreen">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
+        <!-- Боковая панель навигации -->
+        <StackPanel Grid.Column="0" Background="#2D2D2D">
+            <TextBlock Text="КК Система" 
+                       Foreground="White" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       Margin="16,24,16,32"/>
+        </StackPanel>
+
+        <!-- Основной контент -->
+        <ContentControl x:Name="MainContent" 
+                        Grid.Column="1" 
+                        Background="#F5F5F5"/>
     </Grid>
 </Window>
