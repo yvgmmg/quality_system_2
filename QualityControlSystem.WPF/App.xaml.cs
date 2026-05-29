@@ -41,47 +41,41 @@ namespace QualityControlSystem.WPF
                 {
                     services.AddSingleton<IConfiguration>(context.Configuration);
 
-                    // Существующие сервисы
+                    // Сервисы
                     services.AddSingleton<IApiClientService, ApiClientService>();
                     services.AddSingleton<IEdgeDeviceService, EdgeDeviceService>();
                     services.AddSingleton<IDialogService, DialogService>();
                     services.AddSingleton<INotificationService, NotificationService>();
-
-                    // НОВЫЕ СЕРВИСЫ аутентификации
                     services.AddSingleton<IAuthService, AuthService>();
 
+                    // NavigationService (без фабрики)
+                    services.AddSingleton<INavigationService, NavigationService>();
+
                     // ViewModels
-                    services.AddTransient<MainViewModel>();
+                    services.AddTransient<MainViewModel>();   // если нужен, иначе удалите
                     services.AddTransient<LoginViewModel>();
                     services.AddTransient<DashboardViewModel>();
 
-                    // Views (UserControl и окна)
+                    // Views
                     services.AddTransient<LoginView>();
                     services.AddTransient<DashboardView>();
-                    services.AddSingleton<MainWindow>();
-
-                    // NavigationService – обновлённая версия с IServiceProvider
-                    services.AddSingleton<INavigationService>(sp =>
-                        new NavigationService(
-                            sp.GetRequiredService<MainWindow>(),
-                            sp));
+                    services.AddSingleton<MainWindow>();      // теперь без параметров
                 })
                 .Build();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            try
-            {
-                await AppHost!.StartAsync();
-                var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                mainWindow.Show();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при запуске: {ex.Message}\n{ex.StackTrace}",
-                                "Ошибка запуска", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            await AppHost!.StartAsync();
+
+            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+            var navigationService = AppHost.Services.GetRequiredService<INavigationService>();
+
+            navigationService.Initialize(mainWindow);
+            mainWindow.Show();
+
+            navigationService.NavigateTo<LoginView>();
+
             base.OnStartup(e);
         }
 

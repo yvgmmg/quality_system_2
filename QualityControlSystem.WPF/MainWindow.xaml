@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Система контроля качества" 
+        Title="Main" 
         Height="768" Width="1280"
         WindowStartupLocation="CenterScreen">
     <Grid>
@@ -15,7 +15,7 @@
 
         <!-- Боковая панель навигации -->
         <StackPanel Grid.Column="0" Background="#2D2D2D">
-            <TextBlock Text="КК Система" 
+            <TextBlock Text="АСККСKK" 
                        Foreground="White" 
                        FontSize="18" 
                        FontWeight="Bold"

@@ -6,43 +6,32 @@ namespace QualityControlSystem.WPF.Services
 {
     public class NavigationService : INavigationService
     {
-        private readonly MainWindow _mainWindow;
+        private MainWindow? _mainWindow;
         private readonly IServiceProvider _serviceProvider;
 
-        public NavigationService(MainWindow mainWindow, IServiceProvider serviceProvider)
+        public NavigationService(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
+        public void Initialize(MainWindow mainWindow)
         {
             _mainWindow = mainWindow;
-            _serviceProvider = serviceProvider;
         }
 
         public void NavigateTo<TView>() where TView : class
         {
-            try
-            {
-                var view = _serviceProvider.GetService(typeof(TView)) as UIElement;
-                if (view == null)
-                {
-                    MessageBox.Show($"Ошибка: {typeof(TView).Name} не зарегистрирован в DI.",
-                                    "Навигация", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+            if (_mainWindow == null)
+                throw new InvalidOperationException("NavigationService не инициализирован. Вызовите Initialize() перед навигацией.");
 
-                if (_mainWindow.MainContent == null)
-                {
-                    MessageBox.Show("Ошибка: MainContent не найден в MainWindow.",
-                                    "Навигация", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+            var view = _serviceProvider.GetService(typeof(TView)) as UIElement;
+            if (view == null)
+                throw new InvalidOperationException($"View {typeof(TView).Name} не зарегистрирован в DI.");
 
+            if (_mainWindow.MainContent != null)
                 _mainWindow.MainContent.Content = view;
-                // Дополнительно принудительно обновляем
-                _mainWindow.MainContent.UpdateLayout();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Исключение в NavigateTo: {ex.Message}",
-                                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            else
+                MessageBox.Show("MainContent не найден в окне", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         public void GoBack() { }

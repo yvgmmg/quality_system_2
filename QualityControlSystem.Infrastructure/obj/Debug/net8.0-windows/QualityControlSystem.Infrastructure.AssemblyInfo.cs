@@ -11,12 +11,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("QualityControlSystem.WPF")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("QualityControlSystem.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+add31d08e331ae7108a3f0e7aec86c7ebc4608cd")]
-[assembly: System.Reflection.AssemblyProductAttribute("QualityControlSystem.WPF")]
-[assembly: System.Reflection.AssemblyTitleAttribute("QualityControlSystem.WPF")]
+[assembly: System.Reflection.AssemblyProductAttribute("QualityControlSystem.Infrastructure")]
+[assembly: System.Reflection.AssemblyTitleAttribute("QualityControlSystem.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]

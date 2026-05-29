@@ -30,7 +30,7 @@ namespace QualityControlSystem.WPF.ViewModels
             _navigationService = navigationService;
         }
 
-        [RelayCommand(CanExecute = nameof(CanLogin))]
+        [RelayCommand]  // убрали CanExecute = nameof(CanLogin)
         private async Task LoginAsync()
         {
             if (IsBusy) return;

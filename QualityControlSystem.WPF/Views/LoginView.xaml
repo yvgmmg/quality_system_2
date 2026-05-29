@@ -25,7 +25,11 @@
             <TextBlock Text="Логин" Margin="0,5"/>
             <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}" Padding="8" Margin="0,5"/>
             <TextBlock Text="Пароль" Margin="0,10,0,5"/>
-            <PasswordBox x:Name="PasswordBox" PasswordChar="*" Padding="8" Margin="0,5"/>
+            <PasswordBox x:Name="PasswordBox" 
+             PasswordChar="*" 
+             Padding="8" 
+             Margin="0,5"
+             PasswordChanged="PasswordBox_PasswordChanged"/>
             <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,10,0,0" HorizontalAlignment="Center"/>
             <Button Content="Войти" Command="{Binding LoginCommand}" Padding="10" Margin="0,20" Background="#2D2D2D" Foreground="White" FontWeight="Bold" Cursor="Hand">
                 <Button.Style>
