@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QualityControlSystem.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+97d9fa85aeddfcb44815456736296ea98a1a1c31")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ec4a504b112b7110f11c92cb415a2cdac0641e2")]
 [assembly: System.Reflection.AssemblyProductAttribute("QualityControlSystem.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QualityControlSystem.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
