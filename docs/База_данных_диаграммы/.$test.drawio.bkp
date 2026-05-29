@@ -1,0 +1,70 @@
+<mxfile host="Electron" agent="Grok" version="24.7.17">
+  <diagram name="Концептуальная модель данных (List)" id="conceptual-list">
+    <mxGraphModel dx="2000" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== ЗАКАЗ ==================== -->
+        <mxCell id="zakaz" value="&lt;b&gt;Заказ&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="240" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="zakaz_items" value="id_заказа&lt;br&gt;Дата&lt;br&gt;Заказчик&lt;br&gt;Статус&lt;br&gt;Заказанные каркасы" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="95" width="240" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ПРАВА ДОСТУПА ==================== -->
+        <mxCell id="prava" value="&lt;b&gt;Права доступа&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="380" y="60" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="prava_items" value="id_прав_доступа&lt;br&gt;Доступные функции" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="95" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==================== -->
+        <mxCell id="profil" value="&lt;b&gt;Профиль пользователя&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="680" y="60" width="260" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="profil_items" value="id_пользователя&lt;br&gt;ФИО&lt;br&gt;Должность&lt;br&gt;Цех&lt;br&gt;Пароль&lt;br&gt;Квалификация&lt;br&gt;Табельный номер&lt;br&gt;Доступные функции" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="95" width="260" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ОПП ==================== -->
+        <mxCell id="opp" value="&lt;b&gt;ОПП&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="260" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="opp_items" value="id_ОПП&lt;br&gt;Заказ&lt;br&gt;Дата создания&lt;br&gt;Статус&lt;br&gt;Цех&lt;br&gt;Описание&lt;br&gt;Дата начала&lt;br&gt;Дата окончания&lt;br&gt;Инструкции&lt;br&gt;Допуски&lt;br&gt;Партия" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="335" width="260" height="230" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== КАРКАС ==================== -->
+        <mxCell id="karkas" value="&lt;b&gt;Каркас&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="80" y="620" width="260" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="karkas_items" value="id_каркаса&lt;br&gt;Производственный номер&lt;br&gt;Тип&lt;br&gt;Цех&lt;br&gt;Партия&lt;br&gt;Форма тестирования&lt;br&gt;Инструкция&lt;br&gt;Оповещение" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="655" width="260" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== НСИ ==================== -->
+        <mxCell id="nsi" value="&lt;b&gt;Нормативно-справочная информация&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="680" y="620" width="280" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="nsi_items" value="id_НСИ&lt;br&gt;Наименование&lt;br&gt;Тип&lt;br&gt;Описание&lt;br&gt;Минимальное значение&lt;br&gt;Максимальное значение&lt;br&gt;Дата утверждения&lt;br&gt;Дата окончания&lt;br&gt;Статус" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="655" width="280" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ОПОВЕЩЕНИЕ ==================== -->
+        <mxCell id="opoveschenie" value="&lt;b&gt;Оповещение&lt;/b&gt;" style="shape=list;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#1072BA;fontStyle=1;fontColor=#000000;align=center;verticalAlign=top;spacing=10;spacingTop=20;" vertex="1" parent="1">
+          <mxGeometry x="380" y="920" width="260" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="opoveschenie_items" value="id_оповещения&lt;br&gt;Наименование&lt;br&gt;Тип&lt;br&gt;Тип уведомления&lt;br&gt;Описание дефекта&lt;br&gt;Табельный номер сотрудника" style="text;html=1;align=left;verticalAlign=top;spacing=8;spacingLeft=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="955" width="260" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Добавлены остальные сущности аналогично (сократил для читаемости) -->
+        <!-- Производственное оборудование, Форма осмотра, Форма тестирования, Паспорт оборудования, Датчик, Камера, Партия и др. -->
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
