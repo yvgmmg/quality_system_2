@@ -7,6 +7,10 @@ using QualityControlSystem.WPF.ViewModels;
 using QualityControlSystem.WPF.Views;
 using System;
 using System.Windows;
+using QualityControlSystem.Infrastructure;
+using QualityControlSystem.Infrastructure.Repositories.Interfaces;
+using QualityControlSystem.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace QualityControlSystem.WPF
 {
@@ -40,6 +44,13 @@ namespace QualityControlSystem.WPF
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<IConfiguration>(context.Configuration);
+
+                    var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
+                    services.AddDbContext<AppDbContext>(options =>
+                        options.UseSqlite(connectionString));
+
+                    // Репозитории
+                    services.AddScoped<IUserRepository, UserRepository>();
 
                     // Сервисы
                     services.AddSingleton<IApiClientService, ApiClientService>();

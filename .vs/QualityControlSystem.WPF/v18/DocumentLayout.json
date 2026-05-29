@@ -1,0 +1,205 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\quality\\quality_system_2\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\services\\interfaces\\iedgedeviceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\interfaces\\iedgedeviceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\services\\interfaces\\inavigationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\interfaces\\inavigationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\services\\interfaces\\iapiclientservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\interfaces\\iapiclientservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\services\\interfaces\\idialogservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\interfaces\\idialogservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\services\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.wpf\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.infrastructure\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.infrastructure\\entities\\userprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\userprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.infrastructure\\enums\\userrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\enums\\userrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\quality\\quality_system_2\\qualitycontrolsystem.infrastructure\\repositories\\interfaces\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\repositories\\interfaces\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "UserRole.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Enums\\UserRole.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Enums\\UserRole.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Enums\\UserRole.cs",
+              "RelativeToolTip": "QualityControlSystem.Infrastructure\\Enums\\UserRole.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:06:11.087Z",
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "IEdgeDeviceService.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IEdgeDeviceService.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\Interfaces\\IEdgeDeviceService.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IEdgeDeviceService.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\Services\\Interfaces\\IEdgeDeviceService.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAA8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:36:11.262Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "INavigationService.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\INavigationService.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\Interfaces\\INavigationService.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\INavigationService.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\Services\\Interfaces\\INavigationService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:36:10.692Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IApiClientService.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IApiClientService.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\Interfaces\\IApiClientService.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IApiClientService.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\Services\\Interfaces\\IApiClientService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:36:08.49Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IDialogService.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IDialogService.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\Interfaces\\IDialogService.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IDialogService.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\Services\\Interfaces\\IDialogService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:36:07.321Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "IAuthService.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IAuthService.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\Interfaces\\IAuthService.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\Interfaces\\IAuthService.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\Services\\Interfaces\\IAuthService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:36:02.587Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\App.xaml.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\App.xaml.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\App.xaml.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\App.xaml.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAAADYAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:30:05.898Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Repositories\\UserRepository.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Repositories\\UserRepository.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Repositories\\UserRepository.cs",
+              "RelativeToolTip": "QualityControlSystem.Infrastructure\\Repositories\\UserRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:26:39.325Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "UserProfile.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Entities\\UserProfile.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\UserProfile.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Entities\\UserProfile.cs",
+              "RelativeToolTip": "QualityControlSystem.Infrastructure\\Entities\\UserProfile.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAIA9wA8AAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:19:38.061Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\AuthService.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\AuthService.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\Services\\AuthService.cs",
+              "RelativeToolTip": "QualityControlSystem.WPF\\Services\\AuthService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:16:55.186Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "IUserRepository.cs",
+              "DocumentMoniker": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IUserRepository.cs",
+              "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IUserRepository.cs",
+              "ToolTip": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IUserRepository.cs",
+              "RelativeToolTip": "QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IUserRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAABJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-29T09:06:03.477Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

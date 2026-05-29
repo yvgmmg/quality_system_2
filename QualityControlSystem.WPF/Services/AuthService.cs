@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using QualityControlSystem.Infrastructure.Repositories;
+using QualityControlSystem.Infrastructure.Repositories.Interfaces;
 using QualityControlSystem.WPF.Models;
 using QualityControlSystem.WPF.Services.Interfaces;
 
@@ -8,34 +7,36 @@ namespace QualityControlSystem.WPF.Services;
 
 public class AuthService : IAuthService
 {
+    private readonly IUserRepository _userRepository;
     private UserProfileDto? _currentUser;
 
-    // Демонстрационные данные (позже заменить на запрос к БД)
-    private readonly List<(string Login, string Password, UserProfileDto Profile)> _users = new()
+    public AuthService(IUserRepository userRepository)
     {
-        ("admin", "admin", new UserProfileDto { Id = 1, Name = "Админ", Surname = "Админов", Role = "admin", WorkshopId = 0, PersonnelNumber = "A000001" }),
-        ("operator", "operator", new UserProfileDto { Id = 2, Name = "Иван", Surname = "Петров", Role = "operator", WorkshopId = 1, PersonnelNumber = "O123456" }),
-        ("equipment", "equipment", new UserProfileDto { Id = 3, Name = "Сергей", Surname = "Сидоров", Role = "equipment specialist", WorkshopId = 1, PersonnelNumber = "E789012" }),
-        ("qcofficer", "qcofficer", new UserProfileDto { Id = 4, Name = "Мария", Surname = "Иванова", Role = "quality control officer", WorkshopId = 1, PersonnelNumber = "Q345678" })
-    };
+        _userRepository = userRepository;
+    }
 
-    public Task<bool> LoginAsync(string login, string password)
+    public async Task<bool> LoginAsync(string login, string password)
     {
-        var user = _users.FirstOrDefault(u => u.Login == login && u.Password == password);
-        if (user != default)
+        var isValid = await _userRepository.ValidateCredentialsAsync(login, password);
+        if (!isValid) return false;
+
+        var user = await _userRepository.GetByPersonnelNumberAsync(login);
+        if (user == null) return false;
+
+        _currentUser = new UserProfileDto
         {
-            _currentUser = user.Profile;
-            return Task.FromResult(true);
-        }
-        _currentUser = null;
-        return Task.FromResult(false);
+            Id = user.UserProfileId,
+            Name = user.Name,
+            Surname = user.Surname,
+            Patron = user.Patron,
+            Role = user.Role.ToString(),
+            WorkshopId = user.WorkshopId,
+            PersonnelNumber = user.PersonnelNumber
+        };
+        return true;
     }
 
-    public void Logout()
-    {
-        _currentUser = null;
-    }
-
+    public void Logout() => _currentUser = null;
     public UserProfileDto? CurrentUser => _currentUser;
     public bool IsAuthenticated => _currentUser != null;
 }

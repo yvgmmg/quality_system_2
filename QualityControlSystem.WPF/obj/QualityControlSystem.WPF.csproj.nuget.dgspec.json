@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj": {}
+    "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj": {}
   },
   "projects": {
-    "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj": {
+    "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
-        "projectName": "QualityControlSystem.WPF",
-        "projectPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
-        "packagesPath": "C:\\Users\\night\\.nuget\\packages\\",
-        "outputPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\obj\\",
+        "projectUniqueName": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj",
+        "projectName": "QualityControlSystem.Infrastructure",
+        "projectPath": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\Ученик 2\\.nuget\\packages\\",
+        "outputPath": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "D:\\Visual Studio 2022\\Инструменты и пакеты SDK\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\night\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\Ученик 2\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -29,7 +25,8 @@
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0-windows7.0": {
+          "net8.0-windows": {
+            "framework": "net8.0-windows7.0",
             "targetAlias": "net8.0-windows",
             "projectReferences": {}
           }
@@ -44,15 +41,118 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.300"
       },
       "frameworks": {
-        "net8.0-windows7.0": {
+        "net8.0-windows": {
+          "framework": "net8.0-windows7.0",
           "targetAlias": "net8.0-windows",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.8, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            },
+            "Microsoft.WindowsDesktop.App.WPF": {
+              "privateAssets": "none"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
+        "projectName": "QualityControlSystem.WPF",
+        "projectPath": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
+        "packagesPath": "C:\\Users\\Ученик 2\\.nuget\\packages\\",
+        "outputPath": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Ученик 2\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0-windows"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0-windows": {
+            "framework": "net8.0-windows7.0",
+            "targetAlias": "net8.0-windows",
+            "projectReferences": {
+              "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj": {
+                "projectPath": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.300"
+      },
+      "frameworks": {
+        "net8.0-windows": {
+          "framework": "net8.0-windows7.0",
+          "targetAlias": "net8.0-windows",
+          "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
             "CommunityToolkit.Mvvm": {
               "target": "Package",
               "version": "[8.4.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             },
             "Microsoft.Extensions.Configuration": {
               "target": "Package",
@@ -94,7 +194,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.314/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
