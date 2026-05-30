@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="QualityControlSystem.WPF.Views.UserManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Command="{Binding AddUserCommand}" Content="Добавить" Width="80" Margin="5"/>
+            <Button Command="{Binding EditUserCommand}" Content="Редактировать" Width="100" Margin="5"/>
+            <Button Command="{Binding DeleteUserCommand}" Content="Удалить" Width="80" Margin="5"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
+                  AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="Фамилия" Binding="{Binding Surname}" Width="120"/>
+                <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="100"/>
+                <DataGridTextColumn Header="Отчество" Binding="{Binding Patron}" Width="100"/>
+                <DataGridTextColumn Header="Табельный номер" Binding="{Binding PersonnelNumber}" Width="120"/>
+                <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="150"/>
+                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopId}" Width="60"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="5" Foreground="Red"/>
+    </Grid>
+</UserControl>

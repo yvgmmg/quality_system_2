@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QualityControlSystem.WPF.Models;
+using System.Threading.Tasks;
 
-namespace QualityControlSystem.WPF.Services.Interfaces;
-
-public interface IAuthService
+namespace QualityControlSystem.WPF.Services.Interfaces
 {
-    Task<bool> LoginAsync(string login, string password);
-    void Logout();
-    UserProfileDto? CurrentUser { get; }
-    bool IsAuthenticated { get; }
+    public interface IAuthService
+    {
+        Task<bool> LoginAsync(string personnelNumber, string password);
+        void Logout();
+        UserProfileDto? CurrentUser { get; }
+        event Action<UserProfileDto?>? CurrentUserChanged;
+    }
 }

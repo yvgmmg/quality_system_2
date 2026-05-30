@@ -45,7 +45,6 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <TextBlock Text="Демо-логины: admin/admin, operator/operator, equipment/equipment, qcofficer/qcofficer" FontSize="10" Foreground="Gray" TextWrapping="Wrap" TextAlignment="Center"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -1,7 +1,7 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
-    "net8.0-windows": {
+    "net8.0-windows7.0": {
       "BCrypt.Net-Next/4.2.0": {
         "type": "package",
         "compile": {
@@ -430,7 +430,7 @@
           }
         }
       },
-      "Microsoft.EntityFrameworkCore.Tools/8.0.0": {
+      "Microsoft.EntityFrameworkCore.Tools/10.0.8": {
         "type": "package",
         "dependencies": {
           "Microsoft.EntityFrameworkCore.Design": "8.0.0"
@@ -2269,17 +2269,18 @@
         "microsoft.entityframeworkcore.sqlite.core.nuspec"
       ]
     },
-    "Microsoft.EntityFrameworkCore.Tools/8.0.0": {
-      "sha512": "zRdaXiiB1gEA0b+AJTd2+drh78gkEA4HyZ1vqNZrKq4xwW8WwavSiQsoeb1UsIMZkocLMBbhQYWClkZzuTKEgQ==",
+    "Microsoft.EntityFrameworkCore.Tools/10.0.8": {
+      "sha512": "bKtoSviiOUX75jM5bzSnBGPUjb2CfbBHdUDsjYv2X3/G3ZMMG18VpJMMAcP0tD8Xepu+wLl2soNJiWH6XxXWdQ==",
       "type": "package",
-      "path": "microsoft.entityframeworkcore.tools/8.0.0",
+      "path": "microsoft.entityframeworkcore.tools/10.0.8",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
+        "docs/PACKAGE.md",
         "lib/net8.0/_._",
-        "microsoft.entityframeworkcore.tools.8.0.0.nupkg.sha512",
+        "microsoft.entityframeworkcore.tools.10.0.8.nupkg.sha512",
         "microsoft.entityframeworkcore.tools.nuspec",
         "tools/EntityFrameworkCore.PS2.psd1",
         "tools/EntityFrameworkCore.PS2.psm1",
@@ -2287,11 +2288,11 @@
         "tools/EntityFrameworkCore.psm1",
         "tools/about_EntityFrameworkCore.help.txt",
         "tools/init.ps1",
-        "tools/net461/any/ef.exe",
-        "tools/net461/win-arm64/ef.exe",
-        "tools/net461/win-x86/ef.exe",
-        "tools/netcoreapp2.0/any/ef.dll",
-        "tools/netcoreapp2.0/any/ef.runtimeconfig.json"
+        "tools/net472/any/ef.exe",
+        "tools/net472/win-arm64/ef.exe",
+        "tools/net472/win-x86/ef.exe",
+        "tools/net8.0/any/ef.dll",
+        "tools/net8.0/any/ef.runtimeconfig.json"
       ]
     },
     "Microsoft.Extensions.Caching.Abstractions/8.0.0": {
@@ -3941,11 +3942,11 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net8.0-windows": [
+    "net8.0-windows7.0": [
       "BCrypt.Net-Next >= 4.2.0",
       "CommunityToolkit.Mvvm >= 8.4.2",
       "Microsoft.EntityFrameworkCore.Sqlite >= 8.0.0",
-      "Microsoft.EntityFrameworkCore.Tools >= 8.0.0",
+      "Microsoft.EntityFrameworkCore.Tools >= 10.0.8",
       "Microsoft.Extensions.Configuration >= 10.0.8",
       "Microsoft.Extensions.Configuration.Json >= 10.0.8",
       "Microsoft.Extensions.DependencyInjection >= 10.0.8",
@@ -3955,35 +3956,39 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Ученик 2\\.nuget\\packages\\": {}
+    "C:\\Users\\night\\.nuget\\packages\\": {},
+    "D:\\Visual Studio 2022\\Инструменты и пакеты SDK\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
+      "projectUniqueName": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
       "projectName": "QualityControlSystem.WPF",
-      "projectPath": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
-      "packagesPath": "C:\\Users\\Ученик 2\\.nuget\\packages\\",
-      "outputPath": "D:\\quality\\quality_system_2\\QualityControlSystem.WPF\\obj\\",
+      "projectPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj",
+      "packagesPath": "C:\\Users\\night\\.nuget\\packages\\",
+      "outputPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "D:\\Visual Studio 2022\\Инструменты и пакеты SDK\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\Ученик 2\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\NuGet.Config",
+        "C:\\Users\\night\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0-windows"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net8.0-windows": {
-          "framework": "net8.0-windows7.0",
+        "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj": {
-              "projectPath": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj"
+            "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj": {
+              "projectPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj"
             }
           }
         }
@@ -3998,11 +4003,10 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
-      "net8.0-windows": {
-        "framework": "net8.0-windows7.0",
+      "net8.0-windows7.0": {
         "targetAlias": "net8.0-windows",
         "dependencies": {
           "BCrypt.Net-Next": {
@@ -4018,8 +4022,10 @@
             "version": "[8.0.0, )"
           },
           "Microsoft.EntityFrameworkCore.Tools": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
             "target": "Package",
-            "version": "[8.0.0, )"
+            "version": "[10.0.8, )"
           },
           "Microsoft.Extensions.Configuration": {
             "target": "Package",
@@ -4061,7 +4067,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.314/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

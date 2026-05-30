@@ -1,7 +1,7 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
-    "net8.0-windows": {
+    "net8.0-windows7.0": {
       "BCrypt.Net-Next/4.2.0": {
         "type": "package",
         "compile": {
@@ -2323,7 +2323,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net8.0-windows": [
+    "net8.0-windows7.0": [
       "BCrypt.Net-Next >= 4.2.0",
       "Microsoft.EntityFrameworkCore.Design >= 8.0.0",
       "Microsoft.EntityFrameworkCore.Tools >= 10.0.8",
@@ -2331,31 +2331,35 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Ученик 2\\.nuget\\packages\\": {}
+    "C:\\Users\\night\\.nuget\\packages\\": {},
+    "D:\\Visual Studio 2022\\Инструменты и пакеты SDK\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj",
+      "projectUniqueName": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj",
       "projectName": "QualityControlSystem.Infrastructure",
-      "projectPath": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj",
-      "packagesPath": "C:\\Users\\Ученик 2\\.nuget\\packages\\",
-      "outputPath": "D:\\quality\\quality_system_2\\QualityControlSystem.Infrastructure\\obj\\",
+      "projectPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj",
+      "packagesPath": "C:\\Users\\night\\.nuget\\packages\\",
+      "outputPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "D:\\Visual Studio 2022\\Инструменты и пакеты SDK\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\Ученик 2\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\NuGet.Config",
+        "C:\\Users\\night\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0-windows"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net8.0-windows": {
-          "framework": "net8.0-windows7.0",
+        "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {}
         }
@@ -2370,11 +2374,10 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
-      "net8.0-windows": {
-        "framework": "net8.0-windows7.0",
+      "net8.0-windows7.0": {
         "targetAlias": "net8.0-windows",
         "dependencies": {
           "BCrypt.Net-Next": {
@@ -2415,7 +2418,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.314/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

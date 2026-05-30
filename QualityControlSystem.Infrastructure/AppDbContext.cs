@@ -1,328 +1,361 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure.Entities;
-using QualityControlSystem.Infrastructure.Enums;
 
 namespace QualityControlSystem.Infrastructure;
 
-public class AppDbContext : DbContext
+public partial class AppDbContext : DbContext
 {
-    // DbSets for all entities
-    public DbSet<UserProfile> UserProfiles { get; set; } = null!;
-    public DbSet<AccessRight> AccessRights { get; set; } = null!;
-    public DbSet<Batch> Batches { get; set; } = null!;
-    public DbSet<Camera> Cameras { get; set; } = null!;
-    public DbSet<CameraFrame> CameraFrames { get; set; } = null!;
-    public DbSet<EquipmentInspectionForm> EquipmentInspectionForms { get; set; } = null!;
-    public DbSet<EquipmentInspectionFormParams> EquipmentInspectionFormParams { get; set; } = null!;
-    public DbSet<EquipmentInspectionFormProductionEquipment> EquipmentInspectionFormProductionEquipments { get; set; } = null!;
-    public DbSet<Frame> Frames { get; set; } = null!;
-    public DbSet<FrameTestForm> FrameTestForms { get; set; } = null!;
-    public DbSet<FrameTestFormFrame> FrameTestFormFrames { get; set; } = null!;
-    public DbSet<FrameTestFormParams> FrameTestFormParams { get; set; } = null!;
-    public DbSet<Instruction> Instructions { get; set; } = null!;
-    public DbSet<InstructionProductionEquipment> InstructionProductionEquipments { get; set; } = null!;
-    public DbSet<InstructionProductionOrder> InstructionProductionOrders { get; set; } = null!;
-    public DbSet<Material> Materials { get; set; } = null!;
-    public DbSet<Notification> Notifications { get; set; } = null!;
-    public DbSet<Params> Params { get; set; } = null!;
-    public DbSet<ProductionEquipment> ProductionEquipments { get; set; } = null!;
-    public DbSet<ProductionOrder> ProductionOrders { get; set; } = null!;
-    public DbSet<RegulatoryInformation> RegulatoryInformations { get; set; } = null!;
-    public DbSet<RegulatoryInformationInstruction> RegulatoryInformationInstructions { get; set; } = null!;
-    public DbSet<RegulatoryInformationProductionEquipment> RegulatoryInformationProductionEquipments { get; set; } = null!;
-    public DbSet<RequisitionInvoice> RequisitionInvoices { get; set; } = null!;
-    public DbSet<Sensor> Sensors { get; set; } = null!;
-    public DbSet<SensorReadings> SensorReadings { get; set; } = null!;
-    public DbSet<UserProfileAccessRights> UserProfileAccessRights { get; set; } = null!;
-    public DbSet<Workshop> Workshops { get; set; } = null!;
-    public DbSet<WorkshopProductionOrder> WorkshopProductionOrders { get; set; } = null!;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options)
+    {
+    }
+
+    public virtual DbSet<AccessRight> AccessRights { get; set; }
+
+    public virtual DbSet<Batch> Batches { get; set; }
+
+    public virtual DbSet<Camera> Cameras { get; set; }
+
+    public virtual DbSet<CameraFrame> CameraFrames { get; set; }
+
+    public virtual DbSet<EquipmentInspectionForm> EquipmentInspectionForms { get; set; }
+
+    public virtual DbSet<EquipmentInspectionFormParam> EquipmentInspectionFormParams { get; set; }
+
+    public virtual DbSet<EquipmentInspectionFormProductionEquipment> EquipmentInspectionFormProductionEquipments { get; set; }
+
+    public virtual DbSet<Frame> Frames { get; set; }
+
+    public virtual DbSet<FrameTestForm> FrameTestForms { get; set; }
+
+    public virtual DbSet<FrameTestFormFrame> FrameTestFormFrames { get; set; }
+
+    public virtual DbSet<FrameTestFormParam> FrameTestFormParams { get; set; }
+
+    public virtual DbSet<Instruction> Instructions { get; set; }
+
+    public virtual DbSet<InstructionProductionEquipment> InstructionProductionEquipments { get; set; }
+
+    public virtual DbSet<InstructionProductionOrder> InstructionProductionOrders { get; set; }
+
+    public virtual DbSet<Material> Materials { get; set; }
+
+    public virtual DbSet<Notification> Notifications { get; set; }
+
+    public virtual DbSet<Param> Params { get; set; }
+
+    public virtual DbSet<ProductionEquipment> ProductionEquipments { get; set; }
+
+    public virtual DbSet<ProductionOrder> ProductionOrders { get; set; }
+
+    public virtual DbSet<RegilatoryInformationInstruction> RegilatoryInformationInstructions { get; set; }
+
+    public virtual DbSet<RegulatoryInformation> RegulatoryInformations { get; set; }
+
+    public virtual DbSet<RegulatoryInfromationProductionEquipment> RegulatoryInfromationProductionEquipments { get; set; }
+
+    public virtual DbSet<RequisitionInvoice> RequisitionInvoices { get; set; }
+
+    public virtual DbSet<Sensor> Sensors { get; set; }
+
+    public virtual DbSet<SensorReading> SensorReadings { get; set; }
+
+    public virtual DbSet<UserProfile> UserProfiles { get; set; }
+
+    public virtual DbSet<UserProfileAccessRight> UserProfileAccessRights { get; set; }
+
+    public virtual DbSet<Workshop> Workshops { get; set; }
+
+    public virtual DbSet<WorkshopProductionOrder> WorkshopProductionOrders { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseNpgsql("Host=localhost;Database=quality_system;Username=postgres;Password=1234");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder
+            .HasPostgresEnum("frame_result", new[] { "ok", "for_rework", "defective" })
+            .HasPostgresEnum("inspection_result", new[] { "in progress", "ok", "normal", "repair" })
+            .HasPostgresEnum("measurement_unit", new[] { "мм", "см", "м", "г", "кг", "т", "°C", "°", "%", "шт", "Н", "МПа", "В", "А", "м/с", "м²", "м³", "безразм." })
+            .HasPostgresEnum("role", new[] { "admin", "operator", "equipment specialist", "quality control officer" })
+            .HasPostgresEnum("severity", new[] { "warning", "critical" })
+            .HasPostgresEnum("source", new[] { "equipment", "frame" })
+            .HasPostgresEnum("test_result", new[] { "ok", "defective" });
 
-        // Relationships and cascade behaviours
-        modelBuilder.Entity<UserProfile>()
-            .HasOne(up => up.Workshop)
-            .WithMany()
-            .HasForeignKey(up => up.WorkshopId)
-            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AccessRight>(entity =>
+        {
+            entity.HasKey(e => e.AccessRightId).HasName("access_rights_pk");
+        });
 
-        modelBuilder.Entity<UserProfileAccessRights>()
-            .HasOne(ua => ua.UserProfile)
-            .WithMany(up => up.AccessRights)
-            .HasForeignKey(ua => ua.UserProfileId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Batch>(entity =>
+        {
+            entity.HasKey(e => e.BatchId).HasName("batch_pk");
 
-        modelBuilder.Entity<UserProfileAccessRights>()
-            .HasOne(ua => ua.AccessRight)
-            .WithMany()
-            .HasForeignKey(ua => ua.AccessRightId)
-            .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.ProductionOrder).WithMany(p => p.Batches)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("batch_production_order_fk");
+        });
 
-        modelBuilder.Entity<Batch>()
-            .HasOne(b => b.ProductionOrder)
-            .WithMany()
-            .HasForeignKey(b => b.ProductionOrderId)
-            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Camera>(entity =>
+        {
+            entity.HasKey(e => e.CameraId).HasName("camera_pk");
 
-        modelBuilder.Entity<Camera>()
-            .HasOne(c => c.Workshop)
-            .WithMany()
-            .HasForeignKey(c => c.WorkshopId)
-            .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.Workshop).WithMany(p => p.Cameras).HasConstraintName("camera_workshop_fk");
+        });
 
-        modelBuilder.Entity<CameraFrame>()
-            .HasOne(cf => cf.Camera)
-            .WithMany()
-            .HasForeignKey(cf => cf.CameraId)
-            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<CameraFrame>(entity =>
+        {
+            entity.HasKey(e => e.CameraFrameId).HasName("camera_frame_pk");
 
-        modelBuilder.Entity<CameraFrame>()
-            .HasOne(cf => cf.Frame)
-            .WithMany()
-            .HasForeignKey(cf => cf.FrameId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.Camera).WithMany(p => p.CameraFrames).HasConstraintName("camera_frame_camera_fk");
 
-        modelBuilder.Entity<EquipmentInspectionForm>()
-            .HasOne(e => e.UserProfile)
-            .WithMany()
-            .HasForeignKey(e => e.UserProfileId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.Frame).WithMany(p => p.CameraFrames).HasConstraintName("camera_frame_frame_fk");
+        });
 
-        modelBuilder.Entity<EquipmentInspectionFormParams>()
-            .HasOne(eip => eip.EquipmentInspectionForm)
-            .WithMany()
-            .HasForeignKey(eip => eip.EquipmentInspectionFormId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<EquipmentInspectionForm>(entity =>
+        {
+            entity.HasKey(e => e.EquipmentInspectionFormId).HasName("equipment_inspection_form_pk");
 
-        modelBuilder.Entity<EquipmentInspectionFormParams>()
-            .HasOne(eip => eip.Params)
-            .WithMany()
-            .HasForeignKey(eip => eip.ParamsId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.UserProfile).WithMany(p => p.EquipmentInspectionForms).HasConstraintName("equipment_inspection_form_user_profile_fk");
+        });
 
-        modelBuilder.Entity<EquipmentInspectionFormProductionEquipment>()
-            .HasOne(epe => epe.EquipmentInspectionForm)
-            .WithMany()
-            .HasForeignKey(epe => epe.EquipmentInspectionFormId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<EquipmentInspectionFormParam>(entity =>
+        {
+            entity.HasKey(e => e.EquipmentInspectionFormParamsId).HasName("equipment_inspection_form_params_pk");
 
-        modelBuilder.Entity<EquipmentInspectionFormProductionEquipment>()
-            .HasOne(epe => epe.ProductionEquipment)
-            .WithMany()
-            .HasForeignKey(epe => epe.ProductionEquipmentId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.EquipmentInspectionFormParamsId).HasDefaultValueSql("nextval('equipment_inspection_form_par_equipment_inspection_form_par_seq'::regclass)");
 
-        modelBuilder.Entity<Frame>()
-            .HasOne(f => f.Instruction)
-            .WithMany()
-            .HasForeignKey(f => f.InstructionId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.EquipmentInspectionForm).WithMany(p => p.EquipmentInspectionFormParams).HasConstraintName("equipment_inspection_form_params_equipment_inspection_form_fk");
 
-        modelBuilder.Entity<Frame>()
-            .HasOne(f => f.Batch)
-            .WithMany()
-            .HasForeignKey(f => f.BatchId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.Params).WithMany(p => p.EquipmentInspectionFormParams).HasConstraintName("equipment_inspection_form_params_params_fk");
+        });
 
-        modelBuilder.Entity<Frame>()
-            .HasOne(f => f.Workshop)
-            .WithMany()
-            .HasForeignKey(f => f.WorkshopId)
-            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<EquipmentInspectionFormProductionEquipment>(entity =>
+        {
+            entity.HasKey(e => e.EquipmentInspectionFormProductionEquipment1).HasName("equipment_inspection_form_production_equipment_pk");
 
-        modelBuilder.Entity<FrameTestForm>()
-            .HasOne(ftf => ftf.UserProfile)
-            .WithMany()
-            .HasForeignKey(ftf => ftf.UserProfileId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.Property(e => e.EquipmentInspectionFormProductionEquipment1).HasDefaultValueSql("nextval('equipment_inspection_form_pro_equipment_inspection_form_pro_seq'::regclass)");
 
-        modelBuilder.Entity<FrameTestFormFrame>()
-            .HasOne(ftff => ftff.Frame)
-            .WithMany()
-            .HasForeignKey(ftff => ftff.FrameId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.EquipmentInspectionForm).WithMany(p => p.EquipmentInspectionFormProductionEquipments).HasConstraintName("equipment_inspection_form_production_equipment_equipment_inspec");
 
-        modelBuilder.Entity<FrameTestFormFrame>()
-            .HasOne(ftff => ftff.FrameTestForm)
-            .WithMany()
-            .HasForeignKey(ftff => ftff.FrameTestFormId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.ProductionEquipment).WithMany(p => p.EquipmentInspectionFormProductionEquipments).HasConstraintName("equipment_inspection_form_production_equipment_production_equip");
+        });
 
-        modelBuilder.Entity<FrameTestFormParams>()
-            .HasOne(ftfp => ftfp.FrameTestForm)
-            .WithMany()
-            .HasForeignKey(ftfp => ftfp.FrameTestFormId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Frame>(entity =>
+        {
+            entity.HasKey(e => e.FrameId).HasName("frame_pk");
 
-        modelBuilder.Entity<FrameTestFormParams>()
-            .HasOne(ftfp => ftfp.Params)
-            .WithMany()
-            .HasForeignKey(ftfp => ftfp.ParamsId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Batch).WithMany(p => p.Frames).HasConstraintName("frame_batch_fk");
 
-        modelBuilder.Entity<InstructionProductionEquipment>()
-            .HasOne(ipe => ipe.Instruction)
-            .WithMany()
-            .HasForeignKey(ipe => ipe.InstructionId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Instruction).WithMany(p => p.Frames).HasConstraintName("frame_instruction_fk");
 
-        modelBuilder.Entity<InstructionProductionEquipment>()
-            .HasOne(ipe => ipe.ProductionEquipment)
-            .WithMany()
-            .HasForeignKey(ipe => ipe.ProductionEquipmentId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Workshop).WithMany(p => p.Frames).HasConstraintName("frame_workshop_fk");
+        });
 
-        modelBuilder.Entity<InstructionProductionOrder>()
-            .HasOne(i po => i po.Instruction)
-            .WithMany()
-            .HasForeignKey(i po => i po.InstructionId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<FrameTestForm>(entity =>
+        {
+            entity.HasKey(e => e.FrameTestFormId).HasName("frame_test_form_pk");
 
-        modelBuilder.Entity<InstructionProductionOrder>()
-            .HasOne(i po => i po.ProductionOrder)
-            .WithMany()
-            .HasForeignKey(i po => i po.ProductionOrderId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.UserProfile).WithMany(p => p.FrameTestForms).HasConstraintName("frame_test_form_user_profile_fk");
+        });
 
-        modelBuilder.Entity<Notification>()
-            .HasOne(n => n.Frame)
-            .WithMany()
-            .HasForeignKey(n => n.FrameId)
-            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<FrameTestFormFrame>(entity =>
+        {
+            entity.HasKey(e => e.FrameTestFormFrameId).HasName("frame_test_form_frame_pk");
 
-        modelBuilder.Entity<Notification>()
-            .HasOne(n => n.ProductionEquipment)
-            .WithMany()
-            .HasForeignKey(n => n.ProductionEquipmentId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.Frame).WithMany(p => p.FrameTestFormFrames).HasConstraintName("frame_test_form_frame_frame_fk");
 
-        modelBuilder.Entity<ProductionEquipment>()
-            .HasOne(pe => pe.Workshop)
-            .WithMany()
-            .HasForeignKey(pe => pe.WorkshopId)
-            .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.FrameTestForm).WithMany(p => p.FrameTestFormFrames).HasConstraintName("frame_test_form_frame_frame_test_form_fk");
+        });
 
-        modelBuilder.Entity<RegulatoryInformationInstruction>()
-            .HasOne(rii => rii.RegulatoryInformation)
-            .WithMany()
-            .HasForeignKey(rii => rii.RegulatoryInformationId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<FrameTestFormParam>(entity =>
+        {
+            entity.HasKey(e => e.FrameTestFormParamsId).HasName("frame_test_form_params_pk");
 
-        modelBuilder.Entity<RegulatoryInformationInstruction>()
-            .HasOne(rii => rii.Instruction)
-            .WithMany()
-            .HasForeignKey(rii => rii.InstructionId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.FrameTestForm).WithMany(p => p.FrameTestFormParams).HasConstraintName("frame_test_form_params_frame_test_form_fk");
 
-        modelBuilder.Entity<RegulatoryInformationProductionEquipment>()
-            .HasOne(rip => rip.RegulatoryInformation)
-            .WithMany()
-            .HasForeignKey(rip => rip.RegulatoryInformationId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Params).WithMany(p => p.FrameTestFormParams).HasConstraintName("frame_test_form_params_params_fk");
+        });
 
-        modelBuilder.Entity<RegulatoryInformationProductionEquipment>()
-            .HasOne(rip => rip.ProductionEquipment)
-            .WithMany()
-            .HasForeignKey(rip => rip.ProductionEquipmentId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Instruction>(entity =>
+        {
+            entity.HasKey(e => e.InstructionId).HasName("instruction_pk");
+        });
 
-        modelBuilder.Entity<RequisitionInvoice>()
-            .HasOne(ri => ri.ProductionOrder)
-            .WithMany()
-            .HasForeignKey(ri => ri.ProductionOrderId)
-            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<InstructionProductionEquipment>(entity =>
+        {
+            entity.HasKey(e => e.InstructionProductionEquipmentId).HasName("instruction_production_equipment_pk");
 
-        modelBuilder.Entity<Sensor>()
-            .HasOne(s => s.Workshop)
-            .WithMany()
-            .HasForeignKey(s => s.WorkshopId)
-            .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.InstructionProductionEquipmentId).HasDefaultValueSql("nextval('instruction_production_equipment_instruction_production_equipme'::regclass)");
 
-        modelBuilder.Entity<SensorReadings>()
-            .HasOne(sr => sr.Sensor)
-            .WithMany()
-            .HasForeignKey(sr => sr.SensorId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.Instruction).WithMany(p => p.InstructionProductionEquipments)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("instruction_production_equipment_instruction_fk");
 
-        modelBuilder.Entity<SensorReadings>()
-            .HasOne(sr => sr.Frame)
-            .WithMany()
-            .HasForeignKey(sr => sr.FrameId)
-            .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.ProductionEquipment).WithMany(p => p.InstructionProductionEquipments)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("instruction_production_equipment_production_equipment_fk");
+        });
 
-        modelBuilder.Entity<SensorReadings>()
-            .HasOne(sr => sr.ProductionEquipment)
-            .WithMany()
-            .HasForeignKey(sr => sr.ProductionEquipmentId)
-            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<InstructionProductionOrder>(entity =>
+        {
+            entity.HasKey(e => e.InstructionProductionOrderId).HasName("instruction_production_order_pk");
 
-        modelBuilder.Entity<WorkshopProductionOrder>()
-            .HasOne(wpo => wpo.Workshop)
-            .WithMany()
-            .HasForeignKey(wpo => wpo.WorkshopId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.InstructionProductionOrderId).HasDefaultValueSql("nextval('instruction_production_order_instruction_production_order_i_seq'::regclass)");
 
-        modelBuilder.Entity<WorkshopProductionOrder>()
-            .HasOne(wpo => wpo.ProductionOrder)
-            .WithMany()
-            .HasForeignKey(wpo => wpo.ProductionOrderId)
-            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Instruction).WithMany(p => p.InstructionProductionOrders).HasConstraintName("instruction_production_order_instruction_fk");
 
-        // Indexes (example: unique index on UserProfile.PersonnelNumber)
-        modelBuilder.Entity<UserProfile>()
-            .HasIndex(up => up.PersonnelNumber)
-            .IsUnique();
+            entity.HasOne(d => d.ProductionOrder).WithMany(p => p.InstructionProductionOrders).HasConstraintName("instruction_production_order_production_order_fk");
+        });
 
-        modelBuilder.Entity<Workshop>()
-            .HasIndex(w => w.Number)
-            .IsUnique();
+        modelBuilder.Entity<Material>(entity =>
+        {
+            entity.HasKey(e => e.MaterialId).HasName("material_pk");
 
-        // Seed data (kept from original file)
-        modelBuilder.Entity<UserProfile>().HasData(
-            new UserProfile
-            {
-                UserProfileId = 1,
-                Name = "Админ",
-                Surname = "Админов",
-                Patron = null,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"),
-                PersonnelNumber = "A000001",
-                Role = UserRole.Admin,
-                WorkshopId = 0
-            },
-            new UserProfile
-            {
-                UserProfileId = 2,
-                Name = "Иван",
-                Surname = "Петров",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("operator"),
-                PersonnelNumber = "O123456",
-                Role = UserRole.Operator,
-                WorkshopId = 1
-            },
-            new UserProfile
-            {
-                UserProfileId = 3,
-                Name = "Сергей",
-                Surname = "Сидоров",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("equipment"),
-                PersonnelNumber = "E789012",
-                Role = UserRole.EquipmentSpecialist,
-                WorkshopId = 1
-            },
-            new UserProfile
-            {
-                UserProfileId = 4,
-                Name = "Мария",
-                Surname = "Иванова",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("qcofficer"),
-                PersonnelNumber = "Q345678",
-                Role = UserRole.QualityControlOfficer,
-                WorkshopId = 1
-            }
-        );
+            entity.HasOne(d => d.RequisitionInvoice).WithMany(p => p.Materials).HasConstraintName("material_requisition_invoice_fk");
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.NotificationId).HasName("notification_pk");
+
+            entity.HasOne(d => d.Frame).WithMany(p => p.Notifications)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("notification_frame_fk");
+
+            entity.HasOne(d => d.ProductionEquipment).WithMany(p => p.Notifications)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("notification_production_equipment_fk");
+
+            entity.HasOne(d => d.UserProfile).WithMany(p => p.Notifications).HasConstraintName("notification_user_profile_fk");
+        });
+
+        modelBuilder.Entity<Param>(entity =>
+        {
+            entity.HasKey(e => e.ParamsId).HasName("params_pk");
+        });
+
+        modelBuilder.Entity<ProductionEquipment>(entity =>
+        {
+            entity.HasKey(e => e.ProductionEquipmentId).HasName("production_equipment_pk");
+
+            entity.HasOne(d => d.Workshop).WithMany(p => p.ProductionEquipments).HasConstraintName("production_equipment_workshop_fk");
+        });
+
+        modelBuilder.Entity<ProductionOrder>(entity =>
+        {
+            entity.HasKey(e => e.ProductionOrderId).HasName("production_order_pk");
+        });
+
+        modelBuilder.Entity<RegilatoryInformationInstruction>(entity =>
+        {
+            entity.HasKey(e => e.RegulatoryInformationInstructionId).HasName("regilatory_information_instruction_pk");
+
+            entity.Property(e => e.RegulatoryInformationInstructionId).HasDefaultValueSql("nextval('regilatory_information_instru_regilatory_information_instru_seq'::regclass)");
+
+            entity.HasOne(d => d.Instruction).WithMany(p => p.RegilatoryInformationInstructions).HasConstraintName("regilatory_information_instruction_instruction_fk");
+
+            entity.HasOne(d => d.RegulatoryInformation).WithMany(p => p.RegilatoryInformationInstructions).HasConstraintName("regilatory_information_instruction_regulatory_information_fk");
+        });
+
+        modelBuilder.Entity<RegulatoryInformation>(entity =>
+        {
+            entity.HasKey(e => e.RegulatoryInformationId).HasName("regulatory_information_pk");
+
+            entity.Property(e => e.MaxValue).HasComment("Максимально допустимое значение (не более)");
+            entity.Property(e => e.MinValue).HasComment("Минимально допустимое значение (не менее)");
+        });
+
+        modelBuilder.Entity<RegulatoryInfromationProductionEquipment>(entity =>
+        {
+            entity.HasKey(e => e.RegulatoryInformationProductionEquipmentId).HasName("regulatory_infromation_production_equipment_pk");
+
+            entity.Property(e => e.RegulatoryInformationProductionEquipmentId).HasDefaultValueSql("nextval('regulatory_infromation_produc_regulatory_infromation_produc_seq'::regclass)");
+
+            entity.HasOne(d => d.ProductionEquipment).WithMany(p => p.RegulatoryInfromationProductionEquipments).HasConstraintName("regulatory_infromation_production_equipment_production_equipmen");
+
+            entity.HasOne(d => d.RegulatoryInformation).WithMany(p => p.RegulatoryInfromationProductionEquipments).HasConstraintName("regulatory_infromation_production_equipment_regulatory_informat");
+        });
+
+        modelBuilder.Entity<RequisitionInvoice>(entity =>
+        {
+            entity.HasKey(e => e.RequisitionInvoiceId).HasName("requisition_invoice_pk");
+
+            entity.Property(e => e.RequisitionInvoiceId).HasDefaultValueSql("nextval('frame_test_form_params_frame_test_form_params_id_seq'::regclass)");
+
+            entity.HasOne(d => d.ProductionOrder).WithMany(p => p.RequisitionInvoices)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("requisition_invoice_production_order_fk");
+        });
+
+        modelBuilder.Entity<Sensor>(entity =>
+        {
+            entity.HasKey(e => e.SensorId).HasName("sensor_pk");
+
+            entity.HasOne(d => d.Workshop).WithMany(p => p.Sensors)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("sensor_workshop_fk");
+        });
+
+        modelBuilder.Entity<SensorReading>(entity =>
+        {
+            entity.HasKey(e => e.SensorReadingsId).HasName("sensor_readings_pk");
+
+            entity.HasOne(d => d.Frame).WithMany(p => p.SensorReadings).HasConstraintName("sensor_readings_frame_fk");
+
+            entity.HasOne(d => d.ProductionEquipment).WithMany(p => p.SensorReadings)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("sensor_readings_production_equipment_fk");
+
+            entity.HasOne(d => d.Sensor).WithMany(p => p.SensorReadings).HasConstraintName("sensor_readings_sensor_fk");
+        });
+
+        modelBuilder.Entity<UserProfile>(entity =>
+        {
+            entity.HasKey(e => e.UserProfileId).HasName("user_profile_pk");
+
+            entity.Property(e => e.Role).HasConversion<string>();
+
+            entity.HasOne(d => d.Workshop).WithMany(p => p.UserProfiles).HasConstraintName("user_profile_workshop_fk");
+        });
+
+        modelBuilder.Entity<UserProfileAccessRight>(entity =>
+        {
+            entity.HasKey(e => e.UserProfileAccessRightsId).HasName("user_profile_access_rights_pk");
+
+            entity.HasOne(d => d.AccessRight).WithMany(p => p.UserProfileAccessRights)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("user_profile_access_rights_access_rights_fk");
+
+            entity.HasOne(d => d.UserProfile).WithMany(p => p.UserProfileAccessRights).HasConstraintName("user_profile_access_rights_user_profile_fk");
+        });
+
+        modelBuilder.Entity<Workshop>(entity =>
+        {
+            entity.HasKey(e => e.WorkshopId).HasName("workshop_pk");
+        });
+
+        modelBuilder.Entity<WorkshopProductionOrder>(entity =>
+        {
+            entity.HasKey(e => e.WorkshopProductionOrder1).HasName("workshop_production_order_pk");
+
+            entity.HasOne(d => d.ProductionOrder).WithMany(p => p.WorkshopProductionOrders)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("workshop_production_order_production_order_fk");
+
+            entity.HasOne(d => d.Workshop).WithMany(p => p.WorkshopProductionOrders)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("workshop_production_order_workshop_fk");
+        });
+        modelBuilder.HasSequence("instruction_production_equipment_instruction_production_equipme").HasMax(2147483647L);
+        modelBuilder.HasSequence("requisition_invoice_requisition_invoice_id_seq").HasMax(2147483647L);
+        modelBuilder.HasSequence("workshop_production_order_workshop_production_order_seq").HasMax(2147483647L);
+
+        OnModelCreatingPartial(modelBuilder);
     }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

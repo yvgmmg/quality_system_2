@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="QualityControlSystem.WPF.Views.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="White" Margin="20" CornerRadius="8">
+        <StackPanel Margin="20">
+            <TextBlock Text="Профиль пользователя" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Фамилия:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding User.Surname}" Margin="5"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Имя:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding User.Name}" Margin="5"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Отчество:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding User.Patron}" Margin="5"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Табельный номер:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding User.PersonnelNumber}" Margin="5"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Роль:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding User.Role}" Margin="5"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Цех №:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding User.WorkshopId}" Margin="5"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

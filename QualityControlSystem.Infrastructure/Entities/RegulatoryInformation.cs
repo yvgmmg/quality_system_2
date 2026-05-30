@@ -1,38 +1,53 @@
+﻿using Microsoft.EntityFrameworkCore;
+using QualityControlSystem.Infrastructure.Enums;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace QualityControlSystem.Infrastructure.Entities
+namespace QualityControlSystem.Infrastructure.Entities;
+
+[Table("regulatory_information")]
+public partial class RegulatoryInformation
 {
-    [Table("regulatory_information")]
-    public class RegulatoryInformation
-    {
-        [Key]
-        [Column("regulatory_information_id")]
-        public int RegulatoryInformationId { get; set; }
+    [Key]
+    [Column("regulatory_information_id")]
+    public int RegulatoryInformationId { get; set; }
 
-        [Column("name")]
-        public string Name { get; set; } = null!;
+    [Column("name")]
+    [StringLength(255)]
+    public string Name { get; set; } = null!;
 
-        [Column("type")]
-        public Source Type { get; set; }
+    [Column("description")]
+    public string? Description { get; set; }
 
-        [Column("description")]
-        public string? Description { get; set; }
+    /// <summary>
+    /// Минимально допустимое значение (не менее)
+    /// </summary>
+    [Column("min_value")]
+    public float? MinValue { get; set; }
 
-        [Column("min_value")]
-        public float? MinValue { get; set; }
+    /// <summary>
+    /// Максимально допустимое значение (не более)
+    /// </summary>
+    [Column("max_value")]
+    public float? MaxValue { get; set; }
 
-        [Column("max_value")]
-        public float? MaxValue { get; set; }
+    [Column("approval_date")]
+    public DateOnly? ApprovalDate { get; set; }
 
-        [Column("approval_date")]
-        public DateTime? ApprovalDate { get; set; }
+    [Column("end_date")]
+    public DateOnly? EndDate { get; set; }
 
-        [Column("end_date")]
-        public DateTime? EndDate { get; set; }
+    [InverseProperty("RegulatoryInformation")]
+    public virtual ICollection<RegilatoryInformationInstruction> RegilatoryInformationInstructions { get; set; } = new List<RegilatoryInformationInstruction>();
 
-        [Column("measurement")]
-        public MeasurementUnit Measurement { get; set; }
-    }
+    [InverseProperty("RegulatoryInformation")]
+    public virtual ICollection<RegulatoryInfromationProductionEquipment> RegulatoryInfromationProductionEquipments { get; set; } = new List<RegulatoryInfromationProductionEquipment>();
+
+    [Column("type")]
+    public Source Type { get; set; }
+
+    [Column("measurement")]
+    public MeasurementUnit Measurement { get; set; }
 }

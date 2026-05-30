@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-D:\quality\quality_system_2\QualityControlSystem.WPF\obj\Debug\net8.0-windows\
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\obj\Debug\net8.0-windows\
 QualityControlSystem.WPF
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-D:\quality\quality_system_2\QualityControlSystem.WPF\App.xaml
-3-1682748755
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\App.xaml
+5705988220
 
-27-8874857
-256-1612220986
-MainWindow.xaml;Views\DashboardView.xaml;Views\LoginView.xaml;
+33-1024255640
+256194124908
+MainWindow.xaml;Views\DashboardView.xaml;Views\LoginView.xaml;Views\ProfileView.xaml;Views\UserManagementView.xaml;
 
 False
 
