@@ -14,4 +14,5 @@ public class UserProfileDto
     public string Role { get; set; } = string.Empty;      // admin, operator, equipment specialist, quality control officer
     public int WorkshopId { get; set; }
     public string PersonnelNumber { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }

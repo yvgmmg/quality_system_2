@@ -1,0 +1,5 @@
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\CodexCheck\Debug\net8.0-windows\QualityControlSystem.Infrastructure.csproj.AssemblyReference.cache
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\CodexCheck\Debug\net8.0-windows\QualityControlSystem.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\CodexCheck\Debug\net8.0-windows\QualityControlSystem.Infrastructure.AssemblyInfoInputs.cache
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\CodexCheck\Debug\net8.0-windows\QualityControlSystem.Infrastructure.AssemblyInfo.cs
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\CodexCheck\Debug\net8.0-windows\QualityControlSystem.Infrastructure.csproj.CoreCompileInputs.cache

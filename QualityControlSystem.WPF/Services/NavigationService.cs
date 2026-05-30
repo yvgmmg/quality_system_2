@@ -38,12 +38,6 @@ namespace QualityControlSystem.WPF.Services
             if (view != null)
                 SetView(view);
         }
-
-        public void GoBack()
-        {
-            // Для простоты пока не реализуем историю
-        }
-
         private void SetView(UserControl view)
         {
             if (_mainViewModel != null)

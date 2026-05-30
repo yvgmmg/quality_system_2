@@ -17,6 +17,7 @@ namespace QualityControlSystem.WPF
     public partial class App : Application
     {
         public static IHost? AppHost { get; private set; }
+        private bool _isHandlingFatalException;
 
         public App()
         {
@@ -32,7 +33,11 @@ namespace QualityControlSystem.WPF
                     {
                         services.AddSingleton<IConfiguration>(context.Configuration);
 
-                        var connectionString = context.Configuration.GetConnectionString("Database:ConnectionString");
+                        var connectionString = context.Configuration["Database:ConnectionString"];
+                        if (string.IsNullOrWhiteSpace(connectionString))
+                        {
+                            throw new InvalidOperationException("Database connection string is missing. Check appsettings.json.");
+                        }
                         services.AddDbContext<AppDbContext>(options =>
                             options.UseNpgsql(connectionString));
 
@@ -49,14 +54,14 @@ namespace QualityControlSystem.WPF
                         //ViewModel
                         services.AddTransient<MainViewModel>();
                         services.AddTransient<LoginViewModel>();
-                        services.AddTransient<DashboardViewModel>();
                         services.AddTransient<ProfileViewModel>();
+                        services.AddTransient<UserManagementViewModel>();
 
                         //View
                         services.AddTransient<LoginView>();
-                        services.AddTransient<DashboardView>();
                         services.AddSingleton<MainWindow>();
                         services.AddTransient<ProfileView>();
+                        services.AddTransient<UserManagementView>();
                     })
                     .Build();
             }
@@ -69,14 +74,25 @@ namespace QualityControlSystem.WPF
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var ex = args.ExceptionObject as Exception;
-                Console.WriteLine($"Unhandled: {ex?.Message}\n{ex?.StackTrace}");
-                Environment.Exit(1);
+                MessageBox.Show($"Unhandled: {ex?.Message}\n{ex?.StackTrace}",
+                                "Фатальная ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+
             };
 
             DispatcherUnhandledException += (sender, args) =>
             {
-                Console.WriteLine($"Dispatcher: {args.Exception.Message}\n{args.Exception.StackTrace}");
+                if (_isHandlingFatalException)
+                {
+                    args.Handled = false;
+                    Shutdown(1);
+                    return;
+                }
+
+                _isHandlingFatalException = true;
+                MessageBox.Show($"Ошибка: {args.Exception.Message}\n{args.Exception.StackTrace}",
+                                "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 args.Handled = false;
+                Shutdown(1);
             };
         }
 

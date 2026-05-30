@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using QualityControlSystem.WPF.ViewModels;
 
 namespace QualityControlSystem.WPF.Views
 {
@@ -20,9 +21,10 @@ namespace QualityControlSystem.WPF.Views
     /// </summary>
     public partial class UserManagementView : UserControl
     {
-        public UserManagementView()
+        public UserManagementView(UserManagementViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
     }
 }

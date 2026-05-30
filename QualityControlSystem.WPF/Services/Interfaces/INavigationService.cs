@@ -9,7 +9,5 @@ namespace QualityControlSystem.WPF.Services.Interfaces
         void Initialize(MainWindow mainWindow);
         void NavigateTo<TView>() where TView : UserControl;
         void NavigateTo(Type viewType);
-        void GoBack();
-        event Action<UserControl>? CurrentViewChanged;
     }
 }

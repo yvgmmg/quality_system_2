@@ -1,6 +1,7 @@
-﻿using QualityControlSystem.WPF.Services.Interfaces;
 using System.Windows;
 using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Views;
 
 namespace QualityControlSystem.WPF.Services
 {
@@ -19,14 +20,12 @@ namespace QualityControlSystem.WPF.Services
 
         public bool ShowUserDialog(UserProfileDto user, bool isEdit)
         {
-            // Простая заглушка: отображаем сообщение и считаем, что пользователь подтвердил ввод.
-            // В реальном приложении здесь будет открыто окно редактирования/добавления пользователя.
-            var title = isEdit ? "Редактировать пользователя" : "Новый пользователь";
-            var msg = isEdit
-                ? $"Редактировать данные пользователя: {user.Surname} {user.Name}?"
-                : "Создать нового пользователя";
-            MessageBox.Show(msg, title, MessageBoxButton.OK, MessageBoxImage.Information);
-            return true; // Предполагаем, что пользователь нажал OK.
+            var dialog = new UserEditDialog(user, isEdit)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            return dialog.ShowDialog() == true;
         }
     }
 }

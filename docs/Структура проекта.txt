@@ -111,3 +111,5 @@ QualityControlSystem.sln
         ├── SensorRepository.cs              ← новый
         ├── NotificationRepository.cs        ← новый
         └── UserRepository.cs                ← новый
+
+$2a$10$UNZEjFJh22GWWHV5bL2Oa./VO4gfG8ncx7yIwQ3oTRIZegNR1kyr6

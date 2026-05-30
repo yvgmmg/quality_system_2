@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\App.xaml
-5705988220
+61677026009
 
-33-1024255640
+34-1472107246
 256194124908
-MainWindow.xaml;Views\DashboardView.xaml;Views\LoginView.xaml;Views\ProfileView.xaml;Views\UserManagementView.xaml;
+MainWindow.xaml;Views\DashboardView.xaml;Views\LoginView.xaml;Views\ProfileView.xaml;Views\UserEditDialog.xaml;Views\UserManagementView.xaml;
 
 False
 

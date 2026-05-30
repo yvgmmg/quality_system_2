@@ -5,6 +5,7 @@ using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 using QualityControlSystem.WPF.Views;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace QualityControlSystem.WPF.ViewModels
@@ -22,6 +23,12 @@ namespace QualityControlSystem.WPF.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<MenuItemViewModel> _menuItems = new();
+
+        [ObservableProperty]
+        private GridLength _navigationColumnWidth = new(0);
+
+        [ObservableProperty]
+        private Visibility _navigationVisibility = Visibility.Collapsed;
 
         public MainViewModel(INavigationService navigationService, IAuthService authService)
         {
@@ -42,11 +49,15 @@ namespace QualityControlSystem.WPF.ViewModels
             if (_authService.CurrentUser != null)
             {
                 CurrentUserName = $"{_authService.CurrentUser.Surname} {_authService.CurrentUser.Name} {_authService.CurrentUser.Patron}".Trim();
+                NavigationColumnWidth = new GridLength(220);
+                NavigationVisibility = Visibility.Visible;
                 BuildMenu();
             }
             else
             {
                 CurrentUserName = string.Empty;
+                NavigationColumnWidth = new GridLength(0);
+                NavigationVisibility = Visibility.Collapsed;
                 MenuItems.Clear();
             }
         }

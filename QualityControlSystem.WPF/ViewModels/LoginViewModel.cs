@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
-using QualityControlSystem.WPF.Views;   // для DashboardView
+using QualityControlSystem.WPF.Views;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
@@ -37,17 +37,27 @@ namespace QualityControlSystem.WPF.ViewModels
             IsBusy = true;
             ErrorMessage = string.Empty;
 
-            var success = await _authService.LoginAsync(Login, Password);
-            if (success)
+            try
             {
-                _navigationService.NavigateTo<DashboardView>();
+                var success = await _authService.LoginAsync(Login, Password);
+                if (success)
+                {
+                    _navigationService.NavigateTo<ProfileView>();
+                }
+                else
+                {
+                    ErrorMessage = "Неверный логин или пароль.";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                ErrorMessage = "Неверный логин или пароль.";
+                ErrorMessage = $"Ошибка: {ex.Message}";
+                // при необходимости логируйте ex
             }
-
-            IsBusy = false;
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         private bool CanLogin() => !IsBusy && !string.IsNullOrWhiteSpace(Login) && !string.IsNullOrWhiteSpace(Password);

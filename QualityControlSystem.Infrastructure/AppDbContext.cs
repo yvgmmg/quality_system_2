@@ -1,12 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QualityControlSystem.Infrastructure.Entities;
+using QualityControlSystem.Infrastructure.Enums;
 
 namespace QualityControlSystem.Infrastructure;
 
 public partial class AppDbContext : DbContext
 {
+    private static readonly ValueConverter<UserRole, string> UserRoleConverter = new(
+        role => ToDatabaseRole(role),
+        value => FromDatabaseRole(value));
+
+    private static string ToDatabaseRole(UserRole role) => role switch
+    {
+        UserRole.Admin => "admin",
+        UserRole.Operator => "operator",
+        UserRole.EquipmentSpecialist => "equipment specialist",
+        UserRole.QualityControlOfficer => "quality control officer",
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null)
+    };
+
+    private static UserRole FromDatabaseRole(string value) => value switch
+    {
+        "admin" => UserRole.Admin,
+        "operator" => UserRole.Operator,
+        "equipment specialist" => UserRole.EquipmentSpecialist,
+        "quality control officer" => UserRole.QualityControlOfficer,
+        _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+    };
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -317,7 +340,7 @@ public partial class AppDbContext : DbContext
         {
             entity.HasKey(e => e.UserProfileId).HasName("user_profile_pk");
 
-            entity.Property(e => e.Role).HasConversion<string>();
+            entity.Property(e => e.Role).HasConversion(UserRoleConverter);
 
             entity.HasOne(d => d.Workshop).WithMany(p => p.UserProfiles).HasConstraintName("user_profile_workshop_fk");
         });
