@@ -119,10 +119,6 @@
       "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\equipmentinspectionformparam.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\entities\\param.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\param.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\entities\\regulatoryinfromationproductionequipment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\regulatoryinfromationproductionequipment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -227,7 +223,7 @@
               "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\AuthService.cs",
               "ToolTip": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\Services\\AuthService.cs",
               "RelativeToolTip": "QualityControlSystem.WPF\\Services\\AuthService.cs",
-              "ViewState": "AgIAABYAAAAAAAAAAAAowCUAAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAABYAAAAAAAAAAAAowCkAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-30T01:59:11.764Z",
               "EditorCaption": ""
@@ -493,18 +489,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 29,
-              "Title": "Param.cs",
-              "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\Param.cs",
-              "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\Param.cs",
-              "ToolTip": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\Param.cs",
-              "RelativeToolTip": "QualityControlSystem.Infrastructure\\Entities\\Param.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-29T22:24:24.253Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
               "Title": "RegulatoryInfromationProductionEquipment.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\RegulatoryInfromationProductionEquipment.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\RegulatoryInfromationProductionEquipment.cs",
@@ -516,7 +500,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 30,
               "Title": "UserProfileAccessRight.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\UserProfileAccessRight.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\UserProfileAccessRight.cs",
@@ -528,7 +512,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 32,
               "Title": "Microsoft.NET.Sdk.DefaultItems.targets",
               "DocumentMoniker": "C:\\Program Files\\dotnet\\sdk\\9.0.314\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
               "ToolTip": "C:\\Program Files\\dotnet\\sdk\\9.0.314\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
@@ -538,7 +522,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 31,
               "Title": "Workshop.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\Workshop.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\Workshop.cs",

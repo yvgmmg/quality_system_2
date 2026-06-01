@@ -21,20 +21,19 @@ public partial class Sensor
     [StringLength(255)]
     public string Name { get; set; } = null!;
 
-    [Column("mesurement")]
-    [StringLength(20)]
-    public string Mesurement { get; set; } = null!;
+    [Column("measurement")]
+    public Enums.MeasurementUnit Measurement { get; set; }
 
     [Column("workshop_id")]
-    public int? WorkshopId { get; set; }
+    public int WorkshopId { get; set; }
 
-    [Column("sensor_type_id", TypeName = "character varying")]
-    public string? SensorTypeId { get; set; }
+    [Column("sensor_type_id")]
+    public Enums.Source SensorTypeId { get; set; }
 
     [InverseProperty("Sensor")]
     public virtual ICollection<SensorReading> SensorReadings { get; set; } = new List<SensorReading>();
 
     [ForeignKey("WorkshopId")]
     [InverseProperty("Sensors")]
-    public virtual Workshop? Workshop { get; set; }
+    public virtual Workshop Workshop { get; set; } = null!;
 }

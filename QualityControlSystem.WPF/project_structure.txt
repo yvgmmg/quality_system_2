@@ -1,0 +1,99 @@
+﻿QualityControlSystem.WPF
+├── QualityControlSystem.Infrastructure
+│   ├── Entities
+│   │   ├── Batch.cs
+│   │   ├── Camera.cs
+│   │   ├── CameraFrame.cs
+│   │   ├── EquipmentInspectionForm.cs
+│   │   ├── EquipmentInspectionFormParam.cs
+│   │   ├── EquipmentInspectionFormProductionEquipment.cs
+│   │   ├── Frame.cs
+│   │   ├── FrameTestForm.cs
+│   │   ├── FrameTestFormFrame.cs
+│   │   ├── FrameTestFormParam.cs
+│   │   ├── Instruction.cs
+│   │   ├── InstructionProductionEquipment.cs
+│   │   ├── InstructionProductionOrder.cs
+│   │   ├── Material.cs
+│   │   ├── Notification.cs
+│   │   ├── Param.cs
+│   │   ├── ProductionEquipment.cs
+│   │   ├── ProductionOrder.cs
+│   │   ├── RegilatoryInformationInstruction.cs
+│   │   ├── RegulatoryInformation.cs
+│   │   ├── RegulatoryInfromationProductionEquipment.cs
+│   │   ├── RequisitionInvoice.cs
+│   │   ├── Sensor.cs
+│   │   ├── SensorReading.cs
+│   │   ├── UserProfile.cs
+│   │   ├── Workshop.cs
+│   │   └── WorkshopProductionOrder.cs
+│   ├── Enums
+│   │   ├── FrameResult.cs
+│   │   ├── InspectionResult.cs
+│   │   ├── MeasurementUnit.cs
+│   │   ├── Severity.cs
+│   │   ├── Source.cs
+│   │   ├── TestEnum.cs
+│   │   ├── TestResult.cs
+│   │   └── UserRole.cs
+│   ├── Repositories
+│   │   ├── Interfaces
+│   │   │   ├── IRepository.cs
+│   │   │   └── IUserRepository.cs
+│   │   ├── Repository.cs
+│   │   └── UserRepository.cs
+│   ├── AppDbContext.cs
+│   └── QualityControlSystem.Infrastructure.csproj
+├── QualityControlSystem.WPF
+│   ├── Models
+│   │   ├── AnalysisResultDto.cs
+│   │   ├── DeviceStatusDto.cs
+│   │   └── UserProfileDto.cs
+│   ├── Services
+│   │   ├── Interfaces
+│   │   │   ├── IApiClientService.cs
+│   │   │   ├── IAuthService.cs
+│   │   │   ├── IDialogService.cs
+│   │   │   ├── IEdgeDeviceService.cs
+│   │   │   ├── INavigationService.cs
+│   │   │   ├── INotificationService.cs
+│   │   │   └── IUserManagementService.cs
+│   │   ├── ApiClientService.cs
+│   │   ├── AuthService.cs
+│   │   ├── DialogService.cs
+│   │   ├── EdgeDeviceService.cs
+│   │   ├── NavigationService.cs
+│   │   ├── NotificationService.cs
+│   │   └── UserManagementService.cs
+│   ├── ViewModels
+│   │   ├── Base
+│   │   │   └── BaseViewModel.cs
+│   │   ├── DashboardViewModel.cs
+│   │   ├── LoginViewModel.cs
+│   │   ├── MainViewModel.cs
+│   │   ├── ProfileViewModel.cs
+│   │   └── UserManagementViewModel.cs
+│   ├── Views
+│   │   ├── DashboardView.xaml
+│   │   ├── DashboardView.xaml.cs
+│   │   ├── LoginView.xaml
+│   │   ├── LoginView.xaml.cs
+│   │   ├── ProfileView.xaml
+│   │   ├── ProfileView.xaml.cs
+│   │   ├── UserEditDialog.xaml
+│   │   ├── UserEditDialog.xaml.cs
+│   │   ├── UserManagementView.xaml
+│   │   └── UserManagementView.xaml.cs
+│   ├── App.xaml
+│   ├── App.xaml.cs
+│   ├── appsettings.json
+│   ├── AssemblyInfo.cs
+│   ├── MainWindow.xaml
+│   ├── MainWindow.xaml.cs
+│   ├── project_structure.txt
+│   ├── QualityControlSystem.WPF.csproj
+│   ├── QualityControlSystem.WPF.csproj.Backup.tmp
+│   └── QualityControlSystem.WPF.csproj.user
+├── nuget.config
+└── QualityControlSystem.WPF.sln

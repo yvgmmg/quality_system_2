@@ -40,7 +40,10 @@ public partial class RegulatoryInformation
     public DateOnly? EndDate { get; set; }
 
     [InverseProperty("RegulatoryInformation")]
-    public virtual ICollection<RegilatoryInformationInstruction> RegilatoryInformationInstructions { get; set; } = new List<RegilatoryInformationInstruction>();
+    public virtual ICollection<RegulatoryInformationInstruction> RegulatoryInformationInstructions { get; set; } = new List<RegulatoryInformationInstruction>();
+
+    [InverseProperty("RegulatoryInformation")]
+    public virtual ICollection<ParameterResult> ParameterResults { get; set; } = new List<ParameterResult>();
 
     [InverseProperty("RegulatoryInformation")]
     public virtual ICollection<RegulatoryInfromationProductionEquipment> RegulatoryInfromationProductionEquipments { get; set; } = new List<RegulatoryInfromationProductionEquipment>();

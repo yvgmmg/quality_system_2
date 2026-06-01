@@ -16,14 +16,14 @@ public partial class EquipmentInspectionFormParam
     [Column("equipment_inspection_form_id")]
     public int? EquipmentInspectionFormId { get; set; }
 
-    [Column("params_id")]
-    public int? ParamsId { get; set; }
+    [Column("parameter_result_id")]
+    public int? ParameterResultId { get; set; }
 
     [ForeignKey("EquipmentInspectionFormId")]
     [InverseProperty("EquipmentInspectionFormParams")]
     public virtual EquipmentInspectionForm? EquipmentInspectionForm { get; set; }
 
-    [ForeignKey("ParamsId")]
+    [ForeignKey("ParameterResultId")]
     [InverseProperty("EquipmentInspectionFormParams")]
-    public virtual Param? Params { get; set; }
+    public virtual ParameterResult? ParameterResult { get; set; }
 }

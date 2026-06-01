@@ -36,8 +36,6 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public virtual DbSet<AccessRight> AccessRights { get; set; }
-
     public virtual DbSet<Batch> Batches { get; set; }
 
     public virtual DbSet<Camera> Cameras { get; set; }
@@ -68,13 +66,13 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
-    public virtual DbSet<Param> Params { get; set; }
+    public virtual DbSet<ParameterResult> ParameterResults { get; set; }
 
     public virtual DbSet<ProductionEquipment> ProductionEquipments { get; set; }
 
     public virtual DbSet<ProductionOrder> ProductionOrders { get; set; }
 
-    public virtual DbSet<RegilatoryInformationInstruction> RegilatoryInformationInstructions { get; set; }
+    public virtual DbSet<RegulatoryInformationInstruction> RegulatoryInformationInstructions { get; set; }
 
     public virtual DbSet<RegulatoryInformation> RegulatoryInformations { get; set; }
 
@@ -82,20 +80,17 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<RequisitionInvoice> RequisitionInvoices { get; set; }
 
+    public virtual DbSet<RequisitionInvoiceItem> RequisitionInvoiceItems { get; set; }
+
     public virtual DbSet<Sensor> Sensors { get; set; }
 
     public virtual DbSet<SensorReading> SensorReadings { get; set; }
 
     public virtual DbSet<UserProfile> UserProfiles { get; set; }
 
-    public virtual DbSet<UserProfileAccessRight> UserProfileAccessRights { get; set; }
-
     public virtual DbSet<Workshop> Workshops { get; set; }
 
     public virtual DbSet<WorkshopProductionOrder> WorkshopProductionOrders { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=localhost;Database=quality_system;Username=postgres;Password=1234");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -107,11 +102,6 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("severity", new[] { "warning", "critical" })
             .HasPostgresEnum("source", new[] { "equipment", "frame" })
             .HasPostgresEnum("test_result", new[] { "ok", "defective" });
-
-        modelBuilder.Entity<AccessRight>(entity =>
-        {
-            entity.HasKey(e => e.AccessRightId).HasName("access_rights_pk");
-        });
 
         modelBuilder.Entity<Batch>(entity =>
         {
@@ -153,7 +143,9 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.EquipmentInspectionForm).WithMany(p => p.EquipmentInspectionFormParams).HasConstraintName("equipment_inspection_form_params_equipment_inspection_form_fk");
 
-            entity.HasOne(d => d.Params).WithMany(p => p.EquipmentInspectionFormParams).HasConstraintName("equipment_inspection_form_params_params_fk");
+            entity.HasOne(d => d.ParameterResult).WithMany(p => p.EquipmentInspectionFormParams)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("equipment_inspection_form_params_parameter_result_fk");
         });
 
         modelBuilder.Entity<EquipmentInspectionFormProductionEquipment>(entity =>
@@ -200,7 +192,9 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.FrameTestForm).WithMany(p => p.FrameTestFormParams).HasConstraintName("frame_test_form_params_frame_test_form_fk");
 
-            entity.HasOne(d => d.Params).WithMany(p => p.FrameTestFormParams).HasConstraintName("frame_test_form_params_params_fk");
+            entity.HasOne(d => d.ParameterResult).WithMany(p => p.FrameTestFormParams)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("frame_test_form_params_parameter_result_fk");
         });
 
         modelBuilder.Entity<Instruction>(entity =>
@@ -229,6 +223,8 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.InstructionProductionOrderId).HasDefaultValueSql("nextval('instruction_production_order_instruction_production_order_i_seq'::regclass)");
 
+            entity.HasIndex(e => new { e.InstructionId, e.ProductionOrderId }, "instruction_production_order_unique").IsUnique();
+
             entity.HasOne(d => d.Instruction).WithMany(p => p.InstructionProductionOrders).HasConstraintName("instruction_production_order_instruction_fk");
 
             entity.HasOne(d => d.ProductionOrder).WithMany(p => p.InstructionProductionOrders).HasConstraintName("instruction_production_order_production_order_fk");
@@ -237,8 +233,6 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<Material>(entity =>
         {
             entity.HasKey(e => e.MaterialId).HasName("material_pk");
-
-            entity.HasOne(d => d.RequisitionInvoice).WithMany(p => p.Materials).HasConstraintName("material_requisition_invoice_fk");
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -256,9 +250,15 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.UserProfile).WithMany(p => p.Notifications).HasConstraintName("notification_user_profile_fk");
         });
 
-        modelBuilder.Entity<Param>(entity =>
+        modelBuilder.Entity<ParameterResult>(entity =>
         {
-            entity.HasKey(e => e.ParamsId).HasName("params_pk");
+            entity.HasKey(e => e.ParameterResultId).HasName("params_pk");
+
+            entity.Property(e => e.ParameterResultId).HasDefaultValueSql("nextval('params_params_id_seq'::regclass)");
+
+            entity.HasOne(d => d.RegulatoryInformation).WithMany(p => p.ParameterResults)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("parameter_result_regulatory_information_fk");
         });
 
         modelBuilder.Entity<ProductionEquipment>(entity =>
@@ -273,15 +273,15 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.ProductionOrderId).HasName("production_order_pk");
         });
 
-        modelBuilder.Entity<RegilatoryInformationInstruction>(entity =>
+        modelBuilder.Entity<RegulatoryInformationInstruction>(entity =>
         {
             entity.HasKey(e => e.RegulatoryInformationInstructionId).HasName("regilatory_information_instruction_pk");
 
             entity.Property(e => e.RegulatoryInformationInstructionId).HasDefaultValueSql("nextval('regilatory_information_instru_regilatory_information_instru_seq'::regclass)");
 
-            entity.HasOne(d => d.Instruction).WithMany(p => p.RegilatoryInformationInstructions).HasConstraintName("regilatory_information_instruction_instruction_fk");
+            entity.HasOne(d => d.Instruction).WithMany(p => p.RegulatoryInformationInstructions).HasConstraintName("regilatory_information_instruction_instruction_fk");
 
-            entity.HasOne(d => d.RegulatoryInformation).WithMany(p => p.RegilatoryInformationInstructions).HasConstraintName("regilatory_information_instruction_regulatory_information_fk");
+            entity.HasOne(d => d.RegulatoryInformation).WithMany(p => p.RegulatoryInformationInstructions).HasConstraintName("regilatory_information_instruction_regulatory_information_fk");
         });
 
         modelBuilder.Entity<RegulatoryInformation>(entity =>
@@ -307,11 +307,24 @@ public partial class AppDbContext : DbContext
         {
             entity.HasKey(e => e.RequisitionInvoiceId).HasName("requisition_invoice_pk");
 
-            entity.Property(e => e.RequisitionInvoiceId).HasDefaultValueSql("nextval('frame_test_form_params_frame_test_form_params_id_seq'::regclass)");
-
             entity.HasOne(d => d.ProductionOrder).WithMany(p => p.RequisitionInvoices)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("requisition_invoice_production_order_fk");
+        });
+
+        modelBuilder.Entity<RequisitionInvoiceItem>(entity =>
+        {
+            entity.HasKey(e => e.RequisitionInvoiceItemId).HasName("requisition_invoice_item_pk");
+
+            entity.HasIndex(e => new { e.RequisitionInvoiceId, e.MaterialId }, "requisition_invoice_item_unique").IsUnique();
+
+            entity.HasOne(d => d.Material).WithMany(p => p.RequisitionInvoiceItems)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("requisition_invoice_item_material_fk");
+
+            entity.HasOne(d => d.RequisitionInvoice).WithMany(p => p.RequisitionInvoiceItems)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("requisition_invoice_item_requisition_invoice_fk");
         });
 
         modelBuilder.Entity<Sensor>(entity =>
@@ -343,17 +356,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Role).HasConversion(UserRoleConverter);
 
             entity.HasOne(d => d.Workshop).WithMany(p => p.UserProfiles).HasConstraintName("user_profile_workshop_fk");
-        });
-
-        modelBuilder.Entity<UserProfileAccessRight>(entity =>
-        {
-            entity.HasKey(e => e.UserProfileAccessRightsId).HasName("user_profile_access_rights_pk");
-
-            entity.HasOne(d => d.AccessRight).WithMany(p => p.UserProfileAccessRights)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("user_profile_access_rights_access_rights_fk");
-
-            entity.HasOne(d => d.UserProfile).WithMany(p => p.UserProfileAccessRights).HasConstraintName("user_profile_access_rights_user_profile_fk");
         });
 
         modelBuilder.Entity<Workshop>(entity =>

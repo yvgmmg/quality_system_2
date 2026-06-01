@@ -34,5 +34,5 @@ public partial class Instruction
     public virtual ICollection<InstructionProductionOrder> InstructionProductionOrders { get; set; } = new List<InstructionProductionOrder>();
 
     [InverseProperty("Instruction")]
-    public virtual ICollection<RegilatoryInformationInstruction> RegilatoryInformationInstructions { get; set; } = new List<RegilatoryInformationInstruction>();
+    public virtual ICollection<RegulatoryInformationInstruction> RegulatoryInformationInstructions { get; set; } = new List<RegulatoryInformationInstruction>();
 }

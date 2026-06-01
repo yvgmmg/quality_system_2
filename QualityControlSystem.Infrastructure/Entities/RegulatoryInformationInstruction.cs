@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace QualityControlSystem.Infrastructure.Entities;
 
-[Table("regilatory_information_instruction")]
-public partial class RegilatoryInformationInstruction
+[Table("regulatory_information_instruction")]
+public partial class RegulatoryInformationInstruction
 {
     [Key]
     [Column("regulatory_information_instruction_id")]
@@ -20,10 +18,10 @@ public partial class RegilatoryInformationInstruction
     public int? InstructionId { get; set; }
 
     [ForeignKey("InstructionId")]
-    [InverseProperty("RegilatoryInformationInstructions")]
+    [InverseProperty("RegulatoryInformationInstructions")]
     public virtual Instruction? Instruction { get; set; }
 
     [ForeignKey("RegulatoryInformationId")]
-    [InverseProperty("RegilatoryInformationInstructions")]
+    [InverseProperty("RegulatoryInformationInstructions")]
     public virtual RegulatoryInformation? RegulatoryInformation { get; set; }
 }

@@ -132,7 +132,7 @@ namespace QualityControlSystem.WPF.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/QualityControlSystem.WPF;V1.0.0.0;component/views/usereditdialog.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/QualityControlSystem.WPF;component/views/usereditdialog.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\UserEditDialog.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

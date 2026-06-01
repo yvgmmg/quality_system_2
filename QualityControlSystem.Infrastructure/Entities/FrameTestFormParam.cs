@@ -12,8 +12,8 @@ public partial class FrameTestFormParam
     [Column("frame_test_form_id")]
     public int? FrameTestFormId { get; set; }
 
-    [Column("params_id")]
-    public int? ParamsId { get; set; }
+    [Column("parameter_result_id")]
+    public int? ParameterResultId { get; set; }
 
     [Key]
     [Column("frame_test_form_params_id")]
@@ -23,7 +23,7 @@ public partial class FrameTestFormParam
     [InverseProperty("FrameTestFormParams")]
     public virtual FrameTestForm? FrameTestForm { get; set; }
 
-    [ForeignKey("ParamsId")]
+    [ForeignKey("ParameterResultId")]
     [InverseProperty("FrameTestFormParams")]
-    public virtual Param? Params { get; set; }
+    public virtual ParameterResult? ParameterResult { get; set; }
 }

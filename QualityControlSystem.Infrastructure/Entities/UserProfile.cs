@@ -45,9 +45,6 @@ public partial class UserProfile
     [InverseProperty("UserProfile")]
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
-    [InverseProperty("UserProfile")]
-    public virtual ICollection<UserProfileAccessRight> UserProfileAccessRights { get; set; } = new List<UserProfileAccessRight>();
-
     [ForeignKey("WorkshopId")]
     [InverseProperty("UserProfiles")]
     public virtual Workshop Workshop { get; set; } = null!;

@@ -33,7 +33,7 @@ namespace QualityControlSystem.WPF
                     {
                         services.AddSingleton<IConfiguration>(context.Configuration);
 
-                        var connectionString = context.Configuration["Database:ConnectionString"];
+                        var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
                         if (string.IsNullOrWhiteSpace(connectionString))
                         {
                             throw new InvalidOperationException("Database connection string is missing. Check appsettings.json.");
