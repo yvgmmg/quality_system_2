@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using QualityControlSystem.WPF.Models;
 
 namespace QualityControlSystem.WPF.Views
@@ -20,7 +21,7 @@ namespace QualityControlSystem.WPF.Views
             PatronTextBox.Text = _user.Patron;
             PersonnelNumberTextBox.Text = _user.PersonnelNumber;
             RoleComboBox.SelectedValue = string.IsNullOrWhiteSpace(_user.Role) ? "Operator" : _user.Role;
-            WorkshopIdTextBox.Text = _user.WorkshopId > 0 ? _user.WorkshopId.ToString() : string.Empty;
+            WorkshopNumberInput.Text = _user.WorkshopNumber > 0 ? _user.WorkshopNumber.ToString() : string.Empty;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -41,17 +42,9 @@ namespace QualityControlSystem.WPF.Views
                 return;
             }
 
-            if (!int.TryParse(WorkshopIdTextBox.Text, out var workshopId) || workshopId <= 0)
+            if (!int.TryParse(WorkshopNumberInput.Text, out var workshopNumber) || workshopNumber <= 0)
             {
-                MessageBox.Show("ID цеха должен быть положительным числом.", "Проверка данных",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // Проверяем, существует ли цех с указанным ID
-            if (!WorkshopExists(workshopId))
-            {
-                MessageBox.Show($"Цех с ID {workshopId} не найден.", "Проверка данных",
+                MessageBox.Show("Номер цеха должен быть положительным числом.", "Проверка данных",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -61,23 +54,12 @@ namespace QualityControlSystem.WPF.Views
             _user.Patron = string.IsNullOrWhiteSpace(PatronTextBox.Text) ? null : PatronTextBox.Text.Trim();
             _user.PersonnelNumber = PersonnelNumberTextBox.Text.Trim();
             _user.Role = role;
-            _user.WorkshopId = workshopId;
+            _user.WorkshopNumber = workshopNumber;
             _user.Password = PasswordBox.Password;
 
             DialogResult = true;
         }
 
-        private bool WorkshopExists(int workshopId)
-        {
-            try
-            {
-                using var dbContext = new QualityControlSystem.Infrastructure.AppDbContext(new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<QualityControlSystem.Infrastructure.AppDbContext>().Options);
-                return dbContext.Workshops.Any(w => w.WorkshopId == workshopId);
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        private TextBox WorkshopNumberInput => (TextBox)FindName("WorkshopNumberTextBox");
     }
 }

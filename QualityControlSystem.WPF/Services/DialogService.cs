@@ -27,5 +27,15 @@ namespace QualityControlSystem.WPF.Services
 
             return dialog.ShowDialog() == true;
         }
+
+        public bool ShowRegulatoryInformationDialog(RegulatoryInformationDto item, bool isEdit)
+        {
+            var dialog = new RegulatoryInformationEditDialog(item, isEdit)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            return dialog.ShowDialog() == true;
+        }
     }
 }

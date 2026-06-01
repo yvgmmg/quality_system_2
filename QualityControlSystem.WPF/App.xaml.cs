@@ -50,18 +50,21 @@ namespace QualityControlSystem.WPF
                         services.AddSingleton<IAuthService, AuthService>();
                         services.AddSingleton<INavigationService, NavigationService>();
                         services.AddScoped<IUserManagementService, UserManagementService>();
+                        services.AddScoped<IRegulatoryInformationService, RegulatoryInformationService>();
 
                         //ViewModel
                         services.AddTransient<MainViewModel>();
                         services.AddTransient<LoginViewModel>();
                         services.AddTransient<ProfileViewModel>();
                         services.AddTransient<UserManagementViewModel>();
+                        services.AddTransient<RegulatoryInformationViewModel>();
 
                         //View
                         services.AddTransient<LoginView>();
                         services.AddSingleton<MainWindow>();
                         services.AddTransient<ProfileView>();
                         services.AddTransient<UserManagementView>();
+                        services.AddTransient<RegulatoryInformationView>();
                     })
                     .Build();
             }

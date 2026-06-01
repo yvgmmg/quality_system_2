@@ -30,7 +30,9 @@ namespace QualityControlSystem.WPF.Services
 
         public async Task<IEnumerable<UserProfileDto>> GetAllUsersAsync()
         {
-            var users = await _userRepository.GetAllAsync();
+            var users = await _dbContext.UserProfiles
+                .Include(u => u.Workshop)
+                .ToListAsync();
             return users.Select(u => new UserProfileDto
             {
                 Id = u.UserProfileId,
@@ -39,6 +41,7 @@ namespace QualityControlSystem.WPF.Services
                 Patron = u.Patron,
                 Role = u.Role.ToString(),
                 WorkshopId = u.WorkshopId,
+                WorkshopNumber = u.Workshop.Number,
                 PersonnelNumber = u.PersonnelNumber
             });
         }
@@ -56,6 +59,7 @@ namespace QualityControlSystem.WPF.Services
                 Patron = u.Patron,
                 Role = u.Role.ToString(),
                 WorkshopId = u.WorkshopId,
+                WorkshopNumber = await GetWorkshopNumberAsync(u.WorkshopId),
                 PersonnelNumber = u.PersonnelNumber
             };
         }
@@ -65,6 +69,7 @@ namespace QualityControlSystem.WPF.Services
             await ValidateUserAsync(user);
 
             var role = ToDatabaseRole(user.Role);
+            user.WorkshopId = await GetWorkshopIdByNumberAsync(user.WorkshopNumber);
             // Use provided password if not empty, otherwise fallback to defaultPassword
             var passwordToHash = string.IsNullOrWhiteSpace(user.Password) ? defaultPassword : user.Password;
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(passwordToHash);
@@ -86,6 +91,7 @@ namespace QualityControlSystem.WPF.Services
             if (existing == null) return false;
 
             var role = ToDatabaseRole(user.Role);
+            user.WorkshopId = await GetWorkshopIdByNumberAsync(user.WorkshopNumber);
             // Determine password hash: if a new password is provided, hash it; otherwise keep existing hash
             var passwordHash = !string.IsNullOrWhiteSpace(user.Password)
                 ? BCrypt.Net.BCrypt.HashPassword(user.Password)
@@ -131,9 +137,32 @@ namespace QualityControlSystem.WPF.Services
             if (!Enum.TryParse<UserRole>(user.Role, out _))
                 throw new InvalidOperationException("Выбрана некорректная роль пользователя.");
 
-            var workshopExists = await _dbContext.Workshops.AnyAsync(w => w.WorkshopId == user.WorkshopId);
+            if (user.WorkshopNumber <= 0)
+                throw new InvalidOperationException("Номер цеха должен быть положительным числом.");
+
+            var workshopExists = await _dbContext.Workshops.AnyAsync(w => w.Number == user.WorkshopNumber);
             if (!workshopExists)
-                throw new InvalidOperationException($"Цех с ID {user.WorkshopId} не найден.");
+                throw new InvalidOperationException($"Цех с номером {user.WorkshopNumber} не найден.");
+        }
+
+        private async Task<int> GetWorkshopIdByNumberAsync(int workshopNumber)
+        {
+            var workshop = await _dbContext.Workshops
+                .AsNoTracking()
+                .FirstOrDefaultAsync(w => w.Number == workshopNumber);
+
+            if (workshop == null)
+                throw new InvalidOperationException($"Цех с номером {workshopNumber} не найден.");
+
+            return workshop.WorkshopId;
+        }
+
+        private async Task<int> GetWorkshopNumberAsync(int workshopId)
+        {
+            return await _dbContext.Workshops
+                .Where(w => w.WorkshopId == workshopId)
+                .Select(w => w.Number)
+                .FirstOrDefaultAsync();
         }
 
         private static bool IsValidPersonName(string? value)

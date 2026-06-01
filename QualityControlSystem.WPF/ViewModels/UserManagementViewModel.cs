@@ -98,6 +98,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 Patron = SelectedUser.Patron,
                 Role = SelectedUser.Role,
                 WorkshopId = SelectedUser.WorkshopId,
+                WorkshopNumber = SelectedUser.WorkshopNumber,
                 PersonnelNumber = SelectedUser.PersonnelNumber
             };
 

@@ -30,7 +30,7 @@ namespace QualityControlSystem.WPF.ViewModels
             _navigationService = navigationService;
         }
 
-        [RelayCommand]  // убрали CanExecute = nameof(CanLogin)
+        [RelayCommand]
         private async Task LoginAsync()
         {
             if (IsBusy) return;
@@ -52,7 +52,6 @@ namespace QualityControlSystem.WPF.ViewModels
             catch (Exception ex)
             {
                 ErrorMessage = $"Ошибка: {ex.Message}";
-                // при необходимости логируйте ex
             }
             finally
             {

@@ -23,7 +23,7 @@
                 <DataGridTextColumn Header="Отчество" Binding="{Binding Patron}" Width="100"/>
                 <DataGridTextColumn Header="Табельный номер" Binding="{Binding PersonnelNumber}" Width="120"/>
                 <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="150"/>
-                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopId}" Width="60"/>
+                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopNumber}" Width="60"/>
             </DataGrid.Columns>
         </DataGrid>
 

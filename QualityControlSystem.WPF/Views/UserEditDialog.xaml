@@ -50,8 +50,8 @@
             <ComboBoxItem Content="Контролёр качества" Tag="QualityControlOfficer"/>
         </ComboBox>
 
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="ID цеха" Margin="0,0,12,10" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="6" Grid.Column="1" x:Name="WorkshopIdTextBox" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Номер цеха" Margin="0,0,12,10" VerticalAlignment="Center"/>
+        <TextBox Grid.Row="6" Grid.Column="1" x:Name="WorkshopNumberTextBox" Margin="0,0,0,10"/>
 
         <TextBlock Grid.Row="7" Grid.Column="0" x:Name="PasswordLabel" Text="Пароль" Margin="0,0,12,10" VerticalAlignment="Center"/>
         <PasswordBox Grid.Row="7" Grid.Column="1" x:Name="PasswordBox" Margin="0,0,0,10"/>

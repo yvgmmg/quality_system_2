@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.wpf\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.wpf\\views\\usereditdialog.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\views\\usereditdialog.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.wpf\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|solutionrelative:qualitycontrolsystem.wpf\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{20445F16-A036-463C-8D5E-8ED158E7CC4F}|QualityControlSystem.WPF\\QualityControlSystem.WPF.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.wpf\\views\\dashboardview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
@@ -99,16 +99,8 @@
       "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\repositories\\interfaces\\irepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\repositories\\interfaces\\iaccessrightrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\repositories\\interfaces\\iaccessrightrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\repositories\\accessrightrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\repositories\\accessrightrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\entities\\regulatoryinformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -123,15 +115,23 @@
       "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\regulatoryinfromationproductionequipment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\entities\\userprofileaccessright.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\userprofileaccessright.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|d:\\1cool_files\\projects\\qualitycontrolsystem\\qualitycontrolsystem.wpf\\qualitycontrolsystem.infrastructure\\entities\\workshop.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{659F6FF8-8AFF-47D2-882A-D6A858EE55A8}|QualityControlSystem.Infrastructure\\QualityControlSystem.Infrastructure.csproj|solutionrelative:qualitycontrolsystem.infrastructure\\entities\\workshop.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\dotnet\\sdk\\9.0.314\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Repositories\\AccessRightRepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:QualityControlSystem.Infrastructure\\Repositories\\AccessRightRepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IAccessRightRepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IAccessRightRepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\UserProfileAccessRight.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:QualityControlSystem.Infrastructure\\Entities\\UserProfileAccessRight.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -141,19 +141,20 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "UserEditDialog.xaml.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\Views\\UserEditDialog.xaml.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Views\\UserEditDialog.xaml.cs",
               "ToolTip": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\Views\\UserEditDialog.xaml.cs",
               "RelativeToolTip": "QualityControlSystem.WPF\\Views\\UserEditDialog.xaml.cs",
-              "ViewState": "AgIAADIAAAAAAAAAAAApwEYAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAAUAAAAAAAAAAADwvxcAAABxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-30T17:06:49.477Z"
+              "WhenOpened": "2026-05-30T17:06:49.477Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -217,7 +218,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "AuthService.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.WPF\\Services\\AuthService.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.WPF\\Services\\AuthService.cs",
@@ -428,7 +429,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 24,
               "Title": "Repository.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Repositories\\Repository.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Repositories\\Repository.cs",
@@ -440,7 +441,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 30,
               "Title": "AccessRightRepository.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Repositories\\AccessRightRepository.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Repositories\\AccessRightRepository.cs",
@@ -452,7 +453,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 31,
               "Title": "IAccessRightRepository.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IAccessRightRepository.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Repositories\\Interfaces\\IAccessRightRepository.cs",
@@ -464,7 +465,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 26,
               "Title": "EquipmentInspectionFormParam.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\EquipmentInspectionFormParam.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\EquipmentInspectionFormParam.cs",
@@ -476,7 +477,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 25,
               "Title": "RegulatoryInformation.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\RegulatoryInformation.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\RegulatoryInformation.cs",
@@ -488,7 +489,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 27,
               "Title": "RegulatoryInfromationProductionEquipment.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\RegulatoryInfromationProductionEquipment.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\RegulatoryInfromationProductionEquipment.cs",
@@ -500,7 +501,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 32,
               "Title": "UserProfileAccessRight.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\UserProfileAccessRight.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\UserProfileAccessRight.cs",
@@ -512,7 +513,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 29,
               "Title": "Microsoft.NET.Sdk.DefaultItems.targets",
               "DocumentMoniker": "C:\\Program Files\\dotnet\\sdk\\9.0.314\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
               "ToolTip": "C:\\Program Files\\dotnet\\sdk\\9.0.314\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
@@ -522,7 +523,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 28,
               "Title": "Workshop.cs",
               "DocumentMoniker": "D:\\1cool_files\\projects\\QualityControlSystem\\QualityControlSystem.WPF\\QualityControlSystem.Infrastructure\\Entities\\Workshop.cs",
               "RelativeDocumentMoniker": "QualityControlSystem.Infrastructure\\Entities\\Workshop.cs",

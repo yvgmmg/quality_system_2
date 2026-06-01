@@ -31,3 +31,7 @@ D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityCon
 D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\bin\Debug\net8.0-windows\QualityControlSystem.Infrastructure.pdb
 D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\Debug\net8.0-windows\QualityControlSystem.Infrastructure.sourcelink.json
 D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.Infrastructure\obj\Debug\net8.0-windows\QualityControlSystem.Infrastructure.pdb
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\CodexBuild\QualityControlSystem.Infrastructure.deps.json
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\CodexBuild\QualityControlSystem.Infrastructure.runtimeconfig.json
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\CodexBuild\QualityControlSystem.Infrastructure.dll
+D:\1cool_files\projects\QualityControlSystem\QualityControlSystem.WPF\QualityControlSystem.WPF\CodexBuild\QualityControlSystem.Infrastructure.pdb

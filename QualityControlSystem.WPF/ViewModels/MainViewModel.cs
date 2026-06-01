@@ -72,6 +72,11 @@ namespace QualityControlSystem.WPF.ViewModels
                 MenuItems.Add(new MenuItemViewModel { Header = "Управление пользователями", ViewType = typeof(UserManagementView) });
             }
 
+            if (_authService.CurrentUser?.Role == "QualityControlOfficer")
+            {
+                MenuItems.Add(new MenuItemViewModel { Header = "НСИ", ViewType = typeof(RegulatoryInformationView) });
+            }
+
             MenuItems.Add(new MenuItemViewModel { Header = "Выйти", IsExit = true });
         }
 
