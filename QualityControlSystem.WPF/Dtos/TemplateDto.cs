@@ -1,6 +1,6 @@
 using System.Windows.Media;
 
-namespace QualityControlSystem.WPF.Models;
+namespace QualityControlSystem.WPF.Dtos;
 
 public class TemplateDto
 {

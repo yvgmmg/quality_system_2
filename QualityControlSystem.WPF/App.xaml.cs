@@ -7,6 +7,7 @@ using QualityControlSystem.Infrastructure.Repositories;
 using QualityControlSystem.Infrastructure.Repositories.Interfaces;
 using QualityControlSystem.WPF.Services;
 using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Services.Navigation;
 using QualityControlSystem.WPF.ViewModels;
 using QualityControlSystem.WPF.Views;
 using System;
@@ -34,11 +35,7 @@ namespace QualityControlSystem.WPF
                     {
                         services.AddSingleton<IConfiguration>(context.Configuration);
 
-                        var connectionString = context.Configuration["Database:ConnectionString"];
-                        if (string.IsNullOrWhiteSpace(connectionString))
-                        {
-                            throw new InvalidOperationException("Database connection string is missing. Check appsettings.json.");
-                        }
+                        var connectionString = context.Configuration["Database:ConnectionString"] ?? string.Empty;
                         services.AddDbContext<AppDbContext>(options =>
                             options.UseNpgsql(connectionString));
 
@@ -49,6 +46,7 @@ namespace QualityControlSystem.WPF
                         services.AddSingleton<IDialogService, DialogService>();
                         services.AddSingleton<INotificationService, NotificationService>();
                         services.AddSingleton<IAuthService, AuthService>();
+                        services.AddSingleton<NavigationStore>();
                         services.AddSingleton<INavigationService, NavigationService>();
                         services.AddScoped<IUserManagementService, UserManagementService>();
                         services.AddScoped<IQualityTestService, QualityTestService>();
@@ -56,6 +54,7 @@ namespace QualityControlSystem.WPF
                         //ViewModel
                         services.AddTransient<MainViewModel>();
                         services.AddTransient<LoginViewModel>();
+                        services.AddTransient<DashboardViewModel>();
                         services.AddTransient<ProfileViewModel>();
                         services.AddTransient<UserManagementViewModel>();
                         services.AddTransient<OperatorControlViewModel>();
@@ -65,15 +64,7 @@ namespace QualityControlSystem.WPF
                         services.AddTransient<QualityTestsViewModel>();
 
                         //View
-                        services.AddTransient<LoginView>();
                         services.AddSingleton<MainWindow>();
-                        services.AddTransient<ProfileView>();
-                        services.AddTransient<UserManagementView>();
-                        services.AddTransient<OperatorControlView>();
-                        services.AddTransient<EquipmentManagementView>();
-                        services.AddTransient<TemplatesView>();
-                        services.AddTransient<FrameCardsView>();
-                        services.AddTransient<QualityTestsView>();
                     })
                     .Build();
             }
@@ -135,10 +126,9 @@ namespace QualityControlSystem.WPF
                     return;
                 }
 
-                navigationService.Initialize(mainWindow);
                 mainWindow.Show();
 
-                navigationService.NavigateTo<LoginView>();
+                navigationService.NavigateTo<LoginViewModel>();
             }
             catch (Exception ex)
             {

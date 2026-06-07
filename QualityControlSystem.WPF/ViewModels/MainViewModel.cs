@@ -1,12 +1,10 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using QualityControlSystem.WPF.Models;
-using QualityControlSystem.WPF.Services.Interfaces;
-using QualityControlSystem.WPF.ViewModels.Base;
-using QualityControlSystem.WPF.Views;
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using QualityControlSystem.WPF.Dtos;
+using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Services.Navigation;
+using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
@@ -14,9 +12,10 @@ namespace QualityControlSystem.WPF.ViewModels
     {
         private readonly INavigationService _navigationService;
         private readonly IAuthService _authService;
+        private readonly NavigationStore _navigationStore;
 
         [ObservableProperty]
-        private UserControl? _currentView;
+        private BaseViewModel? _currentViewModel;
 
         [ObservableProperty]
         private string _currentUserName = string.Empty;
@@ -25,18 +24,28 @@ namespace QualityControlSystem.WPF.ViewModels
         private ObservableCollection<MenuItemViewModel> _menuItems = new();
 
         [ObservableProperty]
-        private GridLength _navigationColumnWidth = new(0);
+        private double _navigationWidth;
 
         [ObservableProperty]
-        private Visibility _navigationVisibility = Visibility.Collapsed;
+        private bool _isNavigationVisible;
 
-        public MainViewModel(INavigationService navigationService, IAuthService authService)
+        public MainViewModel(
+            INavigationService navigationService,
+            IAuthService authService,
+            NavigationStore navigationStore)
         {
             _navigationService = navigationService;
             _authService = authService;
+            _navigationStore = navigationStore;
 
             _authService.CurrentUserChanged += OnCurrentUserChanged;
+            _navigationStore.CurrentViewModelChanged += HandleCurrentViewModelChanged;
             UpdateUserState();
+        }
+
+        private void HandleCurrentViewModelChanged(BaseViewModel? viewModel)
+        {
+            CurrentViewModel = viewModel;
         }
 
         private void OnCurrentUserChanged(UserProfileDto? user)
@@ -49,15 +58,15 @@ namespace QualityControlSystem.WPF.ViewModels
             if (_authService.CurrentUser != null)
             {
                 CurrentUserName = $"{_authService.CurrentUser.Surname} {_authService.CurrentUser.Name} {_authService.CurrentUser.Patron}".Trim();
-                NavigationColumnWidth = new GridLength(220);
-                NavigationVisibility = Visibility.Visible;
+                NavigationWidth = 220;
+                IsNavigationVisible = true;
                 BuildMenu();
             }
             else
             {
                 CurrentUserName = string.Empty;
-                NavigationColumnWidth = new GridLength(0);
-                NavigationVisibility = Visibility.Collapsed;
+                NavigationWidth = 0;
+                IsNavigationVisible = false;
                 MenuItems.Clear();
             }
         }
@@ -65,28 +74,28 @@ namespace QualityControlSystem.WPF.ViewModels
         private void BuildMenu()
         {
             MenuItems.Clear();
-            MenuItems.Add(new MenuItemViewModel { Header = "Профиль", ViewType = typeof(ProfileView) });
+            MenuItems.Add(new MenuItemViewModel { Header = "Профиль", ViewModelType = typeof(ProfileViewModel) });
 
             if (HasRoleCode(RoleCodes.Admin))
             {
-                MenuItems.Add(new MenuItemViewModel { Header = "Управление пользователями", ViewType = typeof(UserManagementView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Управление пользователями", ViewModelType = typeof(UserManagementViewModel) });
             }
 
             if (HasRoleCode(RoleCodes.Operator))
             {
-                MenuItems.Add(new MenuItemViewModel { Header = "Контроль деталей", ViewType = typeof(OperatorControlView) });
-                MenuItems.Add(new MenuItemViewModel { Header = "Шаблоны", ViewType = typeof(TemplatesView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Контроль деталей", ViewModelType = typeof(OperatorControlViewModel) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Шаблоны", ViewModelType = typeof(TemplatesViewModel) });
             }
 
             if (HasRoleCode(RoleCodes.EquipmentSpecialist))
             {
-                MenuItems.Add(new MenuItemViewModel { Header = "Оборудование", ViewType = typeof(EquipmentManagementView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Оборудование", ViewModelType = typeof(EquipmentManagementViewModel) });
             }
 
             if (HasRoleCode(RoleCodes.QualityControl))
             {
-                MenuItems.Add(new MenuItemViewModel { Header = "Карточки каркасов", ViewType = typeof(FrameCardsView) });
-                MenuItems.Add(new MenuItemViewModel { Header = "Тесты контроля", ViewType = typeof(QualityTestsView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Карточки каркасов", ViewModelType = typeof(FrameCardsViewModel) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Тесты контроля", ViewModelType = typeof(QualityTestsViewModel) });
             }
 
             MenuItems.Add(new MenuItemViewModel { Header = "Выйти", IsExit = true });
@@ -111,19 +120,21 @@ namespace QualityControlSystem.WPF.ViewModels
             if (menuItem.IsExit)
             {
                 _authService.Logout();
-                _navigationService.NavigateTo<LoginView>();
+                _navigationService.NavigateTo<LoginViewModel>();
                 return;
             }
 
-            if (menuItem.ViewType != null)
-                _navigationService.NavigateTo(menuItem.ViewType);
+            if (menuItem.ViewModelType != null)
+            {
+                _navigationService.NavigateTo(menuItem.ViewModelType);
+            }
         }
     }
 
     public class MenuItemViewModel
     {
         public string Header { get; set; } = string.Empty;
-        public System.Type? ViewType { get; set; }
+        public System.Type? ViewModelType { get; set; }
         public bool IsExit { get; set; }
     }
 }

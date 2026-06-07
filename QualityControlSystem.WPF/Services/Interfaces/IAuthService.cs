@@ -1,5 +1,5 @@
-﻿using System;
-using QualityControlSystem.WPF.Models;
+using System;
+using QualityControlSystem.WPF.Dtos;
 using System.Threading.Tasks;
 
 namespace QualityControlSystem.WPF.Services.Interfaces

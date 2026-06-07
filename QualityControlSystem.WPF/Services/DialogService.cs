@@ -1,5 +1,5 @@
 using System.Windows;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.Views;
 

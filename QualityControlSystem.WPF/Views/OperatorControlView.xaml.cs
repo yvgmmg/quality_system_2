@@ -1,14 +1,12 @@
-using QualityControlSystem.WPF.ViewModels;
 using System.Windows.Controls;
 
 namespace QualityControlSystem.WPF.Views
 {
     public partial class OperatorControlView : UserControl
     {
-        public OperatorControlView(OperatorControlViewModel viewModel)
+        public OperatorControlView()
         {
             InitializeComponent();
-            DataContext = viewModel;
         }
     }
 }

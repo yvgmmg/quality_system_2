@@ -1,4 +1,4 @@
-namespace QualityControlSystem.WPF.Models;
+namespace QualityControlSystem.WPF.Dtos;
 
 public class ProductionEquipmentDto
 {

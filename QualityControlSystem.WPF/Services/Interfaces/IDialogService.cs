@@ -1,15 +1,15 @@
-п»їusing System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 namespace QualityControlSystem.WPF.Services.Interfaces
 {
     public interface IDialogService
     {
-        void ShowMessage(string message, string title = "РРЅС„РѕСЂРјР°С†РёСЏ");
-        bool ShowConfirm(string message, string title = "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ");
+        void ShowMessage(string message, string title = "Информация");
+        bool ShowConfirm(string message, string title = "Подтверждение");
         bool ShowUserDialog(UserProfileDto user, bool isEdit);
         bool ShowProductionEquipmentDialog(ProductionEquipmentDto equipment, IEnumerable<LookupItemDto> workshops, bool isEdit);
         bool ShowFrameDialog(FrameCardDto frame, IEnumerable<LookupItemDto> materials, IEnumerable<LookupItemDto> workshops, bool isEdit);

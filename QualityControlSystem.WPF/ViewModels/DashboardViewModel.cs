@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 using System.Threading.Tasks;
-using QualityControlSystem.WPF.Views;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
@@ -29,7 +28,7 @@ namespace QualityControlSystem.WPF.ViewModels
         private async Task LogoutAsync()
         {
             _authService.Logout();
-            _navigationService.NavigateTo<LoginView>();
+            _navigationService.NavigateTo<LoginViewModel>();
             await Task.CompletedTask;
         }
     }

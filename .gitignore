@@ -2,6 +2,7 @@
 obj/
 .vs/
 *.user
+*.Backup.tmp
 *.suo
 *.userosscache
 *.sln.docstates

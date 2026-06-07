@@ -1,5 +1,5 @@
-﻿// QualityControlSystem.WPF/Services/Interfaces/IUserManagementService.cs
-using QualityControlSystem.WPF.Models;
+// QualityControlSystem.WPF/Services/Interfaces/IUserManagementService.cs
+using QualityControlSystem.WPF.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace QualityControlSystem.WPF.Models
+namespace QualityControlSystem.WPF.Dtos
 {
     public class EdgeInspectionResultDto
     {

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using QualityControlSystem.Infrastructure;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using System.Data;
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 using System;

@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 

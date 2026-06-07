@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace QualityControlSystem.WPF.Models;
+namespace QualityControlSystem.WPF.Dtos;
 
 public class QualityTestDto
 {

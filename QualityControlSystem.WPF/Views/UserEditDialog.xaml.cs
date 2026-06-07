@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Windows;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 
 namespace QualityControlSystem.WPF.Views
 {
