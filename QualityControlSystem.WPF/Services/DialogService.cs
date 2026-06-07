@@ -28,9 +28,43 @@ namespace QualityControlSystem.WPF.Services
             return dialog.ShowDialog() == true;
         }
 
-        public bool ShowRegulatoryInformationDialog(RegulatoryInformationDto item, bool isEdit)
+        public bool ShowProductionEquipmentDialog(ProductionEquipmentDto equipment, IEnumerable<LookupItemDto> workshops, bool isEdit)
         {
-            var dialog = new RegulatoryInformationEditDialog(item, isEdit)
+            var dialog = new ProductionEquipmentEditDialog(equipment, workshops, isEdit)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            return dialog.ShowDialog() == true;
+        }
+
+        public bool ShowFrameDialog(FrameCardDto frame, IEnumerable<LookupItemDto> materials, IEnumerable<LookupItemDto> workshops, bool isEdit)
+        {
+            var dialog = new FrameEditDialog(frame, materials, workshops, isEdit)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            return dialog.ShowDialog() == true;
+        }
+
+        public bool ShowTemplateDialog(TemplateDto template, IEnumerable<string> sides, bool isEdit)
+        {
+            var dialog = new TemplateEditDialog(template, sides)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            return dialog.ShowDialog() == true;
+        }
+
+        public bool ShowQualityTestDialog(
+            QualityTestDto test,
+            IEnumerable<LookupItemDto> frames,
+            IEnumerable<TemplateDto> templates,
+            bool isEdit)
+        {
+            var dialog = new QualityTestEditDialog(test, frames, templates, isEdit)
             {
                 Owner = Application.Current.MainWindow
             };

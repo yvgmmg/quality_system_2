@@ -14,7 +14,11 @@ namespace QualityControlSystem.WPF.Services
 
         public ApiClientService(IConfiguration configuration)
         {
-            var baseUrl = configuration["EdgeDevice:BaseUrl"] ?? "http://192.168.1.100:5000";
+            var baseUrl = configuration["EdgeDevice:BaseUrl"];
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                baseUrl = "http://localhost:5000";
+            }
             _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
             _httpClient.Timeout = TimeSpan.FromSeconds(
                 configuration.GetValue<int>("EdgeDevice:TimeoutSeconds", 30));

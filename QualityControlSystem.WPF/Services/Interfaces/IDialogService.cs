@@ -11,6 +11,13 @@ namespace QualityControlSystem.WPF.Services.Interfaces
         void ShowMessage(string message, string title = "Информация");
         bool ShowConfirm(string message, string title = "Подтверждение");
         bool ShowUserDialog(UserProfileDto user, bool isEdit);
-        bool ShowRegulatoryInformationDialog(RegulatoryInformationDto item, bool isEdit);
+        bool ShowProductionEquipmentDialog(ProductionEquipmentDto equipment, IEnumerable<LookupItemDto> workshops, bool isEdit);
+        bool ShowFrameDialog(FrameCardDto frame, IEnumerable<LookupItemDto> materials, IEnumerable<LookupItemDto> workshops, bool isEdit);
+        bool ShowTemplateDialog(TemplateDto template, IEnumerable<string> sides, bool isEdit);
+        bool ShowQualityTestDialog(
+            QualityTestDto test,
+            IEnumerable<LookupItemDto> frames,
+            IEnumerable<TemplateDto> templates,
+            bool isEdit);
     }
 }

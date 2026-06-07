@@ -1,11 +1,13 @@
+using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
 using QualityControlSystem.WPF.Models;
 
 namespace QualityControlSystem.WPF.Views
 {
     public partial class UserEditDialog : Window
     {
+        private static readonly Regex PersonNameRegex = new(@"^[А-ЯЁ][а-яё]+(-[А-ЯЁ][а-яё]+)*$", RegexOptions.Compiled);
+        private static readonly Regex PersonnelNumberRegex = new(@"^\d{1,6}$", RegexOptions.Compiled);
         private readonly UserProfileDto _user;
 
         public UserEditDialog(UserProfileDto user, bool isEdit)
@@ -20,46 +22,95 @@ namespace QualityControlSystem.WPF.Views
             NameTextBox.Text = _user.Name;
             PatronTextBox.Text = _user.Patron;
             PersonnelNumberTextBox.Text = _user.PersonnelNumber;
-            RoleComboBox.SelectedValue = string.IsNullOrWhiteSpace(_user.Role) ? "Operator" : _user.Role;
-            WorkshopNumberInput.Text = _user.WorkshopNumber > 0 ? _user.WorkshopNumber.ToString() : string.Empty;
+            RoleComboBox.SelectedValue = string.IsNullOrWhiteSpace(_user.Role) ? "operator" : _user.Role;
+            WorkshopNumberTextBox.Text = _user.WorkshopId.GetValueOrDefault() > 0 ? _user.WorkshopId.ToString() : string.Empty;
+            PasswordHintText.Text = isEdit
+                ? "Оставьте пароль пустым, чтобы не менять его."
+                : "Если пароль не указан, будет использован default123.";
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(SurnameTextBox.Text) ||
-                string.IsNullOrWhiteSpace(NameTextBox.Text) ||
-                string.IsNullOrWhiteSpace(PersonnelNumberTextBox.Text))
+            var surname = SurnameTextBox.Text.Trim();
+            var name = NameTextBox.Text.Trim();
+            var patron = PatronTextBox.Text.Trim();
+            var personnelNumber = PersonnelNumberTextBox.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(surname) ||
+                string.IsNullOrWhiteSpace(name) ||
+                string.IsNullOrWhiteSpace(personnelNumber))
             {
-                MessageBox.Show("Заполните фамилию, имя и табельный номер.", "Проверка данных",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowValidationMessage("Заполните фамилию, имя и табельный номер.");
+                return;
+            }
+
+            if (!IsValidPersonName(surname))
+            {
+                ShowValidationMessage("Фамилия должна начинаться с заглавной русской буквы и содержать только русские буквы или дефис.");
+                SurnameTextBox.Focus();
+                return;
+            }
+
+            if (!IsValidPersonName(name))
+            {
+                ShowValidationMessage("Имя должно начинаться с заглавной русской буквы и содержать только русские буквы или дефис.");
+                NameTextBox.Focus();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(patron) && !IsValidPersonName(patron))
+            {
+                ShowValidationMessage("Отчество должно начинаться с заглавной русской буквы и содержать только русские буквы или дефис.");
+                PatronTextBox.Focus();
+                return;
+            }
+
+            if (!PersonnelNumberRegex.IsMatch(personnelNumber))
+            {
+                ShowValidationMessage("Табельный номер должен содержать от 1 до 6 цифр. Например: 123 или 000123.");
+                PersonnelNumberTextBox.Focus();
                 return;
             }
 
             if (RoleComboBox.SelectedValue is not string role)
             {
-                MessageBox.Show("Выберите роль пользователя.", "Проверка данных",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowValidationMessage("Выберите роль пользователя.");
+                RoleComboBox.Focus();
                 return;
             }
 
-            if (!int.TryParse(WorkshopNumberInput.Text, out var workshopNumber) || workshopNumber <= 0)
+            int? workshopId = null;
+            if (!string.IsNullOrWhiteSpace(WorkshopNumberTextBox.Text))
             {
-                MessageBox.Show("Номер цеха должен быть положительным числом.", "Проверка данных",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                if (!int.TryParse(WorkshopNumberTextBox.Text, out var parsedWorkshopId) || parsedWorkshopId <= 0)
+                {
+                    ShowValidationMessage("ID цеха должен быть положительным числом.");
+                    WorkshopNumberTextBox.Focus();
+                    return;
+                }
+
+                workshopId = parsedWorkshopId;
             }
 
-            _user.Surname = SurnameTextBox.Text.Trim();
-            _user.Name = NameTextBox.Text.Trim();
-            _user.Patron = string.IsNullOrWhiteSpace(PatronTextBox.Text) ? null : PatronTextBox.Text.Trim();
-            _user.PersonnelNumber = PersonnelNumberTextBox.Text.Trim();
+            _user.Surname = surname;
+            _user.Name = name;
+            _user.Patron = string.IsNullOrWhiteSpace(patron) ? null : patron;
+            _user.PersonnelNumber = personnelNumber;
             _user.Role = role;
-            _user.WorkshopNumber = workshopNumber;
+            _user.WorkshopId = workshopId;
             _user.Password = PasswordBox.Password;
 
             DialogResult = true;
         }
 
-        private TextBox WorkshopNumberInput => (TextBox)FindName("WorkshopNumberTextBox");
+        private static bool IsValidPersonName(string value)
+        {
+            return PersonNameRegex.IsMatch(value);
+        }
+
+        private static void ShowValidationMessage(string message)
+        {
+            MessageBox.Show(message, "Проверка данных", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 }

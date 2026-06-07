@@ -1,0 +1,32 @@
+<UserControl x:Class="QualityControlSystem.WPF.Views.QualityTestsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Command="{Binding AddTestCommand}" Content="Добавить" Width="80" Margin="5"/>
+            <Button Command="{Binding EditTestCommand}" Content="Редактировать" Width="110" Margin="5"/>
+            <Button Command="{Binding DeleteTestCommand}" Content="Удалить" Width="80" Margin="5"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Tests}"
+                  SelectedItem="{Binding SelectedTest}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="190"/>
+                <DataGridTextColumn Header="Каркас" Binding="{Binding FrameName}" Width="170"/>
+                <DataGridTextColumn Header="Шаблоны" Binding="{Binding TemplateSummary}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="5" Foreground="Red"/>
+    </Grid>
+</UserControl>

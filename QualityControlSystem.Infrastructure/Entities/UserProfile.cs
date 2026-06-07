@@ -1,54 +1,47 @@
-﻿using Microsoft.EntityFrameworkCore;
-using QualityControlSystem.Infrastructure.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace QualityControlSystem.Infrastructure.Entities;
 
 [Table("user_profile")]
 public partial class UserProfile
 {
-    [Column("name")]
-    [StringLength(255)]
-    public string Name { get; set; } = null!;
-
-    [Column("surname")]
-    [StringLength(255)]
-    public string Surname { get; set; } = null!;
-
-    [Column("patron")]
-    [StringLength(255)]
-    public string? Patron { get; set; }
-
-    [Column("workshop_id")]
-    public int WorkshopId { get; set; }
-
-    [Column("password_hash")]
-    [StringLength(255)]
-    public string PasswordHash { get; set; } = null!;
-
-    [Column("personnel_number", TypeName = "character varying")]
-    public string? PersonnelNumber { get; set; }
-
     [Key]
     [Column("user_profile_id")]
     public int UserProfileId { get; set; }
 
-    [InverseProperty("UserProfile")]
-    public virtual ICollection<EquipmentInspectionForm> EquipmentInspectionForms { get; set; } = new List<EquipmentInspectionForm>();
+    [Column("workshop_id")]
+    public int? WorkshopId { get; set; }
 
-    [InverseProperty("UserProfile")]
-    public virtual ICollection<FrameTestForm> FrameTestForms { get; set; } = new List<FrameTestForm>();
+    [Column("role_id")]
+    public int RoleId { get; set; }
 
-    [InverseProperty("UserProfile")]
-    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    [Column("password")]
+    [StringLength(255)]
+    public string Password { get; set; } = null!;
+
+    [Column("personnel_number")]
+    [StringLength(6)]
+    public string PersonnelNumber { get; set; } = null!;
+
+    [Column("last_name")]
+    [StringLength(100)]
+    public string LastName { get; set; } = null!;
+
+    [Column("first_name")]
+    [StringLength(100)]
+    public string FirstName { get; set; } = null!;
+
+    [Column("middle_name")]
+    [StringLength(100)]
+    public string? MiddleName { get; set; }
+
+    [ForeignKey("RoleId")]
+    [InverseProperty("UserProfiles")]
+    public virtual Role Role { get; set; } = null!;
 
     [ForeignKey("WorkshopId")]
     [InverseProperty("UserProfiles")]
-    public virtual Workshop Workshop { get; set; } = null!;
-
-    [Column("role")]
-    public UserRole Role { get; set; }
+    public virtual Workshop? Workshop { get; set; }
 }

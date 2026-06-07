@@ -1,1 +1,0 @@
-namespace QualityControlSystem.Infrastructure.Enums { public enum TestEnum { A, B } }

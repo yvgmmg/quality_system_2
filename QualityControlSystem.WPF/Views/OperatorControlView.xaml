@@ -1,0 +1,114 @@
+<UserControl x:Class="QualityControlSystem.WPF.Views.OperatorControlView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="760"
+             d:DesignWidth="1120">
+    <Grid Background="#F5F5F5" Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="220"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,14">
+            <StackPanel DockPanel.Dock="Left">
+                <TextBlock Text="Модуль контроля качества" FontSize="28" FontWeight="Bold"/>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="14" Foreground="#555" Margin="0,4,0,0"/>
+            </StackPanel>
+            <Border DockPanel.Dock="Right" Background="#FFFFFF" BorderBrush="#DADADA" BorderThickness="1" Padding="12,8">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Режим:" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding CurrentMode}"/>
+                </StackPanel>
+            </Border>
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Button Content="Проверить SSH" Command="{Binding CheckConnectionCommand}" Margin="0,0,0,8" Padding="10,8"/>
+                    <Button Content="Загрузить скрипты на Raspberry" Command="{Binding DeployScriptsCommand}" Margin="0,0,0,18" Padding="10,8"/>
+
+                    <TextBlock Text="Создание шаблонов" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Модель каркаса" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding FrameOptions}" SelectedItem="{Binding SelectedFrame}" DisplayMemberPath="Name" Margin="0,0,0,8"/>
+                    <TextBlock Text="Сторона каркаса" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding TemplateSides}" SelectedItem="{Binding SelectedTemplateSide}" Margin="0,0,0,8"/>
+                    <Button Content="Запустить редактор шаблонов" Command="{Binding StartPhotomakerCommand}" Margin="0,0,0,8" Padding="10,8"/>
+                    <Button Content="Сохранить шаблон" Command="{Binding CaptureTemplateCommand}" Margin="0,0,0,8" Padding="10,8"/>
+                    <Button Content="Остановить редактор шаблонов" Command="{Binding StopPhotomakerCommand}" Margin="0,0,0,18" Padding="10,8"/>
+
+                    <TextBlock Text="Контроль деталей" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <Button Content="Запустить обработку" Command="{Binding StartOperatingCommand}" Margin="0,0,0,8" Padding="10,8"/>
+                    <Button Content="Составить отчет" Command="{Binding CreateReportCommand}" Margin="0,0,0,8" Padding="10,8"/>
+                    <Button Content="Остановить обработку" Command="{Binding StopOperatingCommand}" Margin="0,0,0,18" Padding="10,8"/>
+
+                    <TextBlock Text="Лог последней операции" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding LastLog}" MinHeight="110" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Auto"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Column="1" Background="#111" Margin="18,0,0,0">
+                <Grid>
+                    <Image Source="{Binding VideoFrame}" Stretch="Uniform"/>
+                    <TextBlock Text="Видеокадр появится после запуска режима"
+                               Foreground="#BBBBBB"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding VideoFrame}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="0,0,0,8">
+                <TextBlock Text="Результаты контроля" FontWeight="Bold" FontSize="14" DockPanel.Dock="Left"/>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <TextBlock Text="Проверено: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding InspectedFramesCount}" Margin="0,0,14,0"/>
+                    <TextBlock Text="Прошло: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding PassedFramesCount}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Results}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="№" Binding="{Binding ControlNumber}" Width="55"/>
+                    <DataGridTextColumn Header="Время" Binding="{Binding RecordedAt}" Width="145"/>
+                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="90"/>
+                    <DataGridTextColumn Header="Шаблон" Binding="{Binding TemplateId}" Width="75"/>
+                    <DataGridTextColumn Header="Сходство" Binding="{Binding Similarity, StringFormat={}{0:F1}%}" Width="90"/>
+                    <DataGridTextColumn Header="Вес" Binding="{Binding Weight, StringFormat={}{0:F0}}" Width="70"/>
+                    <DataGridTextColumn Header="Результат шаблона" Binding="{Binding TemplateResultText}" Width="150"/>
+                    <DataGridTextColumn Header="Результат взвешивания" Binding="{Binding WeightResultText}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+    </Grid>
+</UserControl>

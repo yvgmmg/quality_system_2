@@ -1,9 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using QualityControlSystem.Infrastructure.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace QualityControlSystem.Infrastructure.Entities;
 
@@ -18,22 +15,19 @@ public partial class FrameTestForm
     [StringLength(255)]
     public string Name { get; set; } = null!;
 
-    [Column("comments")]
-    public string? Comments { get; set; }
+    [Column("description")]
+    public string? Description { get; set; }
 
-    [Column("user_profile_id")]
-    public int? UserProfileId { get; set; }
+    [Column("test_type_id")]
+    public int TestTypeId { get; set; }
 
     [InverseProperty("FrameTestForm")]
     public virtual ICollection<FrameTestFormFrame> FrameTestFormFrames { get; set; } = new List<FrameTestFormFrame>();
 
     [InverseProperty("FrameTestForm")]
-    public virtual ICollection<FrameTestFormParam> FrameTestFormParams { get; set; } = new List<FrameTestFormParam>();
+    public virtual ICollection<FrameTestFormTemplate> FrameTestFormTemplates { get; set; } = new List<FrameTestFormTemplate>();
 
-    [ForeignKey("UserProfileId")]
+    [ForeignKey("TestTypeId")]
     [InverseProperty("FrameTestForms")]
-    public virtual UserProfile? UserProfile { get; set; }
-
-    [Column("result")]
-    public TestResult Result { get; set; }
+    public virtual TestType TestType { get; set; } = null!;
 }

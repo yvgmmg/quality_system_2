@@ -65,7 +65,7 @@ namespace QualityControlSystem.WPF.ViewModels
         [RelayCommand]
         private async Task AddUserAsync()
         {
-            var newUser = new UserProfileDto { Role = "Operator" };
+            var newUser = new UserProfileDto { Role = "operator" };
             if (!_dialogService.ShowUserDialog(newUser, false))
                 return;
 
@@ -73,11 +73,15 @@ namespace QualityControlSystem.WPF.ViewModels
             {
                 await _userService.AddUserAsync(newUser);
                 await LoadUsersAsync();
-                StatusMessage = "Пользователь добавлен. Пароль по умолчанию: default123";
+                StatusMessage = string.IsNullOrWhiteSpace(newUser.Password)
+                    ? "Пользователь добавлен. Пароль по умолчанию: default123"
+                    : "Пользователь добавлен с указанным паролем.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Не удалось добавить пользователя: {GetErrorMessage(ex)}";
+                var message = $"Не удалось добавить пользователя: {GetErrorMessage(ex)}";
+                StatusMessage = message;
+                _dialogService.ShowMessage(message, "Ошибка");
             }
         }
 
@@ -98,7 +102,6 @@ namespace QualityControlSystem.WPF.ViewModels
                 Patron = SelectedUser.Patron,
                 Role = SelectedUser.Role,
                 WorkshopId = SelectedUser.WorkshopId,
-                WorkshopNumber = SelectedUser.WorkshopNumber,
                 PersonnelNumber = SelectedUser.PersonnelNumber
             };
 
@@ -109,11 +112,13 @@ namespace QualityControlSystem.WPF.ViewModels
             {
                 await _userService.UpdateUserAsync(editDto);
                 await LoadUsersAsync();
-                StatusMessage = "Пользователь обновлён.";
+                StatusMessage = "Пользователь обновлен.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Не удалось обновить пользователя: {GetErrorMessage(ex)}";
+                var message = $"Не удалось обновить пользователя: {GetErrorMessage(ex)}";
+                StatusMessage = message;
+                _dialogService.ShowMessage(message, "Ошибка");
             }
         }
 
@@ -140,11 +145,13 @@ namespace QualityControlSystem.WPF.ViewModels
                 await _userService.DeleteUserAsync(SelectedUser.Id);
                 SelectedUser = null;
                 await LoadUsersAsync();
-                StatusMessage = "Пользователь удалён.";
+                StatusMessage = "Пользователь удален.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Не удалось удалить пользователя: {GetErrorMessage(ex)}";
+                var message = $"Не удалось удалить пользователя: {GetErrorMessage(ex)}";
+                StatusMessage = message;
+                _dialogService.ShowMessage(message, "Ошибка");
             }
         }
 

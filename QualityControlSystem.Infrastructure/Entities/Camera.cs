@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -9,25 +7,26 @@ namespace QualityControlSystem.Infrastructure.Entities;
 [Table("camera")]
 public partial class Camera
 {
-    [Column("inventory_number")]
-    [StringLength(14)]
-    public string? InventoryNumber { get; set; }
-
-    [Column("name")]
-    [StringLength(255)]
-    public string? Name { get; set; }
-
-    [Column("workshop_id")]
-    public int? WorkshopId { get; set; }
-
     [Key]
     [Column("camera_id")]
     public int CameraId { get; set; }
 
-    [InverseProperty("Camera")]
-    public virtual ICollection<CameraFrame> CameraFrames { get; set; } = new List<CameraFrame>();
+    [Column("okof_code")]
+    [StringLength(19)]
+    public string OkofCode { get; set; } = null!;
+
+    [Column("inventory_number")]
+    [StringLength(17)]
+    public string InventoryNumber { get; set; } = null!;
+
+    [Column("name")]
+    [StringLength(255)]
+    public string Name { get; set; } = null!;
+
+    [Column("workshop_id")]
+    public int WorkshopId { get; set; }
 
     [ForeignKey("WorkshopId")]
     [InverseProperty("Cameras")]
-    public virtual Workshop? Workshop { get; set; }
+    public virtual Workshop Workshop { get; set; } = null!;
 }

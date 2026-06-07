@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -13,25 +11,34 @@ public partial class Sensor
     [Column("sensor_id")]
     public int SensorId { get; set; }
 
+    [Column("okof_code")]
+    [StringLength(19)]
+    public string OkofCode { get; set; } = null!;
+
     [Column("inventory_number")]
-    [StringLength(14)]
+    [StringLength(17)]
     public string InventoryNumber { get; set; } = null!;
 
     [Column("name")]
     [StringLength(255)]
     public string Name { get; set; } = null!;
 
-    [Column("measurement")]
-    public Enums.MeasurementUnit Measurement { get; set; }
-
     [Column("workshop_id")]
     public int WorkshopId { get; set; }
 
     [Column("sensor_type_id")]
-    public Enums.Source SensorTypeId { get; set; }
+    public int SensorTypeId { get; set; }
 
-    [InverseProperty("Sensor")]
-    public virtual ICollection<SensorReading> SensorReadings { get; set; } = new List<SensorReading>();
+    [Column("measurement_unit_id")]
+    public int MeasurementUnitId { get; set; }
+
+    [ForeignKey("MeasurementUnitId")]
+    [InverseProperty("Sensors")]
+    public virtual MeasurementUnitClassifier MeasurementUnit { get; set; } = null!;
+
+    [ForeignKey("SensorTypeId")]
+    [InverseProperty("Sensors")]
+    public virtual SensorTypeClassifier SensorType { get; set; } = null!;
 
     [ForeignKey("WorkshopId")]
     [InverseProperty("Sensors")]

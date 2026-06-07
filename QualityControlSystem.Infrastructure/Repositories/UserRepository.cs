@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure.Entities;
 using QualityControlSystem.Infrastructure.Repositories.Interfaces;
@@ -22,15 +16,26 @@ public class UserRepository : IUserRepository
     public async Task<UserProfile?> GetByPersonnelNumberAsync(string personnelNumber)
     {
         return await _context.UserProfiles
+            .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.PersonnelNumber == personnelNumber);
     }
 
     public async Task<UserProfile?> ValidateCredentialsAsync(string personnelNumber, string password)
     {
-        var user = await _context.UserProfiles
-            .FirstOrDefaultAsync(u => u.PersonnelNumber == personnelNumber);
-        if (user == null) return null;
-        bool isValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+        var user = await GetByPersonnelNumberAsync(personnelNumber);
+        if (user == null)
+            return null;
+
+        bool isValid;
+        try
+        {
+            isValid = BCrypt.Net.BCrypt.Verify(password, user.Password);
+        }
+        catch
+        {
+            isValid = password == user.Password;
+        }
+
         return isValid ? user : null;
     }
 
@@ -42,12 +47,16 @@ public class UserRepository : IUserRepository
 
     public async Task<UserProfile?> GetByIdAsync(int id)
     {
-        return await _context.UserProfiles.FindAsync(id);
+        return await _context.UserProfiles
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.UserProfileId == id);
     }
 
     public async Task<IEnumerable<UserProfile>> GetAllAsync()
     {
-        return await _context.UserProfiles.ToListAsync();
+        return await _context.UserProfiles
+            .Include(u => u.Role)
+            .ToListAsync();
     }
 
     public async Task UpdateAsync(UserProfile user)

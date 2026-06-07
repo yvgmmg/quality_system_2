@@ -1,5 +1,12 @@
-bin/
+﻿bin/
 obj/
-*.user
-*.tmp
 .vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+TestResults/
+*.nupkg
+__pycache__/
+*.py[cod]

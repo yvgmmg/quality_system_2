@@ -1,114 +1,149 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure;
-using QualityControlSystem.Infrastructure.Enums;
-using QualityControlSystem.Infrastructure.Repositories.Interfaces;
 using QualityControlSystem.WPF.Models;
 using QualityControlSystem.WPF.Services.Interfaces;
+using System.Data;
+using System.Data.Common;
+using System.Text.RegularExpressions;
 
 namespace QualityControlSystem.WPF.Services
 {
     public class UserManagementService : IUserManagementService
     {
-        private readonly IUserRepository _userRepository;
+        private static readonly Dictionary<string, string> RoleAliases = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["admin"] = "admin",
+            ["operator"] = "operator",
+            ["equipment specialist"] = "equipment specialist",
+            ["quality control"] = "quality control",
+            ["quality control officer"] = "quality control",
+            ["quality controll officer"] = "quality control",
+            ["quality control opfficer"] = "quality control",
+            ["quality controll opfficer"] = "quality control"
+        };
+
+        private static readonly Dictionary<string, string> RoleCodes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["admin"] = "01000001",
+            ["operator"] = "02000001",
+            ["equipment specialist"] = "03000001",
+            ["quality control"] = "04000001"
+        };
+
+        private static readonly Regex PersonNameRegex = new(@"^[А-ЯЁ][а-яё]+(-[А-ЯЁ][а-яё]+)*$", RegexOptions.Compiled);
+        private static readonly Regex PersonnelNumberRegex = new(@"^\d{1,6}$", RegexOptions.Compiled);
+
         private readonly AppDbContext _dbContext;
         private readonly IAuthService _authService;
 
-        public UserManagementService(
-            IUserRepository userRepository,
-            AppDbContext dbContext,
-            IAuthService authService)
+        public UserManagementService(AppDbContext dbContext, IAuthService authService)
         {
-            _userRepository = userRepository;
             _dbContext = dbContext;
             _authService = authService;
         }
 
         public async Task<IEnumerable<UserProfileDto>> GetAllUsersAsync()
         {
-            var users = await _dbContext.UserProfiles
-                .Include(u => u.Workshop)
-                .ToListAsync();
-            return users.Select(u => new UserProfileDto
-            {
-                Id = u.UserProfileId,
-                Name = u.Name,
-                Surname = u.Surname,
-                Patron = u.Patron,
-                Role = u.Role.ToString(),
-                WorkshopId = u.WorkshopId,
-                WorkshopNumber = u.Workshop.Number,
-                PersonnelNumber = u.PersonnelNumber
-            });
+            var users = new List<UserProfileDto>();
+            var connection = await GetOpenConnectionAsync();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT
+                    up.user_profile_id,
+                    up.last_name,
+                    up.first_name,
+                    up.middle_name,
+                    up.workshop_id,
+                    up.personnel_number,
+                    r.name AS role_name,
+                    r.role_code
+                FROM public.user_profile up
+                INNER JOIN public."role" r ON r.role_id = up.role_id
+                ORDER BY up.user_profile_id;
+                """;
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                users.Add(ReadUser(reader));
+
+            return users;
         }
 
         public async Task<UserProfileDto?> GetUserByIdAsync(int id)
         {
-            var u = await _userRepository.GetByIdAsync(id);
-            if (u == null) return null;
+            var connection = await GetOpenConnectionAsync();
 
-            return new UserProfileDto
-            {
-                Id = u.UserProfileId,
-                Name = u.Name,
-                Surname = u.Surname,
-                Patron = u.Patron,
-                Role = u.Role.ToString(),
-                WorkshopId = u.WorkshopId,
-                WorkshopNumber = await GetWorkshopNumberAsync(u.WorkshopId),
-                PersonnelNumber = u.PersonnelNumber
-            };
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT
+                    up.user_profile_id,
+                    up.last_name,
+                    up.first_name,
+                    up.middle_name,
+                    up.workshop_id,
+                    up.personnel_number,
+                    r.name AS role_name,
+                    r.role_code
+                FROM public.user_profile up
+                INNER JOIN public."role" r ON r.role_id = up.role_id
+                WHERE up.user_profile_id = @id
+                LIMIT 1;
+                """;
+            AddParameter(command, "id", id);
+
+            using var reader = await command.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? ReadUser(reader) : null;
         }
 
         public async Task<bool> AddUserAsync(UserProfileDto user, string defaultPassword = "default123")
         {
-            await ValidateUserAsync(user);
-
-            var role = ToDatabaseRole(user.Role);
-            user.WorkshopId = await GetWorkshopIdByNumberAsync(user.WorkshopNumber);
-            // Use provided password if not empty, otherwise fallback to defaultPassword
+            var role = await ValidateUserAsync(user);
+            var roleId = await GetOrCreateRoleIdAsync(role);
             var passwordToHash = string.IsNullOrWhiteSpace(user.Password) ? defaultPassword : user.Password;
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(passwordToHash);
 
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync($@"
+            var connection = await GetOpenConnectionAsync();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
                 INSERT INTO public.user_profile
-                    (""name"", surname, patron, workshop_id, password_hash, personnel_number, ""role"")
+                    (last_name, first_name, middle_name, personnel_number, workshop_id, role_id, password)
                 VALUES
-                    ({user.Name}, {user.Surname}, {user.Patron}, {user.WorkshopId}, {passwordHash}, {user.PersonnelNumber}, CAST({role} AS public.role))");
-
+                    (@last_name, @first_name, @middle_name, @personnel_number, @workshop_id, @role_id, @password);
+                """;
+            AddUserParameters(command, user, roleId, passwordHash);
+            await command.ExecuteNonQueryAsync();
             return true;
         }
 
         public async Task<bool> UpdateUserAsync(UserProfileDto user)
         {
-            await ValidateUserAsync(user);
+            var role = await ValidateUserAsync(user);
+            var roleId = await GetOrCreateRoleIdAsync(role);
+            var existingPassword = await GetPasswordHashAsync(user.Id);
+            if (existingPassword == null)
+                return false;
 
-            var existing = await _userRepository.GetByIdAsync(user.Id);
-            if (existing == null) return false;
+            var passwordHash = string.IsNullOrWhiteSpace(user.Password)
+                ? existingPassword
+                : BCrypt.Net.BCrypt.HashPassword(user.Password);
 
-            var role = ToDatabaseRole(user.Role);
-            user.WorkshopId = await GetWorkshopIdByNumberAsync(user.WorkshopNumber);
-            // Determine password hash: if a new password is provided, hash it; otherwise keep existing hash
-            var passwordHash = !string.IsNullOrWhiteSpace(user.Password)
-                ? BCrypt.Net.BCrypt.HashPassword(user.Password)
-                : existing.PasswordHash;
-
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync($@"
+            var connection = await GetOpenConnectionAsync();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
                 UPDATE public.user_profile
-                SET ""name"" = {user.Name},
-                    surname = {user.Surname},
-                    patron = {user.Patron},
-                    personnel_number = {user.PersonnelNumber},
-                    workshop_id = {user.WorkshopId},
-                    password_hash = {passwordHash},
-                    ""role"" = CAST({role} AS public.role)
-                WHERE user_profile_id = {user.Id}");
-
-            return true;
+                SET last_name = @last_name,
+                    first_name = @first_name,
+                    middle_name = @middle_name,
+                    personnel_number = @personnel_number,
+                    workshop_id = @workshop_id,
+                    role_id = @role_id,
+                    password = @password
+                WHERE user_profile_id = @id;
+                """;
+            AddParameter(command, "id", user.Id);
+            AddUserParameters(command, user, roleId, passwordHash);
+            return await command.ExecuteNonQueryAsync() > 0;
         }
 
         public async Task<bool> DeleteUserAsync(int id)
@@ -116,11 +151,15 @@ namespace QualityControlSystem.WPF.Services
             if (_authService.CurrentUser?.Id == id)
                 throw new InvalidOperationException("Нельзя удалить текущего пользователя.");
 
-            await _userRepository.DeleteAsync(id);
+            var connection = await GetOpenConnectionAsync();
+            using var command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM public.user_profile WHERE user_profile_id = @id;";
+            AddParameter(command, "id", id);
+            await command.ExecuteNonQueryAsync();
             return true;
         }
 
-        private async Task ValidateUserAsync(UserProfileDto user)
+        private async Task<string> ValidateUserAsync(UserProfileDto user)
         {
             if (!IsValidPersonName(user.Surname))
                 throw new InvalidOperationException("Фамилия должна начинаться с заглавной русской буквы и содержать только русские буквы или дефис.");
@@ -131,55 +170,119 @@ namespace QualityControlSystem.WPF.Services
             if (!string.IsNullOrWhiteSpace(user.Patron) && !IsValidPersonName(user.Patron))
                 throw new InvalidOperationException("Отчество должно начинаться с заглавной русской буквы и содержать только русские буквы или дефис.");
 
-            if (!Regex.IsMatch(user.PersonnelNumber ?? string.Empty, @"^[А-ЯЁа-яёA-Za-z]\d+$"))
-                throw new InvalidOperationException("Табельный номер должен начинаться с буквы, затем должны идти цифры. Например: A123.");
+            if (!PersonnelNumberRegex.IsMatch(user.PersonnelNumber ?? string.Empty))
+                throw new InvalidOperationException("Табельный номер должен содержать от 1 до 6 цифр. Например: 123 или 000123.");
 
-            if (!Enum.TryParse<UserRole>(user.Role, out _))
+            var role = NormalizeRole(user.Role);
+            if (role == null)
                 throw new InvalidOperationException("Выбрана некорректная роль пользователя.");
 
-            if (user.WorkshopNumber <= 0)
-                throw new InvalidOperationException("Номер цеха должен быть положительным числом.");
+            if (user.WorkshopId.HasValue && !await WorkshopExistsAsync(user.WorkshopId.Value))
+                throw new InvalidOperationException($"Цех с ID {user.WorkshopId.Value} не найден.");
 
-            var workshopExists = await _dbContext.Workshops.AnyAsync(w => w.Number == user.WorkshopNumber);
-            if (!workshopExists)
-                throw new InvalidOperationException($"Цех с номером {user.WorkshopNumber} не найден.");
+            return role;
         }
 
-        private async Task<int> GetWorkshopIdByNumberAsync(int workshopNumber)
+        private async Task<bool> WorkshopExistsAsync(int workshopId)
         {
-            var workshop = await _dbContext.Workshops
-                .AsNoTracking()
-                .FirstOrDefaultAsync(w => w.Number == workshopNumber);
-
-            if (workshop == null)
-                throw new InvalidOperationException($"Цех с номером {workshopNumber} не найден.");
-
-            return workshop.WorkshopId;
+            var connection = await GetOpenConnectionAsync();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM public.workshop WHERE workshop_id = @workshop_id;";
+            AddParameter(command, "workshop_id", workshopId);
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result) > 0;
         }
 
-        private async Task<int> GetWorkshopNumberAsync(int workshopId)
+        private async Task<int> GetOrCreateRoleIdAsync(string role)
         {
-            return await _dbContext.Workshops
-                .Where(w => w.WorkshopId == workshopId)
-                .Select(w => w.Number)
-                .FirstOrDefaultAsync();
+            var connection = await GetOpenConnectionAsync();
+            var roleCode = RoleCodes.TryGetValue(role, out var code)
+                ? code
+                : throw new InvalidOperationException($"Для роли {role} не задан код.");
+
+            using (var insert = connection.CreateCommand())
+            {
+                insert.CommandText = """
+                    INSERT INTO public."role" (role_code, name)
+                    VALUES (@role_code, @name)
+                    ON CONFLICT (name) DO UPDATE SET role_code = EXCLUDED.role_code;
+                    """;
+                AddParameter(insert, "role_code", roleCode);
+                AddParameter(insert, "name", role);
+                await insert.ExecuteNonQueryAsync();
+            }
+
+            using var select = connection.CreateCommand();
+            select.CommandText = "SELECT role_id FROM public.\"role\" WHERE name = @name;";
+            AddParameter(select, "name", role);
+            var result = await select.ExecuteScalarAsync();
+            return result == null
+                ? throw new InvalidOperationException($"Роль {role} не найдена.")
+                : Convert.ToInt32(result);
+        }
+
+        private async Task<string?> GetPasswordHashAsync(int userId)
+        {
+            var connection = await GetOpenConnectionAsync();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT password FROM public.user_profile WHERE user_profile_id = @id;";
+            AddParameter(command, "id", userId);
+            return await command.ExecuteScalarAsync() as string;
+        }
+
+        private async Task<DbConnection> GetOpenConnectionAsync()
+        {
+            var connection = _dbContext.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
+
+            return connection;
+        }
+
+        private static UserProfileDto ReadUser(IDataRecord reader)
+        {
+            return new UserProfileDto
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("user_profile_id")),
+                Surname = reader.GetString(reader.GetOrdinal("last_name")),
+                Name = reader.GetString(reader.GetOrdinal("first_name")),
+                Patron = reader.IsDBNull(reader.GetOrdinal("middle_name")) ? null : reader.GetString(reader.GetOrdinal("middle_name")),
+                WorkshopId = reader.IsDBNull(reader.GetOrdinal("workshop_id")) ? null : reader.GetInt32(reader.GetOrdinal("workshop_id")),
+                PersonnelNumber = reader.GetString(reader.GetOrdinal("personnel_number")),
+                Role = reader.GetString(reader.GetOrdinal("role_name")),
+                RoleCode = reader.GetString(reader.GetOrdinal("role_code"))
+            };
+        }
+
+        private static void AddUserParameters(IDbCommand command, UserProfileDto user, int roleId, string passwordHash)
+        {
+            AddParameter(command, "last_name", user.Surname);
+            AddParameter(command, "first_name", user.Name);
+            AddParameter(command, "middle_name", user.Patron);
+            AddParameter(command, "personnel_number", user.PersonnelNumber);
+            AddParameter(command, "workshop_id", user.WorkshopId);
+            AddParameter(command, "role_id", roleId);
+            AddParameter(command, "password", passwordHash);
+        }
+
+        private static void AddParameter(IDbCommand command, string name, object? value)
+        {
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = name;
+            parameter.Value = value ?? DBNull.Value;
+            command.Parameters.Add(parameter);
+        }
+
+        private static string? NormalizeRole(string? role)
+        {
+            return string.IsNullOrWhiteSpace(role)
+                ? null
+                : RoleAliases.GetValueOrDefault(role.Trim());
         }
 
         private static bool IsValidPersonName(string? value)
         {
-            return Regex.IsMatch(value ?? string.Empty, @"^[А-ЯЁ][а-яё]+(-[А-ЯЁ][а-яё]+)*$");
-        }
-
-        private static string ToDatabaseRole(string role)
-        {
-            return Enum.Parse<UserRole>(role) switch
-            {
-                UserRole.Admin => "admin",
-                UserRole.Operator => "operator",
-                UserRole.EquipmentSpecialist => "equipment specialist",
-                UserRole.QualityControlOfficer => "quality control officer",
-                _ => throw new InvalidOperationException("Выбрана некорректная роль пользователя.")
-            };
+            return PersonNameRegex.IsMatch(value ?? string.Empty);
         }
     }
 }

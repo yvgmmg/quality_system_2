@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +12,12 @@ public partial class Workshop
     public int WorkshopId { get; set; }
 
     [Column("number")]
-    public int Number { get; set; }
+    [StringLength(4)]
+    public string Number { get; set; } = null!;
 
-    [Column("appointment")]
+    [Column("purpose")]
     [StringLength(255)]
-    public string Appointment { get; set; } = null!;
+    public string? Purpose { get; set; }
 
     [InverseProperty("Workshop")]
     public virtual ICollection<Camera> Cameras { get; set; } = new List<Camera>();
@@ -34,7 +33,4 @@ public partial class Workshop
 
     [InverseProperty("Workshop")]
     public virtual ICollection<UserProfile> UserProfiles { get; set; } = new List<UserProfile>();
-
-    [InverseProperty("Workshop")]
-    public virtual ICollection<WorkshopProductionOrder> WorkshopProductionOrders { get; set; } = new List<WorkshopProductionOrder>();
 }

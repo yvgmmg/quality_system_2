@@ -1,0 +1,51 @@
+<UserControl x:Class="QualityControlSystem.WPF.Views.TemplatesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                <Button Command="{Binding EditTemplateCommand}" Content="Редактировать" Width="110" Margin="5"/>
+                <Button Command="{Binding DeleteTemplateCommand}" Content="Удалить" Width="80" Margin="5"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                <TextBlock Text="Поиск" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="190" Margin="0,0,12,0"/>
+                <TextBlock Text="Сторона" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox ItemsSource="{Binding SideFilterOptions}"
+                          SelectedItem="{Binding SelectedSideFilter}"
+                          Width="130"/>
+            </StackPanel>
+        </DockPanel>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding TemplatesView}"
+                  SelectedItem="{Binding SelectedTemplate}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTemplateColumn Header="Фото" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Width="96" Height="72" Background="#EEEEEE" BorderBrush="#DDDDDD" BorderThickness="1" Margin="4">
+                                <Image Source="{Binding ImagePreview}" Stretch="Uniform"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="180"/>
+                <DataGridTextColumn Header="Сторона" Binding="{Binding Side}" Width="100"/>
+                <DataGridTextColumn Header="Путь к файлам шаблона" Binding="{Binding ImagePath}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="5" Foreground="Red"/>
+    </Grid>
+</UserControl>

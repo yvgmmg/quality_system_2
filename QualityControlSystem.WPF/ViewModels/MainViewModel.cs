@@ -67,17 +67,42 @@ namespace QualityControlSystem.WPF.ViewModels
             MenuItems.Clear();
             MenuItems.Add(new MenuItemViewModel { Header = "Профиль", ViewType = typeof(ProfileView) });
 
-            if (_authService.CurrentUser?.Role?.ToLower() == "admin")
+            if (HasRoleCode(RoleCodes.Admin))
             {
                 MenuItems.Add(new MenuItemViewModel { Header = "Управление пользователями", ViewType = typeof(UserManagementView) });
             }
 
-            if (_authService.CurrentUser?.Role == "QualityControlOfficer")
+            if (HasRoleCode(RoleCodes.Operator))
             {
-                MenuItems.Add(new MenuItemViewModel { Header = "НСИ", ViewType = typeof(RegulatoryInformationView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Контроль деталей", ViewType = typeof(OperatorControlView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Шаблоны", ViewType = typeof(TemplatesView) });
+            }
+
+            if (HasRoleCode(RoleCodes.EquipmentSpecialist))
+            {
+                MenuItems.Add(new MenuItemViewModel { Header = "Оборудование", ViewType = typeof(EquipmentManagementView) });
+            }
+
+            if (HasRoleCode(RoleCodes.QualityControl))
+            {
+                MenuItems.Add(new MenuItemViewModel { Header = "Карточки каркасов", ViewType = typeof(FrameCardsView) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Тесты контроля", ViewType = typeof(QualityTestsView) });
             }
 
             MenuItems.Add(new MenuItemViewModel { Header = "Выйти", IsExit = true });
+        }
+
+        private bool HasRoleCode(string roleCode)
+        {
+            return string.Equals(_authService.CurrentUser?.RoleCode, roleCode, System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static class RoleCodes
+        {
+            public const string Admin = "01000001";
+            public const string Operator = "02000001";
+            public const string EquipmentSpecialist = "03000001";
+            public const string QualityControl = "04000001";
         }
 
         [RelayCommand]

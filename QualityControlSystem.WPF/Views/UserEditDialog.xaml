@@ -44,10 +44,10 @@
 
         <TextBlock Grid.Row="5" Grid.Column="0" Text="Роль" Margin="0,0,12,10" VerticalAlignment="Center"/>
         <ComboBox Grid.Row="5" Grid.Column="1" x:Name="RoleComboBox" Margin="0,0,0,10" SelectedValuePath="Tag">
-            <ComboBoxItem Content="Администратор" Tag="Admin"/>
-            <ComboBoxItem Content="Оператор" Tag="Operator"/>
-            <ComboBoxItem Content="Специалист по оборудованию" Tag="EquipmentSpecialist"/>
-            <ComboBoxItem Content="Контролёр качества" Tag="QualityControlOfficer"/>
+            <ComboBoxItem Content="Администратор" Tag="admin"/>
+            <ComboBoxItem Content="Оператор" Tag="operator"/>
+            <ComboBoxItem Content="Специалист по оборудованию" Tag="equipment specialist"/>
+            <ComboBoxItem Content="Контролёр качества" Tag="quality control"/>
         </ComboBox>
 
         <TextBlock Grid.Row="6" Grid.Column="0" Text="Номер цеха" Margin="0,0,12,10" VerticalAlignment="Center"/>

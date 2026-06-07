@@ -28,12 +28,13 @@ namespace QualityControlSystem.WPF
                     {
                         config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
                         config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                        config.AddEnvironmentVariables();
                     })
                     .ConfigureServices((context, services) =>
                     {
                         services.AddSingleton<IConfiguration>(context.Configuration);
 
-                        var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
+                        var connectionString = context.Configuration["Database:ConnectionString"];
                         if (string.IsNullOrWhiteSpace(connectionString))
                         {
                             throw new InvalidOperationException("Database connection string is missing. Check appsettings.json.");
@@ -50,21 +51,29 @@ namespace QualityControlSystem.WPF
                         services.AddSingleton<IAuthService, AuthService>();
                         services.AddSingleton<INavigationService, NavigationService>();
                         services.AddScoped<IUserManagementService, UserManagementService>();
-                        services.AddScoped<IRegulatoryInformationService, RegulatoryInformationService>();
+                        services.AddScoped<IQualityTestService, QualityTestService>();
 
                         //ViewModel
                         services.AddTransient<MainViewModel>();
                         services.AddTransient<LoginViewModel>();
                         services.AddTransient<ProfileViewModel>();
                         services.AddTransient<UserManagementViewModel>();
-                        services.AddTransient<RegulatoryInformationViewModel>();
+                        services.AddTransient<OperatorControlViewModel>();
+                        services.AddTransient<EquipmentManagementViewModel>();
+                        services.AddTransient<TemplatesViewModel>();
+                        services.AddTransient<FrameCardsViewModel>();
+                        services.AddTransient<QualityTestsViewModel>();
 
                         //View
                         services.AddTransient<LoginView>();
                         services.AddSingleton<MainWindow>();
                         services.AddTransient<ProfileView>();
                         services.AddTransient<UserManagementView>();
-                        services.AddTransient<RegulatoryInformationView>();
+                        services.AddTransient<OperatorControlView>();
+                        services.AddTransient<EquipmentManagementView>();
+                        services.AddTransient<TemplatesView>();
+                        services.AddTransient<FrameCardsView>();
+                        services.AddTransient<QualityTestsView>();
                     })
                     .Build();
             }

@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -9,41 +7,33 @@ namespace QualityControlSystem.Infrastructure.Entities;
 [Table("production_equipment")]
 public partial class ProductionEquipment
 {
+    [Key]
+    [Column("production_equipment_id")]
+    public int ProductionEquipmentId { get; set; }
+
     [Column("name")]
     [StringLength(255)]
     public string Name { get; set; } = null!;
 
     [Column("serial_number")]
-    [StringLength(100)]
+    [StringLength(20)]
     public string? SerialNumber { get; set; }
 
+    [Column("okof_code")]
+    [StringLength(19)]
+    public string OkofCode { get; set; } = null!;
+
     [Column("inventory_number")]
-    [StringLength(20)]
-    public string? InventoryNumber { get; set; }
+    [StringLength(17)]
+    public string InventoryNumber { get; set; } = null!;
 
     [Column("workshop_id")]
-    public int? WorkshopId { get; set; }
-
-    [Key]
-    [Column("production_equipment_id")]
-    public int ProductionEquipmentId { get; set; }
+    public int WorkshopId { get; set; }
 
     [InverseProperty("ProductionEquipment")]
-    public virtual ICollection<EquipmentInspectionFormProductionEquipment> EquipmentInspectionFormProductionEquipments { get; set; } = new List<EquipmentInspectionFormProductionEquipment>();
-
-    [InverseProperty("ProductionEquipment")]
-    public virtual ICollection<InstructionProductionEquipment> InstructionProductionEquipments { get; set; } = new List<InstructionProductionEquipment>();
-
-    [InverseProperty("ProductionEquipment")]
-    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
-
-    [InverseProperty("ProductionEquipment")]
-    public virtual ICollection<RegulatoryInfromationProductionEquipment> RegulatoryInfromationProductionEquipments { get; set; } = new List<RegulatoryInfromationProductionEquipment>();
-
-    [InverseProperty("ProductionEquipment")]
-    public virtual ICollection<SensorReading> SensorReadings { get; set; } = new List<SensorReading>();
+    public virtual ICollection<CheckNotification> CheckNotifications { get; set; } = new List<CheckNotification>();
 
     [ForeignKey("WorkshopId")]
     [InverseProperty("ProductionEquipments")]
-    public virtual Workshop? Workshop { get; set; }
+    public virtual Workshop Workshop { get; set; } = null!;
 }
