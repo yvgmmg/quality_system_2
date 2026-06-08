@@ -40,6 +40,9 @@ public partial class Frame
     [InverseProperty("Frame")]
     public virtual ICollection<FrameTestFormFrame> FrameTestFormFrames { get; set; } = new List<FrameTestFormFrame>();
 
+    [InverseProperty("Frame")]
+    public virtual ICollection<ProductionEquipmentFrame> ProductionEquipmentFrames { get; set; } = new List<ProductionEquipmentFrame>();
+
     [ForeignKey("MaterialTypeId")]
     [InverseProperty("Frames")]
     public virtual MaterialType MaterialType { get; set; } = null!;

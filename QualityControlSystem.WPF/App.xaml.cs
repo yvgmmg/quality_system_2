@@ -50,15 +50,18 @@ namespace QualityControlSystem.WPF
                         services.AddSingleton<INavigationService, NavigationService>();
                         services.AddScoped<IUserManagementService, UserManagementService>();
                         services.AddScoped<IQualityTestService, QualityTestService>();
+                        services.AddScoped<IEquipmentManagementService, EquipmentManagementService>();
+                        services.AddScoped<IEquipmentWorkResultsService, EquipmentWorkResultsService>();
 
                         //ViewModel
-                        services.AddTransient<MainViewModel>();
+                        services.AddSingleton<MainViewModel>();
                         services.AddTransient<LoginViewModel>();
                         services.AddTransient<DashboardViewModel>();
                         services.AddTransient<ProfileViewModel>();
                         services.AddTransient<UserManagementViewModel>();
                         services.AddTransient<OperatorControlViewModel>();
                         services.AddTransient<EquipmentManagementViewModel>();
+                        services.AddTransient<EquipmentWorkResultsViewModel>();
                         services.AddTransient<TemplatesViewModel>();
                         services.AddTransient<FrameCardsViewModel>();
                         services.AddTransient<QualityTestsViewModel>();

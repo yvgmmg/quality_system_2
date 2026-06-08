@@ -9,12 +9,15 @@ namespace QualityControlSystem.WPF.Dtos
         public DateTime RecordedAt { get; set; }
         public string? Status { get; set; }
         public int TemplateId { get; set; }
+        public int? FrameId { get; set; }
+        public string? FrameName { get; set; }
         public double? Similarity { get; set; }
         public double? ContourScore { get; set; }
         public double? FilledScore { get; set; }
         public double? ShapeScore { get; set; }
         public string? Reason { get; set; }
         public double? Weight { get; set; }
+        public double? TemperatureC { get; set; }
         public double? ExpectedWeight { get; set; }
         public double? WeightTolerance { get; set; }
         public double? LightPercent { get; set; }

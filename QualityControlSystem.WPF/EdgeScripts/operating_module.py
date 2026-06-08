@@ -214,6 +214,7 @@ class ArduinoSensors:
         self.ser = None
         self.values = {
             "weight": None,
+            "temperature_c": None,
             "light_adc": None,
             "light_percent": None,
             "updated_at": None,
@@ -366,8 +367,23 @@ class ArduinoSensors:
                 if value is None:
                     continue
 
-                if self._matches_label(low, ("вес", "weight", "ves", "р’рµсѓ", "рІрµсЃ")):
+                if self._matches_label(low, ("вес", "weight", "ves", "scale", "р’рµсѓ", "рІрµсЃ", "р’рµсЃ")):
                     self.values["weight"] = value
+                elif self._matches_label(low, (
+                    "температура",
+                    "темп",
+                    "temperature",
+                    "temp",
+                    "thermo",
+                    "celsius",
+                    "°c",
+                    " t:",
+                    "t=",
+                    "рўрµрјрїрµсђр°с‚сѓсђр°",
+                    "рўрµрјрїрµсЂр°с‚ур°",
+                    "рўрµрјрїрµсЂр°с‚сѓсЂр°",
+                )):
+                    self.values["temperature_c"] = value
                 elif self._matches_label(low, ("свет", "light", "рЎрІрµс‚", "сѓрірµс‚")):
                     adc = max(0.0, min(1023.0, value))
                     self.values["light_adc"] = adc
@@ -1007,6 +1023,7 @@ def append_result(summary, sensors):
         "shapeScore": clean_number(summary.get("median_shape")),
         "reason": summary.get("reason"),
         "weight": clean_number(sensor_values.get("weight")),
+        "temperatureC": clean_number(sensor_values.get("temperature_c")),
         "lightPercent": clean_number(sensor_values.get("light_percent")),
         "lightAdc": clean_number(sensor_values.get("light_adc")),
     }

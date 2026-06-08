@@ -1,4 +1,4 @@
-﻿bin/
+bin/
 obj/
 .vs/
 *.user
@@ -11,3 +11,8 @@ TestResults/
 *.nupkg
 __pycache__/
 *.py[cod]
+
+# Local application settings
+**/appsettings*.json
+!**/appsettings.example.json
+!**/appsettings.template.json

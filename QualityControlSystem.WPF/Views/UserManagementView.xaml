@@ -4,6 +4,7 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -14,7 +15,23 @@
             <Button Command="{Binding DeleteUserCommand}" Content="Удалить" Width="80" Margin="5"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
+        <DockPanel Grid.Row="1" Margin="5,0,5,10">
+            <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Width="220"
+                     Margin="0,0,12,0"/>
+            <TextBlock Text="Роль:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox ItemsSource="{Binding RoleFilterOptions}"
+                      SelectedItem="{Binding SelectedRoleFilter}"
+                      Width="170"
+                      Margin="0,0,12,0"/>
+            <TextBlock Text="Цех:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox ItemsSource="{Binding WorkshopFilterOptions}"
+                      SelectedItem="{Binding SelectedWorkshopFilter}"
+                      Width="190"/>
+        </DockPanel>
+
+        <DataGrid Grid.Row="2" ItemsSource="{Binding UsersView}" SelectedItem="{Binding SelectedUser}"
                   AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
@@ -23,10 +40,10 @@
                 <DataGridTextColumn Header="Отчество" Binding="{Binding Patron}" Width="100"/>
                 <DataGridTextColumn Header="Табельный номер" Binding="{Binding PersonnelNumber}" Width="120"/>
                 <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="150"/>
-                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopNumber}" Width="60"/>
+                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopName}" Width="180"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="5" Foreground="Red"/>
+        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" Margin="5" Foreground="Red" TextWrapping="Wrap"/>
     </Grid>
 </UserControl>

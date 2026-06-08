@@ -101,6 +101,7 @@ def append_result(summary, sensors):
         "shapeScore": clean_number(summary.get("median_shape")),
         "reason": summary.get("reason"),
         "weight": clean_number(sensor_values.get("weight")),
+        "temperatureC": clean_number(sensor_values.get("temperature_c")),
         "lightPercent": clean_number(sensor_values.get("light_percent")),
         "lightAdc": clean_number(sensor_values.get("light_adc")),
     }

@@ -23,6 +23,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
     private readonly AppDbContext _dbContext;
     private readonly IDialogService _dialogService;
+    private readonly IAuthService _authService;
 
     [ObservableProperty]
     private ObservableCollection<FrameCardDto> _frames = new();
@@ -54,10 +55,14 @@ public partial class FrameCardsViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isBusy;
 
-    public FrameCardsViewModel(AppDbContext dbContext, IDialogService dialogService)
+    public FrameCardsViewModel(
+        AppDbContext dbContext,
+        IDialogService dialogService,
+        IAuthService authService)
     {
         _dbContext = dbContext;
         _dialogService = dialogService;
+        _authService = authService;
         FramesView = CollectionViewSource.GetDefaultView(Frames);
         FramesView.Filter = FilterFrame;
         _ = LoadAsync();
@@ -101,8 +106,11 @@ public partial class FrameCardsViewModel : BaseViewModel
             })
             .ToListAsync();
 
-        var workshops = await _dbContext.Workshops
-            .AsNoTracking()
+        var workshopQuery = _dbContext.Workshops.AsNoTracking();
+        if (CurrentWorkshopId is int currentWorkshopId)
+            workshopQuery = workshopQuery.Where(workshop => workshop.WorkshopId == currentWorkshopId);
+
+        var workshops = await workshopQuery
             .OrderBy(workshop => workshop.Number)
             .Select(workshop => new LookupItemDto
             {
@@ -119,21 +127,29 @@ public partial class FrameCardsViewModel : BaseViewModel
             MaterialOptions.Add(material);
 
         WorkshopOptions.Clear();
-        WorkshopOptions.Add(new LookupItemDto { Id = null, Name = "Все цеха" });
+        if (CurrentWorkshopId is null)
+            WorkshopOptions.Add(new LookupItemDto { Id = null, Name = "Все цеха" });
         foreach (var workshop in workshops)
             WorkshopOptions.Add(workshop);
 
         SelectedMaterialFilter = MaterialOptions.FirstOrDefault(item => item.Id == materialFilter) ?? MaterialOptions.FirstOrDefault();
-        SelectedWorkshopFilter = WorkshopOptions.FirstOrDefault(item => item.Id == workshopFilter) ?? WorkshopOptions.FirstOrDefault();
+        SelectedWorkshopFilter = CurrentWorkshopId is int userWorkshopId
+            ? WorkshopOptions.FirstOrDefault(item => item.Id == userWorkshopId)
+            : WorkshopOptions.FirstOrDefault(item => item.Id == workshopFilter) ?? WorkshopOptions.FirstOrDefault();
     }
 
     private async Task LoadFramesAsync()
     {
         var selectedId = SelectedFrame?.Id;
-        var frames = await _dbContext.Frames
+        IQueryable<Frame> frameQuery = _dbContext.Frames
             .AsNoTracking()
             .Include(frame => frame.MaterialType)
-            .Include(frame => frame.Workshop)
+            .Include(frame => frame.Workshop);
+
+        if (CurrentWorkshopId is int currentWorkshopId)
+            frameQuery = frameQuery.Where(frame => frame.WorkshopId == currentWorkshopId);
+
+        var frames = await frameQuery
             .OrderBy(frame => frame.FrameId)
             .Select(frame => new
             {
@@ -182,7 +198,10 @@ public partial class FrameCardsViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddFrameAsync()
     {
-        var newFrame = new FrameCardDto();
+        var newFrame = new FrameCardDto
+        {
+            WorkshopId = CurrentWorkshopId.GetValueOrDefault()
+        };
         if (!_dialogService.ShowFrameDialog(newFrame, MaterialOptions.Where(item => item.Id.HasValue), WorkshopOptions.Where(item => item.Id.HasValue), false))
             return;
 
@@ -191,6 +210,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
         try
         {
+            ApplyCurrentWorkshop(newFrame);
             ValidateFrame(newFrame);
             var frame = new Frame
             {
@@ -251,6 +271,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
         try
         {
+            ApplyCurrentWorkshop(editFrame);
             ValidateFrame(editFrame);
             var frame = await _dbContext.Frames.FirstOrDefaultAsync(item => item.FrameId == editFrame.Id);
             if (frame == null)
@@ -414,4 +435,17 @@ public partial class FrameCardsViewModel : BaseViewModel
     partial void OnSelectedMaterialFilterChanged(LookupItemDto? value) => FramesView?.Refresh();
 
     partial void OnSelectedWorkshopFilterChanged(LookupItemDto? value) => FramesView?.Refresh();
+
+    private int? CurrentWorkshopId => _authService.CurrentUser?.WorkshopId;
+
+    private void ApplyCurrentWorkshop(FrameCardDto frame)
+    {
+        if (CurrentWorkshopId is not int workshopId)
+            return;
+
+        if (frame.WorkshopId > 0 && frame.WorkshopId != workshopId)
+            throw new InvalidOperationException("Нельзя добавлять или изменять каркасы другого цеха.");
+
+        frame.WorkshopId = workshopId;
+    }
 }

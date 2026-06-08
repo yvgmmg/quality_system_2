@@ -1,12 +1,13 @@
 using System;
+using Microsoft.Extensions.DependencyInjection;
 using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.Services.Navigation;
 
-public class NavigationStore
+public class NavigationStore : IDisposable
 {
     private BaseViewModel? _currentViewModel;
-    private IDisposable? _currentScope;
+    private IServiceScope? _currentScope;
 
     public event Action<BaseViewModel?>? CurrentViewModelChanged;
 
@@ -15,7 +16,7 @@ public class NavigationStore
         get => _currentViewModel;
     }
 
-    public void SetCurrentViewModel(BaseViewModel? viewModel, IDisposable? scope)
+    public void SetCurrentViewModel(BaseViewModel? viewModel, IServiceScope? scope)
     {
         if (ReferenceEquals(_currentViewModel, viewModel))
         {
@@ -27,5 +28,12 @@ public class NavigationStore
         _currentScope = scope;
         _currentViewModel = viewModel;
         CurrentViewModelChanged?.Invoke(viewModel);
+    }
+
+    public void Dispose()
+    {
+        _currentScope?.Dispose();
+        _currentScope = null;
+        _currentViewModel = null;
     }
 }

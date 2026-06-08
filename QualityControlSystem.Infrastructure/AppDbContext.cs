@@ -28,6 +28,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<ProductionEquipment> ProductionEquipments { get; set; }
 
+    public virtual DbSet<ProductionEquipmentFrame> ProductionEquipmentFrames { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Sensor> Sensors { get; set; }
@@ -156,6 +158,22 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("production_equipment_workshop_fk");
         });
 
+        modelBuilder.Entity<ProductionEquipmentFrame>(entity =>
+        {
+            entity.HasKey(e => new { e.ProductionEquipmentId, e.FrameId }).HasName("production_equipment_frame_pk");
+            entity.HasIndex(e => new { e.ProductionEquipmentId, e.FrameId })
+                .IsUnique()
+                .HasDatabaseName("production_equipment_frame_unique");
+            entity.HasOne(e => e.ProductionEquipment)
+                .WithMany(e => e.ProductionEquipmentFrames)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("production_equipment_frame_equipment_fk");
+            entity.HasOne(e => e.Frame)
+                .WithMany(e => e.ProductionEquipmentFrames)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("production_equipment_frame_frame_fk");
+        });
+
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.RoleId).HasName("role_pk");
@@ -171,6 +189,10 @@ public partial class AppDbContext : DbContext
                 .WithMany(e => e.Sensors)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("sensor_measurement_unit_fk");
+            entity.HasOne(e => e.ProductionEquipment)
+                .WithMany(e => e.Sensors)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("sensor_production_equipment_fk");
             entity.HasOne(e => e.SensorType)
                 .WithMany(e => e.Sensors)
                 .OnDelete(DeleteBehavior.Restrict)

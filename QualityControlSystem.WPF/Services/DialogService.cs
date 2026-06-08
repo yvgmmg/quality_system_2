@@ -7,20 +7,20 @@ namespace QualityControlSystem.WPF.Services
 {
     public class DialogService : IDialogService
     {
-        public void ShowMessage(string message, string title = "Информация")
+        public void ShowMessage(string message, string title = "РРЅС„РѕСЂРјР°С†РёСЏ")
         {
             MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        public bool ShowConfirm(string message, string title = "Подтверждение")
+        public bool ShowConfirm(string message, string title = "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ")
         {
             var result = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
             return result == MessageBoxResult.Yes;
         }
 
-        public bool ShowUserDialog(UserProfileDto user, bool isEdit)
+        public bool ShowUserDialog(UserProfileDto user, IEnumerable<LookupItemDto> workshops, bool isEdit)
         {
-            var dialog = new UserEditDialog(user, isEdit)
+            var dialog = new UserEditDialog(user, workshops, isEdit)
             {
                 Owner = Application.Current.MainWindow
             };

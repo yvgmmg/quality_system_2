@@ -57,9 +57,12 @@ namespace QualityControlSystem.WPF.Services
                     up.workshop_id,
                     up.personnel_number,
                     r.name AS role_name,
-                    r.role_code
+                    r.role_code,
+                    w.number AS workshop_number,
+                    w.purpose AS workshop_purpose
                 FROM public.user_profile up
                 INNER JOIN public."role" r ON r.role_id = up.role_id
+                LEFT JOIN public.workshop w ON w.workshop_id = up.workshop_id
                 ORDER BY up.user_profile_id;
                 """;
 
@@ -68,6 +71,21 @@ namespace QualityControlSystem.WPF.Services
                 users.Add(ReadUser(reader));
 
             return users;
+        }
+
+        public async Task<IReadOnlyList<LookupItemDto>> GetWorkshopOptionsAsync()
+        {
+            return await _dbContext.Workshops
+                .AsNoTracking()
+                .OrderBy(workshop => workshop.Number)
+                .Select(workshop => new LookupItemDto
+                {
+                    Id = workshop.WorkshopId,
+                    Name = string.IsNullOrWhiteSpace(workshop.Purpose)
+                        ? $"Цех {workshop.Number}"
+                        : $"Цех {workshop.Number} - {workshop.Purpose}"
+                })
+                .ToListAsync();
         }
 
         public async Task<UserProfileDto?> GetUserByIdAsync(int id)
@@ -84,9 +102,12 @@ namespace QualityControlSystem.WPF.Services
                     up.workshop_id,
                     up.personnel_number,
                     r.name AS role_name,
-                    r.role_code
+                    r.role_code,
+                    w.number AS workshop_number,
+                    w.purpose AS workshop_purpose
                 FROM public.user_profile up
                 INNER JOIN public."role" r ON r.role_id = up.role_id
+                LEFT JOIN public.workshop w ON w.workshop_id = up.workshop_id
                 WHERE up.user_profile_id = @id
                 LIMIT 1;
                 """;
@@ -248,6 +269,9 @@ namespace QualityControlSystem.WPF.Services
                 Name = reader.GetString(reader.GetOrdinal("first_name")),
                 Patron = reader.IsDBNull(reader.GetOrdinal("middle_name")) ? null : reader.GetString(reader.GetOrdinal("middle_name")),
                 WorkshopId = reader.IsDBNull(reader.GetOrdinal("workshop_id")) ? null : reader.GetInt32(reader.GetOrdinal("workshop_id")),
+                WorkshopName = FormatWorkshop(
+                    ReadNullableText(reader, "workshop_number"),
+                    ReadNullableText(reader, "workshop_purpose")),
                 PersonnelNumber = reader.GetString(reader.GetOrdinal("personnel_number")),
                 Role = reader.GetString(reader.GetOrdinal("role_name")),
                 RoleCode = reader.GetString(reader.GetOrdinal("role_code"))
@@ -271,6 +295,22 @@ namespace QualityControlSystem.WPF.Services
             parameter.ParameterName = name;
             parameter.Value = value ?? DBNull.Value;
             command.Parameters.Add(parameter);
+        }
+
+        private static string FormatWorkshop(string? number, string? purpose)
+        {
+            if (string.IsNullOrWhiteSpace(number))
+                return string.Empty;
+
+            return string.IsNullOrWhiteSpace(purpose)
+                ? $"Цех {number}"
+                : $"Цех {number} - {purpose}";
+        }
+
+        private static string? ReadNullableText(IDataRecord reader, string name)
+        {
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? null : Convert.ToString(reader.GetValue(ordinal));
         }
 
         private static string? NormalizeRole(string? role)

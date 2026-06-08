@@ -10,6 +10,7 @@ using QualityControlSystem.WPF.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
@@ -166,9 +167,15 @@ public partial class TemplatesViewModel : BaseViewModel
         StatusMessage = "Удаление шаблона...";
         try
         {
-            await DeleteTemplateRecordAsync(SelectedTemplate.Id);
+            var deletedTemplatePath = await DeleteTemplateRecordAsync(SelectedTemplate.Id);
+            var fileDeleteMessage = DeleteTemplateFiles(deletedTemplatePath);
             SelectedTemplate = null;
             await LoadAsync();
+            if (!string.IsNullOrWhiteSpace(fileDeleteMessage))
+            {
+                StatusMessage = fileDeleteMessage;
+                return;
+            }
             StatusMessage = "Шаблон удален.";
         }
         catch (Exception ex)
@@ -202,12 +209,23 @@ public partial class TemplatesViewModel : BaseViewModel
         await command.ExecuteNonQueryAsync();
     }
 
-    private async Task DeleteTemplateRecordAsync(int templateId)
+    private async Task<string?> DeleteTemplateRecordAsync(int templateId)
     {
+        string? imagePath = null;
+        var canDeleteFiles = false;
+
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         var connection = _dbContext.Database.GetDbConnection();
         if (connection.State != ConnectionState.Open)
             await connection.OpenAsync();
+
+        await using (var select = connection.CreateCommand())
+        {
+            select.Transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction();
+            select.CommandText = "SELECT image_path FROM template WHERE template_id = @id;";
+            AddParameter(select, "id", templateId);
+            imagePath = await select.ExecuteScalarAsync() as string;
+        }
 
         await using (var unlink = connection.CreateCommand())
         {
@@ -225,7 +243,45 @@ public partial class TemplatesViewModel : BaseViewModel
             await delete.ExecuteNonQueryAsync();
         }
 
+        if (!string.IsNullOrWhiteSpace(imagePath))
+        {
+            await using var count = connection.CreateCommand();
+            count.Transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction();
+            count.CommandText = "SELECT COUNT(*) FROM template WHERE image_path = @image_path;";
+            AddParameter(count, "image_path", imagePath);
+            canDeleteFiles = Convert.ToInt32(await count.ExecuteScalarAsync()) == 0;
+        }
+
         await transaction.CommitAsync();
+        return canDeleteFiles ? imagePath : null;
+    }
+
+    private static string? DeleteTemplateFiles(string? imagePath)
+    {
+        if (string.IsNullOrWhiteSpace(imagePath))
+            return null;
+
+        try
+        {
+            var absolutePath = Path.GetFullPath(imagePath);
+            if (Directory.Exists(absolutePath))
+            {
+                Directory.Delete(absolutePath, recursive: true);
+                return "Файлы шаблона удалены с диска.";
+            }
+
+            if (File.Exists(absolutePath))
+            {
+                File.Delete(absolutePath);
+                return "Файл шаблона удален с диска.";
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Шаблон удален из БД, но файлы не удалось удалить: {ex.Message}";
+        }
+
+        return null;
     }
 
     private bool FilterTemplate(object item)

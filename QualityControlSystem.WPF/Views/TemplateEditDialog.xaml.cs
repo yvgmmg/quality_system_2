@@ -12,7 +12,12 @@ public partial class TemplateEditDialog : Window
         InitializeComponent();
 
         var viewModel = new TemplateEditDialogViewModel(template, sides);
-        viewModel.CloseRequested += result => DialogResult = result;
+        viewModel.CloseRequested += result =>
+        {
+            DialogResult = result;
+            Close();
+        };
+
         DataContext = viewModel;
     }
 }

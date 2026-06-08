@@ -90,6 +90,7 @@ namespace QualityControlSystem.WPF.ViewModels
             if (HasRoleCode(RoleCodes.EquipmentSpecialist))
             {
                 MenuItems.Add(new MenuItemViewModel { Header = "Оборудование", ViewModelType = typeof(EquipmentManagementViewModel) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Результаты работы оборудовани", ViewModelType = typeof(EquipmentWorkResultsViewModel) });
             }
 
             if (HasRoleCode(RoleCodes.QualityControl))

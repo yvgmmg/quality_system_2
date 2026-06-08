@@ -56,4 +56,10 @@ public partial class TemplateEditDialogViewModel : BaseViewModel
         _template.Side = SelectedSide;
         CloseRequested?.Invoke(true);
     }
+
+    [RelayCommand]
+    private void Cancel()
+    {
+        CloseRequested?.Invoke(false);
+    }
 }

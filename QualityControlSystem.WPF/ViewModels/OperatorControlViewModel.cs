@@ -21,15 +21,17 @@ using System.Windows.Threading;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
-    public partial class OperatorControlViewModel : BaseViewModel
+    public partial class OperatorControlViewModel : BaseViewModel, IDisposable
     {
         private readonly AppDbContext _dbContext;
         private readonly IEdgeDeviceService _edgeDeviceService;
+        private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
         private readonly IDialogService _dialogService;
         private readonly INotificationService _notificationService;
         private readonly HttpClient _videoClient = new() { Timeout = TimeSpan.FromSeconds(3) };
         private readonly DispatcherTimer _frameTimer;
         private readonly DispatcherTimer _resultTimer;
+        private bool _isDisposed;
 
         [ObservableProperty]
         private string _statusMessage = "Модуль контроля качества готов";
@@ -54,6 +56,9 @@ namespace QualityControlSystem.WPF.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<LookupItemDto> _frameOptions = new();
+
+        [ObservableProperty]
+        private ObservableCollection<SelectableFrameDto> _inspectionFrameOptions = new();
 
         [ObservableProperty]
         private ObservableCollection<LookupItemDto> _workshopOptions = new();
@@ -84,11 +89,13 @@ namespace QualityControlSystem.WPF.ViewModels
         public OperatorControlViewModel(
             AppDbContext dbContext,
             IEdgeDeviceService edgeDeviceService,
+            IEquipmentWorkResultsService equipmentWorkResultsService,
             IDialogService dialogService,
             INotificationService notificationService)
         {
             _dbContext = dbContext;
             _edgeDeviceService = edgeDeviceService;
+            _equipmentWorkResultsService = equipmentWorkResultsService;
             _dialogService = dialogService;
             _notificationService = notificationService;
 
@@ -107,10 +114,24 @@ namespace QualityControlSystem.WPF.ViewModels
             {
                 var frames = await _edgeDeviceService.GetFrameOptionsAsync();
                 FrameOptions.Clear();
+                InspectionFrameOptions.Clear();
                 foreach (var frame in frames)
+                {
                     FrameOptions.Add(frame);
+                    InspectionFrameOptions.Add(new SelectableFrameDto
+                    {
+                        Id = frame.Id,
+                        Name = frame.Name,
+                        Weight = frame.Weight
+                    });
+                }
 
                 SelectedFrame ??= FrameOptions.FirstOrDefault();
+                if (!InspectionFrameOptions.Any(frame => frame.IsSelected)
+                    && InspectionFrameOptions.FirstOrDefault(frame => frame.Id == SelectedFrame?.Id) is { } selectedFrame)
+                {
+                    selectedFrame.IsSelected = true;
+                }
             }
             catch
             {
@@ -338,6 +359,10 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
+                var selectedFrames = GetSelectedInspectionFrames();
+                if (selectedFrames.Count == 0)
+                    throw new InvalidOperationException("Выберите модель каркаса для шаблона.");
+
                 if (SelectedFrame?.Id is not int frameId)
                     throw new InvalidOperationException("Выберите модель каркаса для шаблона.");
 
@@ -362,10 +387,11 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                if (SelectedFrame?.Id is not int frameId)
+                var selectedFrames = GetSelectedInspectionFrames();
+                if (selectedFrames.Count == 0)
                     throw new InvalidOperationException("Выберите модель каркаса для запуска operating.");
 
-                LastLog = await _edgeDeviceService.StartOperatingForFrameAsync(frameId);
+                LastLog = await _edgeDeviceService.StartOperatingForFramesAsync(selectedFrames.Select(frame => frame.Id!.Value));
                 IsOperatingRunning = true;
                 IsPhotomakerRunning = false;
                 CurrentMode = "Контроль деталей";
@@ -382,6 +408,13 @@ namespace QualityControlSystem.WPF.ViewModels
             {
                 _resultTimer.Stop();
                 await RefreshResultsAsync();
+                foreach (var frame in GetSelectedInspectionFrames())
+                {
+                    var frameResults = Results.Where(result => result.FrameId == frame.Id).ToList();
+                    if (frameResults.Count > 0 && frame.Id.HasValue)
+                        await _equipmentWorkResultsService.CreateResultsForFrameInspectionAsync(frame.Id.Value, frameResults);
+                }
+
                 await _edgeDeviceService.StopOperatingAsync();
                 IsOperatingRunning = false;
                 StopVideoIfIdle();
@@ -403,9 +436,11 @@ namespace QualityControlSystem.WPF.ViewModels
                 if (Results.Count == 0)
                     throw new InvalidOperationException("Нет результатов контроля для отчета.");
 
+                var selectedFrames = GetSelectedInspectionFrames();
                 var reportsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
                 Directory.CreateDirectory(reportsDirectory);
-                var safeFrameName = string.Join("_", SelectedFrame.Name.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries));
+                var reportName = selectedFrames.Count == 1 ? selectedFrames[0].Name : "multi_frames";
+                var safeFrameName = string.Join("_", reportName.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries));
                 var dialog = new SaveFileDialog
                 {
                     Title = "Составить отчет",
@@ -419,7 +454,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 if (dialog.ShowDialog() != true)
                     return;
 
-                var path = await _edgeDeviceService.CreateQualityReportAsync(frameId, Results, dialog.FileName);
+                var path = await _edgeDeviceService.CreateQualityReportAsync(selectedFrames.Select(frame => frame.Id!.Value), Results, dialog.FileName);
                 LastLog = $"Отчет составлен: {path}";
                 StatusMessage = "Отчет составлен";
             });
@@ -429,7 +464,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             var results = await _edgeDeviceService.GetInspectionResultsAsync();
             var ordered = NumberResults(results);
-            ApplyWeightCheck(ordered, SelectedFrame?.Weight);
+            await ApplyFrameChecksAsync(ordered);
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -497,6 +532,41 @@ namespace QualityControlSystem.WPF.ViewModels
             }
         }
 
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            _frameTimer.Stop();
+            _resultTimer.Stop();
+            _videoClient.Dispose();
+
+            var stopPhotomaker = IsPhotomakerRunning;
+            var stopOperating = IsOperatingRunning;
+            IsPhotomakerRunning = false;
+            IsOperatingRunning = false;
+
+            if (!stopPhotomaker && !stopOperating)
+                return;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (stopPhotomaker)
+                        await _edgeDeviceService.StopPhotomakerAsync();
+
+                    if (stopOperating)
+                        await _edgeDeviceService.StopOperatingAsync();
+                }
+                catch
+                {
+                    // The view is already closed; stop failures are surfaced on the next SSH check/start.
+                }
+            });
+        }
+
         private async Task RunUiTaskAsync(Func<Task> action)
         {
             if (IsBusy)
@@ -559,6 +629,95 @@ namespace QualityControlSystem.WPF.ViewModels
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
 
+        private List<SelectableFrameDto> GetSelectedInspectionFrames()
+        {
+            var selectedFrames = InspectionFrameOptions
+                .Where(frame => frame.IsSelected && frame.Id.HasValue)
+                .ToList();
+
+            if (selectedFrames.Count == 0 && SelectedFrame?.Id.HasValue == true)
+            {
+                selectedFrames.Add(new SelectableFrameDto
+                {
+                    Id = SelectedFrame.Id,
+                    Name = SelectedFrame.Name,
+                    Weight = SelectedFrame.Weight,
+                    IsSelected = true
+                });
+            }
+
+            return selectedFrames;
+        }
+
+        private async Task ApplyFrameChecksAsync(List<EdgeInspectionResultDto> results)
+        {
+            var selectedFrames = GetSelectedInspectionFrames();
+            var selectedFrameIds = selectedFrames
+                .Where(frame => frame.Id.HasValue)
+                .Select(frame => frame.Id!.Value)
+                .Distinct()
+                .ToList();
+
+            var templateFrameMap = await LoadTemplateFrameMapAsync(selectedFrameIds);
+            var fallbackFrame = selectedFrames.Count == 1 ? selectedFrames[0] : null;
+
+            foreach (var result in results)
+            {
+                if (templateFrameMap.TryGetValue(result.TemplateId, out var frameInfo))
+                {
+                    result.FrameId = frameInfo.FrameId;
+                    result.FrameName = frameInfo.FrameName;
+                    result.ExpectedWeight = frameInfo.ExpectedWeight;
+                }
+                else if (fallbackFrame?.Id.HasValue == true)
+                {
+                    result.FrameId = fallbackFrame.Id;
+                    result.FrameName = fallbackFrame.Name;
+                    result.ExpectedWeight = fallbackFrame.Weight;
+                }
+
+                result.WeightTolerance = result.ExpectedWeight.HasValue
+                    ? EdgeInspectionResultDto.GetDefaultWeightTolerance(result.ExpectedWeight.Value)
+                    : null;
+            }
+        }
+
+        private async Task<Dictionary<int, FrameInspectionInfo>> LoadTemplateFrameMapAsync(IReadOnlyCollection<int> frameIds)
+        {
+            if (frameIds.Count == 0)
+                return new Dictionary<int, FrameInspectionInfo>();
+
+            var rows = await (
+                from frame in _dbContext.Frames.AsNoTracking()
+                join frameLink in _dbContext.FrameTestFormFrames.AsNoTracking() on frame.FrameId equals frameLink.FrameId
+                join templateLink in _dbContext.FrameTestFormTemplates.AsNoTracking() on frameLink.FrameTestFormId equals templateLink.FrameTestFormId
+                join template in _dbContext.Templates.AsNoTracking() on templateLink.TemplateId equals template.TemplateId
+                where frameIds.Contains(frame.FrameId)
+                select new
+                {
+                    TemplateId = template.TemplateId,
+                    FrameId = frame.FrameId,
+                    FrameName = frame.Name,
+                    frame.Weight
+                })
+                .ToListAsync();
+
+            return rows
+                .GroupBy(row => row.TemplateId)
+                .ToDictionary(
+                    group => group.Key,
+                    group =>
+                    {
+                        var row = group.First();
+                        return new FrameInspectionInfo
+                        {
+                            FrameId = row.FrameId,
+                            FrameName = row.FrameName,
+                            ExpectedWeight = row.Weight.HasValue ? Convert.ToDouble(row.Weight.Value) : null
+                        };
+                    });
+        }
+
         private static List<EdgeInspectionResultDto> NumberResults(IEnumerable<EdgeInspectionResultDto> results)
         {
             var chronological = results
@@ -614,5 +773,22 @@ namespace QualityControlSystem.WPF.ViewModels
                 || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
         }
+    }
+
+    public partial class SelectableFrameDto : ObservableObject
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public double? Weight { get; set; }
+
+        [ObservableProperty]
+        private bool _isSelected;
+    }
+
+    internal sealed class FrameInspectionInfo
+    {
+        public int FrameId { get; set; }
+        public string FrameName { get; set; } = string.Empty;
+        public double? ExpectedWeight { get; set; }
     }
 }

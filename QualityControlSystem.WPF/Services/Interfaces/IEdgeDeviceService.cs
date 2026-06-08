@@ -22,8 +22,10 @@ namespace QualityControlSystem.WPF.Services.Interfaces
         Task<string> SyncTemplatesAsync(CancellationToken cancellationToken = default);
         Task<string> StartOperatingAsync(CancellationToken cancellationToken = default);
         Task<string> StartOperatingForFrameAsync(int frameId, CancellationToken cancellationToken = default);
+        Task<string> StartOperatingForFramesAsync(IEnumerable<int> frameIds, CancellationToken cancellationToken = default);
         Task StopOperatingAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<EdgeInspectionResultDto>> GetInspectionResultsAsync(CancellationToken cancellationToken = default);
         Task<string> CreateQualityReportAsync(int frameId, IEnumerable<EdgeInspectionResultDto> results, string outputPath, CancellationToken cancellationToken = default);
+        Task<string> CreateQualityReportAsync(IEnumerable<int> frameIds, IEnumerable<EdgeInspectionResultDto> results, string outputPath, CancellationToken cancellationToken = default);
     }
 }
