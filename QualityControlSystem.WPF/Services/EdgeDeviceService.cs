@@ -61,12 +61,6 @@ namespace QualityControlSystem.WPF.Services
             };
         }
 
-        public async Task CaptureTemplateAsync(int templateNumber)
-        {
-            await CaptureTemplateRemoteAsync();
-            _notificationService.ShowSuccess("Команда создания шаблона отправлена на Raspberry Pi");
-        }
-
         public async Task<DeviceStatusDto> GetStatusAsync()
         {
             try
@@ -245,8 +239,6 @@ namespace QualityControlSystem.WPF.Services
 
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await EnsureFrameTestFormHasNoDeviceColumnsAsync(dbContext, cancellationToken);
-
             var frame = await dbContext.Frames
                 .AsNoTracking()
                 .Include(item => item.MaterialType)
@@ -299,8 +291,6 @@ namespace QualityControlSystem.WPF.Services
 
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await EnsureFrameTestFormHasNoDeviceColumnsAsync(dbContext, cancellationToken);
-
             var frames = await dbContext.Frames
                 .AsNoTracking()
                 .Include(item => item.MaterialType)
@@ -421,23 +411,6 @@ namespace QualityControlSystem.WPF.Services
 
             var result = await command.ExecuteScalarAsync(cancellationToken);
             return Convert.ToInt32(result);
-        }
-
-        private static async Task EnsureFrameTestFormHasNoDeviceColumnsAsync(AppDbContext dbContext, CancellationToken cancellationToken)
-        {
-            var connection = dbContext.Database.GetDbConnection();
-            if (connection.State != ConnectionState.Open)
-                await connection.OpenAsync(cancellationToken);
-
-            await using var command = connection.CreateCommand();
-            command.CommandText = """
-                ALTER TABLE frame_test_form
-                    DROP COLUMN IF EXISTS camera_id;
-
-                ALTER TABLE frame_test_form
-                    DROP COLUMN IF EXISTS sensor_id;
-                """;
-            await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
         private static async Task<IReadOnlyList<ReportTestInfo>> LoadReportTestsAsync(
@@ -588,81 +561,6 @@ namespace QualityControlSystem.WPF.Services
                 CameraName = cameraName,
                 SensorName = sensorName
             };
-        }
-
-        private static string BuildQualityReport(
-            Frame frame,
-            ReportDeviceInfo devices,
-            IReadOnlyList<ReportTestInfo> tests,
-            IReadOnlyList<EdgeInspectionResultDto> results)
-        {
-            var passedCount = results.Count(result => IsPassedStatus(result.Status));
-            var builder = new StringBuilder();
-
-            builder.AppendLine("ОТЧЕТ О КОНТРОЛЕ КАЧЕСТВА");
-            builder.AppendLine($"Дата составления: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-            builder.AppendLine();
-
-            builder.AppendLine("Модель каркаса");
-            builder.AppendLine($"ID: {frame.FrameId}");
-            builder.AppendLine($"Название: {frame.Name}");
-            builder.AppendLine($"Материал: {frame.MaterialType?.Name ?? "не указан"}");
-            builder.AppendLine($"Цех: {FormatWorkshop(frame.Workshop)}");
-            builder.AppendLine($"Вес: {FormatDecimal(frame.Weight)}");
-            builder.AppendLine($"Длина: {FormatDecimal(frame.Length)}");
-            builder.AppendLine($"Ширина: {FormatDecimal(frame.Width)}");
-            builder.AppendLine($"Высота: {FormatDecimal(frame.Height)}");
-            builder.AppendLine($"Путь к фотографии: {EmptyIfNull(frame.ImagePath)}");
-            builder.AppendLine();
-
-            builder.AppendLine("Итоги контроля");
-            builder.AppendLine($"Проверено каркасов: {results.Count}");
-            builder.AppendLine($"Прошло контроль: {passedCount}");
-            builder.AppendLine($"Требует внимания: {results.Count - passedCount}");
-            builder.AppendLine();
-
-            builder.AppendLine("Проведенные тесты");
-            if (tests.Count == 0)
-            {
-                builder.AppendLine("Для выбранной модели каркаса тесты не найдены.");
-            }
-            else
-            {
-                for (var index = 0; index < tests.Count; index++)
-                {
-                    var test = tests[index];
-                    builder.AppendLine($"{index + 1}. {test.Name}");
-                    builder.AppendLine($"   Описание: {EmptyIfNull(test.Description)}");
-
-                    builder.AppendLine(test.Templates.Count == 0
-                        ? "   Шаблоны: не привязаны"
-                        : $"   Шаблоны: {string.Join("; ", test.Templates)}");
-                }
-            }
-            builder.AppendLine();
-
-            builder.AppendLine("Результаты по каркасам");
-            if (results.Count == 0)
-            {
-                builder.AppendLine("Результаты контроля отсутствуют.");
-            }
-            else
-            {
-                builder.AppendLine("№\tВремя\tСтатус\tРезультат\tШаблон\tСходство\tТензодатчик (code 01)");
-                foreach (var result in results)
-                {
-                    builder.AppendLine(
-                        $"{result.ControlNumber}\t" +
-                        $"{result.RecordedAt:dd.MM.yyyy HH:mm:ss}\t" +
-                        $"{EmptyIfNull(result.Status)}\t" +
-                        $"{EmptyIfNull(result.ResultText)}\t" +
-                        $"{result.TemplateId}\t" +
-                        $"{FormatDouble(result.Similarity, "F1", "%")}\t" +
-                        $"{FormatDouble(result.Weight, "F0", string.Empty)}");
-                }
-            }
-
-            return builder.ToString();
         }
 
         private static string BuildQualityReportV3(
@@ -858,86 +756,6 @@ namespace QualityControlSystem.WPF.Services
             return string.IsNullOrWhiteSpace(value) ? "не указано" : value;
         }
 
-        private static string BuildQualityReportV2(
-            Frame frame,
-            ReportDeviceInfo devices,
-            IReadOnlyList<ReportTestInfo> tests,
-            IReadOnlyList<EdgeInspectionResultDto> results)
-        {
-            var passedCount = results.Count(IsPassedResult);
-            var builder = new StringBuilder();
-
-            builder.AppendLine("ОТЧЕТ О КОНТРОЛЕ КАЧЕСТВА");
-            builder.AppendLine($"Дата составления: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-            builder.AppendLine();
-
-            builder.AppendLine("Модель каркаса");
-            builder.AppendLine($"ID: {frame.FrameId}");
-            builder.AppendLine($"Название: {frame.Name}");
-            builder.AppendLine($"Материал: {frame.MaterialType?.Name ?? "не указан"}");
-            builder.AppendLine($"Цех: {FormatWorkshop(frame.Workshop)}");
-            builder.AppendLine($"Вес по карточке: {FormatDecimal(frame.Weight)}");
-            builder.AppendLine($"Длина: {FormatDecimal(frame.Length)}");
-            builder.AppendLine($"Ширина: {FormatDecimal(frame.Width)}");
-            builder.AppendLine($"Высота: {FormatDecimal(frame.Height)}");
-            builder.AppendLine($"Путь к фотографии: {EmptyIfNull(frame.ImagePath)}");
-            builder.AppendLine();
-
-            builder.AppendLine("Средства контроля");
-            builder.AppendLine($"Камера: {EmptyIfNull(devices.CameraName)}");
-            builder.AppendLine($"Датчик веса: {EmptyIfNull(devices.SensorName)}");
-            builder.AppendLine();
-
-            builder.AppendLine("Итоги контроля");
-            builder.AppendLine($"Проверено каркасов: {results.Count}");
-            builder.AppendLine($"Прошло контроль: {passedCount}");
-            builder.AppendLine($"Требует внимания: {results.Count - passedCount}");
-            builder.AppendLine();
-
-            builder.AppendLine("Проведенные тесты");
-            if (tests.Count == 0)
-            {
-                builder.AppendLine("Для выбранной модели каркаса тесты не найдены.");
-            }
-            else
-            {
-                for (var index = 0; index < tests.Count; index++)
-                {
-                    var test = tests[index];
-                    builder.AppendLine($"{index + 1}. {test.Name}");
-                    builder.AppendLine($"   Описание: {EmptyIfNull(test.Description)}");
-                    builder.AppendLine(test.Templates.Count == 0
-                        ? "   Шаблоны: не привязаны"
-                        : $"   Шаблоны: {string.Join("; ", test.Templates)}");
-                }
-            }
-            builder.AppendLine();
-
-            builder.AppendLine("Результаты по каркасам");
-            if (results.Count == 0)
-            {
-                builder.AppendLine("Результаты контроля отсутствуют.");
-            }
-            else
-            {
-                builder.AppendLine("№\tВремя\tСтатус\tШаблон\tСходство\tВес\tРезультат шаблона\tРезультат взвешивания");
-                foreach (var result in results)
-                {
-                    builder.AppendLine(
-                        $"{result.ControlNumber}\t" +
-                        $"{result.RecordedAt:dd.MM.yyyy HH:mm:ss}\t" +
-                        $"{EmptyIfNull(result.Status)}\t" +
-                        $"{result.TemplateId}\t" +
-                        $"{FormatDouble(result.Similarity, "F1", "%")}\t" +
-                        $"{FormatDouble(result.Weight, "F0", string.Empty)}\t" +
-                        $"{EmptyIfNull(result.TemplateResultText)}\t" +
-                        $"{EmptyIfNull(result.WeightResultText)}");
-                }
-            }
-
-            return builder.ToString();
-        }
-
         private static void ApplyWeightCheck(IEnumerable<EdgeInspectionResultDto> results, double? expectedWeight)
         {
             foreach (var result in results)
@@ -1001,75 +819,6 @@ namespace QualityControlSystem.WPF.Services
             return string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool IsPassedStatus(string? status)
-        {
-            return string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string FormatWorkshop(Workshop? workshop)
-        {
-            if (workshop == null)
-                return "не указан";
-
-            return string.IsNullOrWhiteSpace(workshop.Purpose)
-                ? workshop.Number
-                : $"{workshop.Number} ({workshop.Purpose})";
-        }
-
-        private static string FormatDecimal(decimal? value)
-        {
-            return value.HasValue
-                ? value.Value.ToString("0.###", CultureInfo.InvariantCulture)
-                : "не указано";
-        }
-
-        private static string FormatDouble(double? value, string format, string suffix)
-        {
-            return value.HasValue
-                ? value.Value.ToString(format, CultureInfo.InvariantCulture) + suffix
-                : "-";
-        }
-
-        private static string EmptyIfNull(string? value)
-        {
-            return string.IsNullOrWhiteSpace(value) ? "не указано" : value;
-        }
-
-        private async Task PrepareRemoteTemplatesForFrameAsync(int frameId, CancellationToken cancellationToken)
-        {
-            if (frameId <= 0)
-                throw new InvalidOperationException("Выберите модель каркаса для запуска operating.");
-
-            using var scope = _scopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var templatePaths = await (
-                from test in dbContext.FrameTestForms.AsNoTracking()
-                join frameLink in dbContext.FrameTestFormFrames.AsNoTracking() on test.FrameTestFormId equals frameLink.FrameTestFormId
-                join templateLink in dbContext.FrameTestFormTemplates.AsNoTracking() on test.FrameTestFormId equals templateLink.FrameTestFormId
-                join template in dbContext.Templates.AsNoTracking() on templateLink.TemplateId equals template.TemplateId
-                where frameLink.FrameId == frameId
-                select template.ImagePath)
-                .Distinct()
-                .ToListAsync(cancellationToken);
-
-            if (templatePaths.Count == 0)
-                throw new InvalidOperationException("Для выбранной модели каркаса нет тестов с привязанными шаблонами.");
-
-            var existingTemplatePaths = templatePaths
-                .Where(path => Directory.Exists(path))
-                .ToList();
-
-            if (existingTemplatePaths.Count == 0)
-                throw new InvalidOperationException("Локальные папки шаблонов из таблицы template не найдены на ПК.");
-
-            await ClearRemoteTemplateDirectoryAsync(cancellationToken);
-            await RunSshAsync($"mkdir -p {QuoteRemote(_options.RemoteTemplateDirectory.TrimEnd('/'))}", cancellationToken);
-            var remoteTarget = $"{RemoteIdentity()}:{_options.RemoteTemplateDirectory.TrimEnd('/')}/";
-            await RunProcessAsync("scp", BuildScpArgs(existingTemplatePaths, remoteTarget), cancellationToken);
         }
 
         private async Task PrepareRemoteTemplatesForFramesAsync(IEnumerable<int> frameIds, CancellationToken cancellationToken)
@@ -1192,9 +941,7 @@ namespace QualityControlSystem.WPF.Services
                     Directory.Delete(path, recursive: true);
             }
             catch
-            {
-                // Temporary staging can be cleaned by the OS later.
-            }
+            { }
         }
 
         private string BuildStartCommand(string scriptName, int port, string logName, string pidName)

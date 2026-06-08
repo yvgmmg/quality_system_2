@@ -25,7 +25,7 @@ public class QualityTestService : IQualityTestService
 
     public async Task<IReadOnlyList<QualityTestDto>> GetTestsAsync()
     {
-        await EnsureSchemaAsync();
+        await EnsureDefaultTestTypeAsync();
 
         var tests = await _dbContext.FrameTestForms
             .AsNoTracking()
@@ -93,7 +93,7 @@ public class QualityTestService : IQualityTestService
 
     public async Task AddTestAsync(QualityTestDto test)
     {
-        await EnsureSchemaAsync();
+        await EnsureDefaultTestTypeAsync();
         ValidateTest(test);
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -105,7 +105,7 @@ public class QualityTestService : IQualityTestService
 
     public async Task UpdateTestAsync(QualityTestDto test)
     {
-        await EnsureSchemaAsync();
+        await EnsureDefaultTestTypeAsync();
         ValidateTest(test);
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -137,16 +137,10 @@ public class QualityTestService : IQualityTestService
         await _dbContext.SaveChangesAsync();
     }
 
-    private async Task EnsureSchemaAsync()
+    private async Task EnsureDefaultTestTypeAsync()
     {
         await ExecuteNonQueryAsync(
             """
-            ALTER TABLE frame_test_form
-                DROP COLUMN IF EXISTS camera_id;
-
-            ALTER TABLE frame_test_form
-                DROP COLUMN IF EXISTS sensor_id;
-
             INSERT INTO test_type(name)
             VALUES ('camera_test')
             ON CONFLICT (name) DO NOTHING;

@@ -8,7 +8,6 @@ namespace QualityControlSystem.WPF.Services.Interfaces
     public interface IEdgeDeviceService
     {
         Task<AnalysisResultDto> AnalyzeFrameAsync();
-        Task CaptureTemplateAsync(int templateNumber);
         Task<DeviceStatusDto> GetStatusAsync();
         string GetPhotomakerFrameUrl();
         string GetOperatingFrameUrl();

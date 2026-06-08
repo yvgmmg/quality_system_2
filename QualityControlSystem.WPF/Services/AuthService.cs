@@ -62,7 +62,8 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"Ошибка авторизации: {ex.Message}\n{ex.StackTrace}", "Auth Error");
+            Console.Error.WriteLine($"Auth error: {ex}");
+            _dialogService.ShowMessage("Не удалось выполнить вход. Проверьте подключение к базе данных и повторите попытку.", "Auth Error");
             return false;
         }
     }
@@ -130,7 +131,7 @@ public class AuthService : IAuthService
         }
         catch
         {
-            return password == storedPassword;
+            return false;
         }
     }
 

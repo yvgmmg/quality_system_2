@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Repositories;
 using QualityControlSystem.Infrastructure.Repositories.Interfaces;
@@ -73,14 +74,17 @@ namespace QualityControlSystem.WPF
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка создания хоста: {ex.Message}\n{ex.StackTrace}");
+                Console.Error.WriteLine($"Ошибка создания хоста: {ex}");
                 Environment.Exit(1);
             }
 
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var ex = args.ExceptionObject as Exception;
-                MessageBox.Show($"Unhandled: {ex?.Message}\n{ex?.StackTrace}",
+                if (ex != null)
+                    LogError(ex, "Unhandled application exception");
+
+                MessageBox.Show("Произошла критическая ошибка. Перезапустите приложение и повторите действие.",
                                 "Фатальная ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
 
             };
@@ -95,7 +99,8 @@ namespace QualityControlSystem.WPF
                 }
 
                 _isHandlingFatalException = true;
-                MessageBox.Show($"Ошибка: {args.Exception.Message}\n{args.Exception.StackTrace}",
+                LogError(args.Exception, "Dispatcher unhandled exception");
+                MessageBox.Show("Произошла критическая ошибка. Перезапустите приложение и повторите действие.",
                                 "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 args.Handled = false;
                 Shutdown(1);
@@ -116,18 +121,7 @@ namespace QualityControlSystem.WPF
                 await AppHost.StartAsync();
 
                 var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                if (mainWindow == null)
-                {
-                    Console.WriteLine("MainWindow не зарегистрирован в DI.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
                 var navigationService = AppHost.Services.GetRequiredService<INavigationService>();
-                if (navigationService == null)
-                {
-                    Console.WriteLine("INavigationService не зарегистрирован.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
 
                 mainWindow.Show();
 
@@ -135,7 +129,9 @@ namespace QualityControlSystem.WPF
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Исключение в OnStartup: {ex.Message}\n{ex.StackTrace}", "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                LogError(ex, "Startup failed");
+                MessageBox.Show("Не удалось запустить приложение. Проверьте настройки и подключение к базе данных.",
+                                "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 Environment.Exit(1);
             }
 
@@ -147,6 +143,15 @@ namespace QualityControlSystem.WPF
             await AppHost!.StopAsync();
             AppHost.Dispose();
             base.OnExit(e);
+        }
+
+        private static void LogError(Exception ex, string message)
+        {
+            var logger = AppHost?.Services.GetService<ILogger<App>>();
+            if (logger != null)
+                logger.LogError(ex, message);
+            else
+                Console.Error.WriteLine($"{message}: {ex}");
         }
     }
 }
