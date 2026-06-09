@@ -51,6 +51,8 @@ public partial class AppDbContext : DbContext
             return;
         }
 
+        // Primary configuration is provided by the WPF composition root.
+        // This fallback is kept for EF Core design-time tooling and local infrastructure checks.
         var connectionString = Environment.GetEnvironmentVariable("QUALITY_SYSTEM_CONNECTION_STRING");
         if (!string.IsNullOrWhiteSpace(connectionString))
         {
@@ -60,6 +62,7 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // TODO: Keep these values in sync with TemplateSides constants used by the WPF layer.
         modelBuilder.HasPostgresEnum("template_side", new[] { "front", "left", "right", "top", "back" });
 
         modelBuilder.Entity<Camera>(entity =>

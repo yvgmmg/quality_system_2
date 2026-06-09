@@ -1,10 +1,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace QualityControlSystem.Infrastructure.Entities;
 
 [Table("production_equipment_frame")]
-[Index(nameof(ProductionEquipmentId), nameof(FrameId), IsUnique = true, Name = "production_equipment_frame_unique")]
 public partial class ProductionEquipmentFrame
 {
     [Column("production_equipment_id")]

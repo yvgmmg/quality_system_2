@@ -33,7 +33,7 @@ public class UserRepository : IUserRepository
         }
         catch
         {
-            isValid = password == user.Password;
+            isValid = false;
         }
 
         return isValid ? user : null;
