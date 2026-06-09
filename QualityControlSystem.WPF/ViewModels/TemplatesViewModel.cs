@@ -1,27 +1,22 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using QualityControlSystem.Infrastructure;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
-using QualityControlSystem.WPF.Services;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
-using System.Data;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class TemplatesViewModel : BaseViewModel
+public partial class TemplatesViewModel : BaseViewModel, IAsyncInitializable
 {
-    private readonly AppDbContext _dbContext;
+    private readonly ITemplateManagementService _templateService;
     private readonly IDialogService _dialogService;
+    private bool _isInitialized;
 
     [ObservableProperty]
     private ObservableCollection<TemplateDto> _templates = new();
@@ -47,9 +42,9 @@ public partial class TemplatesViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isBusy;
 
-    public TemplatesViewModel(AppDbContext dbContext, IDialogService dialogService)
+    public TemplatesViewModel(ITemplateManagementService templateService, IDialogService dialogService)
     {
-        _dbContext = dbContext;
+        _templateService = templateService;
         _dialogService = dialogService;
 
         SideFilterOptions.Add(UiFilterOptions.AllSides);
@@ -58,7 +53,15 @@ public partial class TemplatesViewModel : BaseViewModel
 
         TemplatesView = CollectionViewSource.GetDefaultView(Templates);
         TemplatesView.Filter = FilterTemplate;
-        _ = LoadAsync();
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -67,30 +70,11 @@ public partial class TemplatesViewModel : BaseViewModel
         try
         {
             var selectedId = SelectedTemplate?.Id;
-            var templates = await _dbContext.Templates
-                .AsNoTracking()
-                .OrderBy(template => template.TemplateId)
-                .Select(template => new
-                {
-                    template.TemplateId,
-                    template.Name,
-                    template.ImagePath,
-                    template.Side
-                })
-                .ToListAsync();
+            var templates = await _templateService.GetTemplatesAsync();
 
             Templates.Clear();
             foreach (var template in templates)
-            {
-                Templates.Add(new TemplateDto
-                {
-                    Id = template.TemplateId,
-                    Name = template.Name,
-                    ImagePath = template.ImagePath,
-                    Side = template.Side,
-                    ImagePreview = TemplatePreviewLoader.Load(template.ImagePath)
-                });
-            }
+                Templates.Add(template);
 
             SelectedTemplate = Templates.FirstOrDefault(template => template.Id == selectedId);
             TemplatesView?.Refresh();
@@ -133,8 +117,7 @@ public partial class TemplatesViewModel : BaseViewModel
         StatusMessage = "Обновление шаблона...";
         try
         {
-            ValidateTemplate(editTemplate);
-            await UpdateTemplateAsync(editTemplate);
+            await _templateService.UpdateTemplateAsync(editTemplate);
             await LoadAsync();
             StatusMessage = "Шаблон обновлен.";
         }
@@ -166,8 +149,7 @@ public partial class TemplatesViewModel : BaseViewModel
         StatusMessage = "Удаление шаблона...";
         try
         {
-            var deletedTemplatePath = await DeleteTemplateRecordAsync(SelectedTemplate.Id);
-            var fileDeleteMessage = DeleteTemplateFiles(deletedTemplatePath);
+            var fileDeleteMessage = await _templateService.DeleteTemplateAsync(SelectedTemplate.Id);
             SelectedTemplate = null;
             await LoadAsync();
             if (!string.IsNullOrWhiteSpace(fileDeleteMessage))
@@ -189,100 +171,6 @@ public partial class TemplatesViewModel : BaseViewModel
         }
     }
 
-    private async Task UpdateTemplateAsync(TemplateDto template)
-    {
-        var connection = _dbContext.Database.GetDbConnection();
-        if (connection.State != ConnectionState.Open)
-            await connection.OpenAsync();
-
-        await using var command = connection.CreateCommand();
-        command.CommandText = """
-            UPDATE template
-            SET name = @name,
-                side = CAST(@side AS template_side)
-            WHERE template_id = @id;
-            """;
-        AddParameter(command, "id", template.Id);
-        AddParameter(command, "name", template.Name.Trim());
-        AddParameter(command, "side", template.Side.Trim().ToLowerInvariant());
-        await command.ExecuteNonQueryAsync();
-    }
-
-    private async Task<string?> DeleteTemplateRecordAsync(int templateId)
-    {
-        string? imagePath = null;
-        var canDeleteFiles = false;
-
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-        var connection = _dbContext.Database.GetDbConnection();
-        if (connection.State != ConnectionState.Open)
-            await connection.OpenAsync();
-
-        await using (var select = connection.CreateCommand())
-        {
-            select.Transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction();
-            select.CommandText = "SELECT image_path FROM template WHERE template_id = @id;";
-            AddParameter(select, "id", templateId);
-            imagePath = await select.ExecuteScalarAsync() as string;
-        }
-
-        await using (var unlink = connection.CreateCommand())
-        {
-            unlink.Transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction();
-            unlink.CommandText = "DELETE FROM frame_test_form_template WHERE template_id = @id;";
-            AddParameter(unlink, "id", templateId);
-            await unlink.ExecuteNonQueryAsync();
-        }
-
-        await using (var delete = connection.CreateCommand())
-        {
-            delete.Transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction();
-            delete.CommandText = "DELETE FROM template WHERE template_id = @id;";
-            AddParameter(delete, "id", templateId);
-            await delete.ExecuteNonQueryAsync();
-        }
-
-        if (!string.IsNullOrWhiteSpace(imagePath))
-        {
-            await using var count = connection.CreateCommand();
-            count.Transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction();
-            count.CommandText = "SELECT COUNT(*) FROM template WHERE image_path = @image_path;";
-            AddParameter(count, "image_path", imagePath);
-            canDeleteFiles = Convert.ToInt32(await count.ExecuteScalarAsync()) == 0;
-        }
-
-        await transaction.CommitAsync();
-        return canDeleteFiles ? imagePath : null;
-    }
-
-    private static string? DeleteTemplateFiles(string? imagePath)
-    {
-        if (string.IsNullOrWhiteSpace(imagePath))
-            return null;
-
-        try
-        {
-            var absolutePath = Path.GetFullPath(imagePath);
-            if (Directory.Exists(absolutePath))
-            {
-                Directory.Delete(absolutePath, recursive: true);
-                return "Файлы шаблона удалены с диска.";
-            }
-
-            if (File.Exists(absolutePath))
-            {
-                File.Delete(absolutePath);
-                return "Файл шаблона удален с диска.";
-            }
-        }
-        catch (Exception ex)
-        {
-            return $"Шаблон удален из БД, но файлы не удалось удалить: {ex.Message}";
-        }
-
-        return null;
-    }
-
     private bool FilterTemplate(object item)
     {
         if (item is not TemplateDto template)
@@ -302,23 +190,6 @@ public partial class TemplatesViewModel : BaseViewModel
         }
 
         return true;
-    }
-
-    private static void ValidateTemplate(TemplateDto template)
-    {
-        if (string.IsNullOrWhiteSpace(template.Name))
-            throw new InvalidOperationException("Укажите имя шаблона.");
-
-        if (!TemplateSides.All.Contains(template.Side?.Trim().ToLowerInvariant()))
-            throw new InvalidOperationException("Выберите сторону каркаса.");
-    }
-
-    private static void AddParameter(IDbCommand command, string name, object? value)
-    {
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = name;
-        parameter.Value = value ?? DBNull.Value;
-        command.Parameters.Add(parameter);
     }
 
     private static string GetErrorMessage(Exception exception)
