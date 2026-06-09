@@ -25,6 +25,7 @@ namespace QualityControlSystem.WPF.ViewModels
     {
         private readonly IOperatorControlDataService _operatorControlDataService;
         private readonly IOperatorInspectionSessionService _operatorInspectionSessionService;
+        private readonly IOperatorReportService _operatorReportService;
         private readonly IEdgeDeviceService _edgeDeviceService;
         private readonly IEquipmentManagementService _equipmentManagementService;
         private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
@@ -93,6 +94,7 @@ namespace QualityControlSystem.WPF.ViewModels
         public OperatorControlViewModel(
             IOperatorControlDataService operatorControlDataService,
             IOperatorInspectionSessionService operatorInspectionSessionService,
+            IOperatorReportService operatorReportService,
             IEdgeDeviceService edgeDeviceService,
             IEquipmentManagementService equipmentManagementService,
             IEquipmentWorkResultsService equipmentWorkResultsService,
@@ -102,6 +104,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             _operatorControlDataService = operatorControlDataService;
             _operatorInspectionSessionService = operatorInspectionSessionService;
+            _operatorReportService = operatorReportService;
             _edgeDeviceService = edgeDeviceService;
             _equipmentManagementService = equipmentManagementService;
             _equipmentWorkResultsService = equipmentWorkResultsService;
@@ -364,16 +367,14 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                if (SelectedFrame?.Id is not int frameId)
-                    throw new InvalidOperationException("Выберите модель каркаса для отчета.");
-
                 if (IsOperatingRunning)
                     await RefreshResultsAsync();
 
-                if (Results.Count == 0)
-                    throw new InvalidOperationException("Нет результатов контроля для отчета.");
-
                 var selectedFrames = GetSelectedInspectionFrames();
+                var selectedFrameIds = selectedFrames
+                    .Where(frame => frame.Id.HasValue)
+                    .Select(frame => frame.Id!.Value)
+                    .ToList();
                 var reportsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports");
                 Directory.CreateDirectory(reportsDirectory);
                 var reportName = selectedFrames.Count == 1 ? selectedFrames[0].Name : "multi_frames";
@@ -391,7 +392,12 @@ namespace QualityControlSystem.WPF.ViewModels
                 if (dialog.ShowDialog() != true)
                     return;
 
-                var path = await _edgeDeviceService.CreateQualityReportAsync(selectedFrames.Select(frame => frame.Id!.Value), Results, dialog.FileName);
+                var path = await _operatorReportService.CreateQualityReportAsync(new OperatorReportRequest
+                {
+                    FrameIds = selectedFrameIds,
+                    Results = Results.ToList(),
+                    OutputPath = dialog.FileName
+                });
                 LastLog = $"Отчет составлен: {path}";
                 StatusMessage = "Отчет составлен";
             });
