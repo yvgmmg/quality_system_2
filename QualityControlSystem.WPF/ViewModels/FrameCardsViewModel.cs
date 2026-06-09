@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
@@ -128,7 +129,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
         WorkshopOptions.Clear();
         if (CurrentWorkshopId is null)
-            WorkshopOptions.Add(new LookupItemDto { Id = null, Name = "Все цеха" });
+            WorkshopOptions.Add(new LookupItemDto { Id = null, Name = UiFilterOptions.AllWorkshops });
         foreach (var workshop in workshops)
             WorkshopOptions.Add(workshop);
 

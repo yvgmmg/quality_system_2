@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using QualityControlSystem.Infrastructure;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services;
 using QualityControlSystem.WPF.Services.Interfaces;
@@ -19,8 +20,6 @@ namespace QualityControlSystem.WPF.ViewModels;
 
 public partial class TemplatesViewModel : BaseViewModel
 {
-    private static readonly string[] AllowedSides = ["front", "left", "right", "top", "back"];
-
     private readonly AppDbContext _dbContext;
     private readonly IDialogService _dialogService;
 
@@ -40,7 +39,7 @@ public partial class TemplatesViewModel : BaseViewModel
     private string _searchText = string.Empty;
 
     [ObservableProperty]
-    private string _selectedSideFilter = "Все стороны";
+    private string _selectedSideFilter = UiFilterOptions.AllSides;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -53,8 +52,8 @@ public partial class TemplatesViewModel : BaseViewModel
         _dbContext = dbContext;
         _dialogService = dialogService;
 
-        SideFilterOptions.Add("Все стороны");
-        foreach (var side in AllowedSides)
+        SideFilterOptions.Add(UiFilterOptions.AllSides);
+        foreach (var side in TemplateSides.All)
             SideFilterOptions.Add(side);
 
         TemplatesView = CollectionViewSource.GetDefaultView(Templates);
@@ -127,7 +126,7 @@ public partial class TemplatesViewModel : BaseViewModel
             ImagePreview = SelectedTemplate.ImagePreview
         };
 
-        if (!_dialogService.ShowTemplateDialog(editTemplate, AllowedSides, true))
+        if (!_dialogService.ShowTemplateDialog(editTemplate, TemplateSides.All, true))
             return;
 
         IsBusy = true;
@@ -296,7 +295,7 @@ public partial class TemplatesViewModel : BaseViewModel
         }
 
         if (!string.IsNullOrWhiteSpace(SelectedSideFilter)
-            && SelectedSideFilter != "Все стороны"
+            && SelectedSideFilter != UiFilterOptions.AllSides
             && !string.Equals(template.Side, SelectedSideFilter, StringComparison.OrdinalIgnoreCase))
         {
             return false;
@@ -310,7 +309,7 @@ public partial class TemplatesViewModel : BaseViewModel
         if (string.IsNullOrWhiteSpace(template.Name))
             throw new InvalidOperationException("Укажите имя шаблона.");
 
-        if (!AllowedSides.Contains(template.Side?.Trim().ToLowerInvariant()))
+        if (!TemplateSides.All.Contains(template.Side?.Trim().ToLowerInvariant()))
             throw new InvalidOperationException("Выберите сторону каркаса.");
     }
 

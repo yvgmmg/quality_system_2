@@ -21,6 +21,7 @@ namespace QualityControlSystem.WPF.Services
         {
             var scope = _scopeFactory.CreateScope();
             var viewModel = scope.ServiceProvider.GetRequiredService<TViewModel>();
+            InitializeIfNeeded(viewModel);
             _navigationStore.SetCurrentViewModel(viewModel, scope);
         }
 
@@ -35,7 +36,14 @@ namespace QualityControlSystem.WPF.Services
 
             var scope = _scopeFactory.CreateScope();
             var viewModel = (BaseViewModel)scope.ServiceProvider.GetRequiredService(viewModelType);
+            InitializeIfNeeded(viewModel);
             _navigationStore.SetCurrentViewModel(viewModel, scope);
+        }
+
+        private static void InitializeIfNeeded(BaseViewModel viewModel)
+        {
+            if (viewModel is IAsyncInitializable initializable)
+                _ = initializable.InitializeAsync();
         }
     }
 }

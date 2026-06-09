@@ -13,6 +13,7 @@ __pycache__/
 *.py[cod]
 
 # Local application settings
-**/appsettings*.json
+**/appsettings.json
+**/appsettings.*.json
 !**/appsettings.example.json
 !**/appsettings.template.json

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,7 +12,7 @@ namespace QualityControlSystem.WPF.Views;
 
 public partial class QualityTestEditDialog : Window
 {
-    private const string AllSidesFilter = "Все стороны";
+    private const string AllSidesFilter = UiFilterOptions.AllSides;
 
     private readonly QualityTestDto _test;
     private readonly ObservableCollection<SelectableTemplateDto> _templateRows = new();

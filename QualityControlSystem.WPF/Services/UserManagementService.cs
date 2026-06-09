@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using System.Data;
@@ -22,12 +23,12 @@ namespace QualityControlSystem.WPF.Services
             ["quality controll opfficer"] = "quality control"
         };
 
-        private static readonly Dictionary<string, string> RoleCodes = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly Dictionary<string, string> RoleCodeByName = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["admin"] = "01000001",
-            ["operator"] = "02000001",
-            ["equipment specialist"] = "03000001",
-            ["quality control"] = "04000001"
+            ["admin"] = RoleCodes.Admin,
+            ["operator"] = RoleCodes.Operator,
+            ["equipment specialist"] = RoleCodes.EquipmentSpecialist,
+            ["quality control"] = RoleCodes.QualityControl
         };
 
         private static readonly Regex PersonNameRegex = new(@"^[А-ЯЁ][а-яё]+(-[А-ЯЁ][а-яё]+)*$", RegexOptions.Compiled);
@@ -217,7 +218,7 @@ namespace QualityControlSystem.WPF.Services
         private async Task<int> GetOrCreateRoleIdAsync(string role)
         {
             var connection = await GetOpenConnectionAsync();
-            var roleCode = RoleCodes.TryGetValue(role, out var code)
+            var roleCode = RoleCodeByName.TryGetValue(role, out var code)
                 ? code
                 : throw new InvalidOperationException($"Для роли {role} не задан код.");
 

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.Services.Navigation;
@@ -105,14 +106,6 @@ namespace QualityControlSystem.WPF.ViewModels
         private bool HasRoleCode(string roleCode)
         {
             return string.Equals(_authService.CurrentUser?.RoleCode, roleCode, System.StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static class RoleCodes
-        {
-            public const string Admin = "01000001";
-            public const string Operator = "02000001";
-            public const string EquipmentSpecialist = "03000001";
-            public const string QualityControl = "04000001";
         }
 
         [RelayCommand]

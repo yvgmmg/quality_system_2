@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using System;
@@ -387,8 +388,7 @@ namespace QualityControlSystem.WPF.Services
             CancellationToken cancellationToken)
         {
             var normalizedSide = side.Trim().ToLowerInvariant();
-            var allowedSides = new[] { "front", "left", "right", "top", "back" };
-            if (!allowedSides.Contains(normalizedSide))
+            if (!TemplateSides.All.Contains(normalizedSide))
                 throw new InvalidOperationException($"Недопустимая сторона шаблона: {side}.");
 
             if (imagePath.Length > 500)
@@ -816,9 +816,9 @@ namespace QualityControlSystem.WPF.Services
 
         private static bool IsPassedStatusForQualityResult(string? status)
         {
-            return string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(status, InspectionStatuses.Ok, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(status, InspectionStatuses.AcceptedRu, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(status, InspectionStatuses.Passed, StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task PrepareRemoteTemplatesForFramesAsync(IEnumerable<int> frameIds, CancellationToken cancellationToken)

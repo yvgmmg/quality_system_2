@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
@@ -14,7 +15,7 @@ namespace QualityControlSystem.WPF.ViewModels;
 
 public partial class EquipmentManagementViewModel : BaseViewModel
 {
-    private const string AllWorkshopsFilter = "Все цеха";
+    private const string AllWorkshopsFilter = UiFilterOptions.AllWorkshops;
 
     private readonly IEquipmentManagementService _equipmentService;
     private readonly IDialogService _dialogService;

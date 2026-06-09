@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
@@ -14,7 +15,7 @@ namespace QualityControlSystem.WPF.ViewModels;
 
 public partial class QualityTestsViewModel : BaseViewModel
 {
-    private const string AllFramesFilter = "Все каркасы";
+    private const string AllFramesFilter = UiFilterOptions.AllFrames;
 
     private readonly IQualityTestService _qualityTestService;
     private readonly IDialogService _dialogService;

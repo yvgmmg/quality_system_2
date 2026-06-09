@@ -1,4 +1,5 @@
 using System;
+using QualityControlSystem.WPF.Constants;
 
 namespace QualityControlSystem.WPF.Dtos
 {
@@ -40,7 +41,7 @@ namespace QualityControlSystem.WPF.Dtos
                 var tolerance = WeightTolerance ?? GetDefaultWeightTolerance(ExpectedWeight.Value);
                 var difference = Math.Abs(Weight.Value - ExpectedWeight.Value);
                 return difference <= tolerance
-                    ? $"OK, отклонение {difference:F0}"
+                    ? $"{InspectionStatuses.Ok}, отклонение {difference:F0}"
                     : $"Отклонение веса {difference:F0}";
             }
         }

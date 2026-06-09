@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
@@ -18,6 +19,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using TemplateSideValues = QualityControlSystem.WPF.Constants.TemplateSides;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
@@ -73,10 +75,10 @@ namespace QualityControlSystem.WPF.ViewModels
         private LookupItemDto? _selectedFrame;
 
         [ObservableProperty]
-        private ObservableCollection<string> _templateSides = new(["front", "left", "right", "top", "back"]);
+        private ObservableCollection<string> _templateSides = new(TemplateSideValues.All);
 
         [ObservableProperty]
-        private string _selectedTemplateSide = "front";
+        private string _selectedTemplateSide = TemplateSideValues.Front;
 
         [ObservableProperty]
         private int _inspectedFramesCount;
@@ -136,19 +138,6 @@ namespace QualityControlSystem.WPF.ViewModels
             catch
             {
                 // The screen can still be used for SSH/script diagnostics.
-            }
-        }
-
-        private async Task LoadEquipmentAsync()
-        {
-            try
-            {
-                await LoadWorkshopOptionsAsync();
-                await LoadProductionEquipmentAsync();
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Ошибка загрузки оборудования: {GetErrorMessage(ex)}";
             }
         }
 
@@ -737,24 +726,6 @@ namespace QualityControlSystem.WPF.ViewModels
                 .ToList();
         }
 
-        private static bool IsPassedStatus(string? status)
-        {
-            return string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static void ApplyWeightCheck(IEnumerable<EdgeInspectionResultDto> results, double? expectedWeight)
-        {
-            foreach (var result in results)
-            {
-                result.ExpectedWeight = expectedWeight;
-                result.WeightTolerance = expectedWeight.HasValue
-                    ? EdgeInspectionResultDto.GetDefaultWeightTolerance(expectedWeight.Value)
-                    : null;
-            }
-        }
-
         private static bool IsPassedResult(EdgeInspectionResultDto result)
         {
             if (!IsPassedStatusForQualityResult(result.Status))
@@ -769,9 +740,9 @@ namespace QualityControlSystem.WPF.ViewModels
 
         private static bool IsPassedStatusForQualityResult(string? status)
         {
-            return string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(status, InspectionStatuses.Ok, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(status, InspectionStatuses.AcceptedRu, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(status, InspectionStatuses.Passed, StringComparison.OrdinalIgnoreCase);
         }
     }
 

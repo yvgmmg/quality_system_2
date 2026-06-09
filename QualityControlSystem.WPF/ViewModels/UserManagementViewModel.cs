@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
@@ -14,8 +15,8 @@ namespace QualityControlSystem.WPF.ViewModels
 {
     public partial class UserManagementViewModel : BaseViewModel
     {
-        private const string AllRolesFilter = "Все роли";
-        private const string AllWorkshopsFilter = "Все цеха";
+        private const string AllRolesFilter = UiFilterOptions.AllRoles;
+        private const string AllWorkshopsFilter = UiFilterOptions.AllWorkshops;
 
         private readonly IUserManagementService _userService;
         private readonly IDialogService _dialogService;

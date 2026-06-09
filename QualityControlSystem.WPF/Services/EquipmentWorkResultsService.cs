@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
+using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 
@@ -145,8 +146,8 @@ public class EquipmentWorkResultsService : IEquipmentWorkResultsService
 
     private static bool IsPassedStatus(string? status)
     {
-        return string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(status, "Годен", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(status, "Passed", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(status, InspectionStatuses.Ok, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, InspectionStatuses.AcceptedRu, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, InspectionStatuses.Passed, StringComparison.OrdinalIgnoreCase);
     }
 }
