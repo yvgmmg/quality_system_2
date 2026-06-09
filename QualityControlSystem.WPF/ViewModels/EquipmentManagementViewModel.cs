@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Validation;
 using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels;
@@ -18,6 +19,7 @@ public partial class EquipmentManagementViewModel : BaseViewModel
     private const string AllWorkshopsFilter = UiFilterOptions.AllWorkshops;
 
     private readonly IEquipmentManagementService _equipmentService;
+    private readonly IEquipmentValidator _equipmentValidator;
     private readonly IDialogService _dialogService;
 
     [ObservableProperty]
@@ -55,9 +57,11 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
     public EquipmentManagementViewModel(
         IEquipmentManagementService equipmentService,
+        IEquipmentValidator equipmentValidator,
         IDialogService dialogService)
     {
         _equipmentService = equipmentService;
+        _equipmentValidator = equipmentValidator;
         _dialogService = dialogService;
         EquipmentView = CollectionViewSource.GetDefaultView(Equipment);
         EquipmentView.Filter = FilterEquipment;
@@ -187,6 +191,7 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
         await RunBusyAsync(async () =>
         {
+            EnsureEquipmentIsValid(newEquipment);
             await _equipmentService.AddEquipmentAsync(newEquipment);
             await LoadEquipmentAsync();
             StatusMessage = "Оборудование добавлено.";
@@ -217,6 +222,7 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
         await RunBusyAsync(async () =>
         {
+            EnsureEquipmentIsValid(editEquipment);
             await _equipmentService.UpdateEquipmentAsync(editEquipment);
             await LoadEquipmentAsync();
             StatusMessage = "Оборудование обновлено.";
@@ -298,6 +304,13 @@ public partial class EquipmentManagementViewModel : BaseViewModel
         {
             IsBusy = false;
         }
+    }
+
+    private void EnsureEquipmentIsValid(ProductionEquipmentDto equipment)
+    {
+        var result = _equipmentValidator.Validate(equipment);
+        if (!result.IsValid)
+            throw new InvalidOperationException(result.ErrorMessage ?? "Данные оборудования заполнены некорректно.");
     }
 
     partial void OnSelectedEquipmentChanged(ProductionEquipmentDto? value)

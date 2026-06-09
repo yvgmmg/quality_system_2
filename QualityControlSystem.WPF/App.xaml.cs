@@ -9,6 +9,7 @@ using QualityControlSystem.Infrastructure.Repositories.Interfaces;
 using QualityControlSystem.WPF.Services;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.Services.Navigation;
+using QualityControlSystem.WPF.Validation;
 using QualityControlSystem.WPF.ViewModels;
 using QualityControlSystem.WPF.Views;
 using System;
@@ -53,6 +54,7 @@ namespace QualityControlSystem.WPF
                         services.AddScoped<IQualityTestService, QualityTestService>();
                         services.AddScoped<IEquipmentManagementService, EquipmentManagementService>();
                         services.AddScoped<IEquipmentWorkResultsService, EquipmentWorkResultsService>();
+                        services.AddSingleton<IEquipmentValidator, EquipmentValidator>();
 
                         //ViewModel
                         services.AddSingleton<MainViewModel>();

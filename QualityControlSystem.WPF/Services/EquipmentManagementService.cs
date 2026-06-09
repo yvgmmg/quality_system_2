@@ -3,6 +3,7 @@ using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Validation;
 
 namespace QualityControlSystem.WPF.Services;
 
@@ -11,11 +12,16 @@ public class EquipmentManagementService : IEquipmentManagementService
     private const string EquipmentSensorCode = "02";
     private readonly AppDbContext _dbContext;
     private readonly IAuthService _authService;
+    private readonly IEquipmentValidator _equipmentValidator;
 
-    public EquipmentManagementService(AppDbContext dbContext, IAuthService authService)
+    public EquipmentManagementService(
+        AppDbContext dbContext,
+        IAuthService authService,
+        IEquipmentValidator equipmentValidator)
     {
         _dbContext = dbContext;
         _authService = authService;
+        _equipmentValidator = equipmentValidator;
     }
 
     public async Task<IReadOnlyList<LookupItemDto>> GetWorkshopOptionsAsync()
@@ -65,7 +71,7 @@ public class EquipmentManagementService : IEquipmentManagementService
     public async Task AddEquipmentAsync(ProductionEquipmentDto equipment)
     {
         ApplyCurrentWorkshop(equipment);
-        ValidateEquipment(equipment);
+        EnsureValid(equipment);
         _dbContext.ProductionEquipments.Add(new ProductionEquipment
         {
             Name = equipment.Name.Trim(),
@@ -81,7 +87,7 @@ public class EquipmentManagementService : IEquipmentManagementService
     public async Task UpdateEquipmentAsync(ProductionEquipmentDto equipment)
     {
         ApplyCurrentWorkshop(equipment);
-        ValidateEquipment(equipment);
+        EnsureValid(equipment);
         var entity = await _dbContext.ProductionEquipments
             .FirstOrDefaultAsync(item => item.ProductionEquipmentId == equipment.Id);
 
@@ -306,31 +312,11 @@ public class EquipmentManagementService : IEquipmentManagementService
             throw new InvalidOperationException("Нельзя изменять данные другого цеха.");
     }
 
-    private static void ValidateEquipment(ProductionEquipmentDto equipment)
+    private void EnsureValid(ProductionEquipmentDto equipment)
     {
-        if (string.IsNullOrWhiteSpace(equipment.Name))
-            throw new InvalidOperationException("Укажите название оборудования.");
-
-        if (string.IsNullOrWhiteSpace(equipment.OkofCode))
-            throw new InvalidOperationException("Укажите код ОКОФ.");
-
-        if (string.IsNullOrWhiteSpace(equipment.InventoryNumber))
-            throw new InvalidOperationException("Укажите инвентарный номер.");
-
-        if (equipment.WorkshopId <= 0)
-            throw new InvalidOperationException("Выберите цех.");
-
-        if (equipment.Name.Trim().Length > 255)
-            throw new InvalidOperationException("Название оборудования не должно быть длиннее 255 символов.");
-
-        if (NormalizeOptionalText(equipment.SerialNumber)?.Length > 20)
-            throw new InvalidOperationException("Серийный номер не должен быть длиннее 20 символов.");
-
-        if (equipment.OkofCode.Trim().Length > 19)
-            throw new InvalidOperationException("Код ОКОФ не должен быть длиннее 19 символов.");
-
-        if (equipment.InventoryNumber.Trim().Length > 17)
-            throw new InvalidOperationException("Инвентарный номер не должен быть длиннее 17 символов.");
+        var result = _equipmentValidator.Validate(equipment);
+        if (!result.IsValid)
+            throw new InvalidOperationException(result.ErrorMessage ?? "Данные оборудования заполнены некорректно.");
     }
 
     private static string? NormalizeOptionalText(string? value)

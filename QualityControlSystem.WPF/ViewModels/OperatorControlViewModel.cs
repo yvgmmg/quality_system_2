@@ -3,10 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using QualityControlSystem.Infrastructure;
-using QualityControlSystem.Infrastructure.Entities;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Validation;
 using QualityControlSystem.WPF.ViewModels.Base;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,9 @@ namespace QualityControlSystem.WPF.ViewModels
     {
         private readonly AppDbContext _dbContext;
         private readonly IEdgeDeviceService _edgeDeviceService;
+        private readonly IEquipmentManagementService _equipmentManagementService;
         private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
+        private readonly IEquipmentValidator _equipmentValidator;
         private readonly IDialogService _dialogService;
         private readonly INotificationService _notificationService;
         private readonly HttpClient _videoClient = new() { Timeout = TimeSpan.FromSeconds(3) };
@@ -91,13 +93,17 @@ namespace QualityControlSystem.WPF.ViewModels
         public OperatorControlViewModel(
             AppDbContext dbContext,
             IEdgeDeviceService edgeDeviceService,
+            IEquipmentManagementService equipmentManagementService,
             IEquipmentWorkResultsService equipmentWorkResultsService,
+            IEquipmentValidator equipmentValidator,
             IDialogService dialogService,
             INotificationService notificationService)
         {
             _dbContext = dbContext;
             _edgeDeviceService = edgeDeviceService;
+            _equipmentManagementService = equipmentManagementService;
             _equipmentWorkResultsService = equipmentWorkResultsService;
+            _equipmentValidator = equipmentValidator;
             _dialogService = dialogService;
             _notificationService = notificationService;
 
@@ -143,17 +149,7 @@ namespace QualityControlSystem.WPF.ViewModels
 
         private async Task LoadWorkshopOptionsAsync()
         {
-            var workshops = await _dbContext.Workshops
-                .AsNoTracking()
-                .OrderBy(workshop => workshop.Number)
-                .Select(workshop => new LookupItemDto
-                {
-                    Id = workshop.WorkshopId,
-                    Name = string.IsNullOrWhiteSpace(workshop.Purpose)
-                        ? $"Цех {workshop.Number}"
-                        : $"Цех {workshop.Number} - {workshop.Purpose}"
-                })
-                .ToListAsync();
+            var workshops = await _equipmentManagementService.GetWorkshopOptionsAsync();
 
             WorkshopOptions.Clear();
             foreach (var workshop in workshops)
@@ -163,39 +159,11 @@ namespace QualityControlSystem.WPF.ViewModels
         private async Task LoadProductionEquipmentAsync()
         {
             var selectedId = SelectedEquipment?.Id;
-            var rows = await _dbContext.ProductionEquipments
-                .AsNoTracking()
-                .Include(item => item.Workshop)
-                .OrderBy(item => item.ProductionEquipmentId)
-                .Select(item => new
-                {
-                    item.ProductionEquipmentId,
-                    item.Name,
-                    item.SerialNumber,
-                    item.OkofCode,
-                    item.InventoryNumber,
-                    item.WorkshopId,
-                    item.Workshop.Number,
-                    item.Workshop.Purpose
-                })
-                .ToListAsync();
+            var rows = await _equipmentManagementService.GetEquipmentAsync();
 
             Equipment.Clear();
             foreach (var item in rows)
-            {
-                Equipment.Add(new ProductionEquipmentDto
-                {
-                    Id = item.ProductionEquipmentId,
-                    Name = item.Name,
-                    SerialNumber = item.SerialNumber,
-                    OkofCode = item.OkofCode,
-                    InventoryNumber = item.InventoryNumber,
-                    WorkshopId = item.WorkshopId,
-                    WorkshopName = string.IsNullOrWhiteSpace(item.Purpose)
-                        ? $"Цех {item.Number}"
-                        : $"Цех {item.Number} - {item.Purpose}"
-                });
-            }
+                Equipment.Add(item);
 
             SelectedEquipment = Equipment.FirstOrDefault(item => item.Id == selectedId);
         }
@@ -209,18 +177,8 @@ namespace QualityControlSystem.WPF.ViewModels
 
             await RunUiTaskAsync(async () =>
             {
-                ValidateEquipment(newEquipment);
-                var equipment = new ProductionEquipment
-                {
-                    Name = newEquipment.Name.Trim(),
-                    SerialNumber = NormalizeOptionalText(newEquipment.SerialNumber),
-                    OkofCode = newEquipment.OkofCode.Trim(),
-                    InventoryNumber = newEquipment.InventoryNumber.Trim(),
-                    WorkshopId = newEquipment.WorkshopId
-                };
-
-                _dbContext.ProductionEquipments.Add(equipment);
-                await _dbContext.SaveChangesAsync();
+                EnsureEquipmentIsValid(newEquipment);
+                await _equipmentManagementService.AddEquipmentAsync(newEquipment);
                 await LoadProductionEquipmentAsync();
                 StatusMessage = "Оборудование добавлено.";
             });
@@ -250,20 +208,8 @@ namespace QualityControlSystem.WPF.ViewModels
 
             await RunUiTaskAsync(async () =>
             {
-                ValidateEquipment(editEquipment);
-                var equipment = await _dbContext.ProductionEquipments
-                    .FirstOrDefaultAsync(item => item.ProductionEquipmentId == editEquipment.Id);
-
-                if (equipment == null)
-                    throw new InvalidOperationException("Оборудование не найдено.");
-
-                equipment.Name = editEquipment.Name.Trim();
-                equipment.SerialNumber = NormalizeOptionalText(editEquipment.SerialNumber);
-                equipment.OkofCode = editEquipment.OkofCode.Trim();
-                equipment.InventoryNumber = editEquipment.InventoryNumber.Trim();
-                equipment.WorkshopId = editEquipment.WorkshopId;
-
-                await _dbContext.SaveChangesAsync();
+                EnsureEquipmentIsValid(editEquipment);
+                await _equipmentManagementService.UpdateEquipmentAsync(editEquipment);
                 await LoadProductionEquipmentAsync();
                 StatusMessage = "Оборудование обновлено.";
             });
@@ -283,14 +229,7 @@ namespace QualityControlSystem.WPF.ViewModels
 
             await RunUiTaskAsync(async () =>
             {
-                var equipment = await _dbContext.ProductionEquipments
-                    .FirstOrDefaultAsync(item => item.ProductionEquipmentId == SelectedEquipment.Id);
-
-                if (equipment == null)
-                    throw new InvalidOperationException("Оборудование не найдено.");
-
-                _dbContext.ProductionEquipments.Remove(equipment);
-                await _dbContext.SaveChangesAsync();
+                await _equipmentManagementService.DeleteEquipmentAsync(SelectedEquipment.Id);
                 SelectedEquipment = null;
                 await LoadProductionEquipmentAsync();
                 StatusMessage = "Оборудование удалено.";
@@ -586,37 +525,12 @@ namespace QualityControlSystem.WPF.ViewModels
             return current.Message;
         }
 
-        private static void ValidateEquipment(ProductionEquipmentDto equipment)
+        private void EnsureEquipmentIsValid(ProductionEquipmentDto equipment)
         {
-            if (string.IsNullOrWhiteSpace(equipment.Name))
-                throw new InvalidOperationException("Укажите название оборудования.");
-
-            if (string.IsNullOrWhiteSpace(equipment.OkofCode))
-                throw new InvalidOperationException("Укажите код ОКОФ.");
-
-            if (string.IsNullOrWhiteSpace(equipment.InventoryNumber))
-                throw new InvalidOperationException("Укажите инвентарный номер.");
-
-            if (equipment.WorkshopId <= 0)
-                throw new InvalidOperationException("Выберите цех.");
-
-            if (equipment.Name.Trim().Length > 255)
-                throw new InvalidOperationException("Название оборудования не должно быть длиннее 255 символов.");
-
-            if (NormalizeOptionalText(equipment.SerialNumber)?.Length > 20)
-                throw new InvalidOperationException("Серийный номер не должен быть длиннее 20 символов.");
-
-            if (equipment.OkofCode.Trim().Length > 19)
-                throw new InvalidOperationException("Код ОКОФ не должен быть длиннее 19 символов.");
-
-            if (equipment.InventoryNumber.Trim().Length > 17)
-                throw new InvalidOperationException("Инвентарный номер не должен быть длиннее 17 символов.");
-        }
-
-        private static string? NormalizeOptionalText(string? value)
-        {
-            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-        }
+        var result = _equipmentValidator.Validate(equipment);
+        if (!result.IsValid)
+            throw new InvalidOperationException(result.ErrorMessage ?? "Данные оборудования заполнены некорректно.");
+    }
 
         private List<SelectableFrameDto> GetSelectedInspectionFrames()
         {
