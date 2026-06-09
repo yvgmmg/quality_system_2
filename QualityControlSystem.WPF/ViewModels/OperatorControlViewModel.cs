@@ -24,6 +24,7 @@ namespace QualityControlSystem.WPF.ViewModels
     public partial class OperatorControlViewModel : BaseViewModel, IAsyncInitializable, IDisposable
     {
         private readonly IOperatorControlDataService _operatorControlDataService;
+        private readonly IOperatorInspectionSessionService _operatorInspectionSessionService;
         private readonly IEdgeDeviceService _edgeDeviceService;
         private readonly IEquipmentManagementService _equipmentManagementService;
         private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
@@ -91,6 +92,7 @@ namespace QualityControlSystem.WPF.ViewModels
 
         public OperatorControlViewModel(
             IOperatorControlDataService operatorControlDataService,
+            IOperatorInspectionSessionService operatorInspectionSessionService,
             IEdgeDeviceService edgeDeviceService,
             IEquipmentManagementService equipmentManagementService,
             IEquipmentWorkResultsService equipmentWorkResultsService,
@@ -99,6 +101,7 @@ namespace QualityControlSystem.WPF.ViewModels
             INotificationService notificationService)
         {
             _operatorControlDataService = operatorControlDataService;
+            _operatorInspectionSessionService = operatorInspectionSessionService;
             _edgeDeviceService = edgeDeviceService;
             _equipmentManagementService = equipmentManagementService;
             _equipmentWorkResultsService = equipmentWorkResultsService;
@@ -126,7 +129,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             try
             {
-                var frames = await _edgeDeviceService.GetFrameOptionsAsync();
+                var frames = await _operatorInspectionSessionService.GetFrameOptionsAsync();
                 FrameOptions.Clear();
                 InspectionFrameOptions.Clear();
                 foreach (var frame in frames)
@@ -247,7 +250,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                LastLog = await _edgeDeviceService.CheckConnectionAsync();
+                LastLog = await _operatorInspectionSessionService.CheckConnectionAsync();
                 StatusMessage = "Raspberry Pi доступна по SSH";
             });
         }
@@ -257,7 +260,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                LastLog = await _edgeDeviceService.DeployScriptsAsync();
+                LastLog = await _operatorInspectionSessionService.DeployScriptsAsync();
                 StatusMessage = "Wrapper-скрипты загружены на Raspberry Pi";
             });
         }
@@ -267,7 +270,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                LastLog = await _edgeDeviceService.StartPhotomakerAsync();
+                LastLog = await _operatorInspectionSessionService.StartPhotomakerAsync();
                 IsPhotomakerRunning = true;
                 IsOperatingRunning = false;
                 CurrentMode = "Создание шаблонов";
@@ -281,7 +284,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                await _edgeDeviceService.StopPhotomakerAsync();
+                await _operatorInspectionSessionService.StopPhotomakerAsync();
                 IsPhotomakerRunning = false;
                 StopVideoIfIdle();
                 StatusMessage = "Photomaker остановлен";
@@ -300,7 +303,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 if (SelectedFrame?.Id is not int frameId)
                     throw new InvalidOperationException("Выберите модель каркаса для шаблона.");
 
-                var templateId = await _edgeDeviceService.CaptureTemplateForFrameAsync(frameId, SelectedTemplateSide);
+                var templateId = await _operatorInspectionSessionService.CaptureTemplateForFrameAsync(frameId, SelectedTemplateSide);
                 LastLog = $"Создан шаблон #{templateId}: каркас {SelectedFrame.Name}, сторона {SelectedTemplateSide}";
                 StatusMessage = "Шаблон сохранен на ПК и добавлен в таблицу template";
             });
@@ -311,7 +314,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             await RunUiTaskAsync(async () =>
             {
-                LastLog = await _edgeDeviceService.SyncTemplatesAsync();
+                LastLog = await _operatorInspectionSessionService.SyncTemplatesAsync();
                 StatusMessage = "Шаблоны синхронизированы на основной ПК";
             });
         }
@@ -325,7 +328,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 if (selectedFrames.Count == 0)
                     throw new InvalidOperationException("Выберите модель каркаса для запуска operating.");
 
-                LastLog = await _edgeDeviceService.StartOperatingForFramesAsync(selectedFrames.Select(frame => frame.Id!.Value));
+                LastLog = await _operatorInspectionSessionService.StartOperatingForFramesAsync(selectedFrames.Select(frame => frame.Id!.Value));
                 IsOperatingRunning = true;
                 IsPhotomakerRunning = false;
                 CurrentMode = "Контроль деталей";
@@ -349,7 +352,7 @@ namespace QualityControlSystem.WPF.ViewModels
                         await _equipmentWorkResultsService.CreateResultsForFrameInspectionAsync(frame.Id.Value, frameResults);
                 }
 
-                await _edgeDeviceService.StopOperatingAsync();
+                await _operatorInspectionSessionService.StopOperatingAsync();
                 IsOperatingRunning = false;
                 StopVideoIfIdle();
                 StatusMessage = "Operating остановлен";
@@ -396,7 +399,7 @@ namespace QualityControlSystem.WPF.ViewModels
 
         private async Task RefreshResultsAsync()
         {
-            var results = await _edgeDeviceService.GetInspectionResultsAsync();
+            var results = await _operatorInspectionSessionService.GetInspectionResultsAsync();
             var ordered = NumberResults(results);
             await ApplyFrameChecksAsync(ordered);
 
@@ -489,10 +492,10 @@ namespace QualityControlSystem.WPF.ViewModels
                 try
                 {
                     if (stopPhotomaker)
-                        await _edgeDeviceService.StopPhotomakerAsync();
+                        await _operatorInspectionSessionService.StopPhotomakerAsync();
 
                     if (stopOperating)
-                        await _edgeDeviceService.StopOperatingAsync();
+                        await _operatorInspectionSessionService.StopOperatingAsync();
                 }
                 catch
                 {
