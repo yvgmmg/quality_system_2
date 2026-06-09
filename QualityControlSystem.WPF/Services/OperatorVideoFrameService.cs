@@ -32,7 +32,7 @@ public sealed class OperatorVideoFrameService : IOperatorVideoFrameService
 
     private async Task<ImageSource?> LoadFrameAsync(string url, CancellationToken cancellationToken)
     {
-        var frameUrl = $"{url}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        var frameUrl = AddCacheBustingParameter(url);
         var bytes = await HttpClient.GetByteArrayAsync(frameUrl, cancellationToken);
 
         using var stream = new MemoryStream(bytes);
@@ -44,5 +44,13 @@ public sealed class OperatorVideoFrameService : IOperatorVideoFrameService
         image.Freeze();
 
         return image;
+    }
+
+    private static string AddCacheBustingParameter(string url)
+    {
+        var separator = url.Contains('?', StringComparison.Ordinal) ? "&" : "?";
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        return $"{url}{separator}t={timestamp}";
     }
 }
