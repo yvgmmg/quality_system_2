@@ -4,6 +4,7 @@ using QualityControlSystem.Infrastructure;
 using QualityControlSystem.Infrastructure.Entities;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Validation;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -17,10 +18,12 @@ public class QualityTestService : IQualityTestService
     private const string DefaultTestTypeName = "camera_test";
 
     private readonly AppDbContext _dbContext;
+    private readonly IQualityTestValidator _qualityTestValidator;
 
-    public QualityTestService(AppDbContext dbContext)
+    public QualityTestService(AppDbContext dbContext, IQualityTestValidator qualityTestValidator)
     {
         _dbContext = dbContext;
+        _qualityTestValidator = qualityTestValidator;
     }
 
     public async Task<IReadOnlyList<QualityTestDto>> GetTestsAsync()
@@ -94,7 +97,7 @@ public class QualityTestService : IQualityTestService
     public async Task AddTestAsync(QualityTestDto test)
     {
         await EnsureDefaultTestTypeAsync();
-        ValidateTest(test);
+        EnsureValid(test);
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         var defaultTestTypeId = await GetDefaultTestTypeIdAsync();
@@ -106,7 +109,7 @@ public class QualityTestService : IQualityTestService
     public async Task UpdateTestAsync(QualityTestDto test)
     {
         await EnsureDefaultTestTypeAsync();
-        ValidateTest(test);
+        EnsureValid(test);
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         var defaultTestTypeId = await GetDefaultTestTypeIdAsync();
@@ -199,16 +202,11 @@ public class QualityTestService : IQualityTestService
         }
     }
 
-    private static void ValidateTest(QualityTestDto test)
+    private void EnsureValid(QualityTestDto test)
     {
-        if (string.IsNullOrWhiteSpace(test.Name))
-            throw new InvalidOperationException("Укажите название теста.");
-
-        if (test.FrameId <= 0)
-            throw new InvalidOperationException("Выберите модель каркаса.");
-
-        if (test.TemplateIds.Count == 0)
-            throw new InvalidOperationException("Привяжите хотя бы один шаблон.");
+        var result = _qualityTestValidator.Validate(test);
+        if (!result.IsValid)
+            throw new InvalidOperationException(result.ErrorMessage ?? "Данные теста контроля заполнены некорректно.");
     }
 
     private async Task ExecuteNonQueryAsync(string sql, params (string Name, object? Value)[] parameters)

@@ -13,12 +13,13 @@ using System.Windows.Data;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class QualityTestsViewModel : BaseViewModel
+public partial class QualityTestsViewModel : BaseViewModel, IAsyncInitializable
 {
     private const string AllFramesFilter = UiFilterOptions.AllFrames;
 
     private readonly IQualityTestService _qualityTestService;
     private readonly IDialogService _dialogService;
+    private bool _isInitialized;
 
     [ObservableProperty]
     private ObservableCollection<QualityTestDto> _tests = new();
@@ -50,7 +51,15 @@ public partial class QualityTestsViewModel : BaseViewModel
         _dialogService = dialogService;
         TestsView = CollectionViewSource.GetDefaultView(Tests);
         TestsView.Filter = FilterTest;
-        _ = LoadAsync();
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await LoadAsync();
     }
 
     private async Task LoadAsync()

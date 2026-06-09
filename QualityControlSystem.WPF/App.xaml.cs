@@ -58,6 +58,7 @@ namespace QualityControlSystem.WPF
                         services.AddScoped<IFrameCardService, FrameCardService>();
                         services.AddSingleton<IEquipmentValidator, EquipmentValidator>();
                         services.AddSingleton<IFrameCardValidator, FrameCardValidator>();
+                        services.AddSingleton<IQualityTestValidator, QualityTestValidator>();
 
                         //ViewModel
                         services.AddSingleton<MainViewModel>();
