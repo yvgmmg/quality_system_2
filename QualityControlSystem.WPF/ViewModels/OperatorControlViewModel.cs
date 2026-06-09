@@ -25,6 +25,7 @@ namespace QualityControlSystem.WPF.ViewModels
     {
         private readonly IOperatorControlDataService _operatorControlDataService;
         private readonly IOperatorInspectionSessionService _operatorInspectionSessionService;
+        private readonly IOperatorInspectionResultService _operatorInspectionResultService;
         private readonly IOperatorReportService _operatorReportService;
         private readonly IEdgeDeviceService _edgeDeviceService;
         private readonly IEquipmentManagementService _equipmentManagementService;
@@ -94,6 +95,7 @@ namespace QualityControlSystem.WPF.ViewModels
         public OperatorControlViewModel(
             IOperatorControlDataService operatorControlDataService,
             IOperatorInspectionSessionService operatorInspectionSessionService,
+            IOperatorInspectionResultService operatorInspectionResultService,
             IOperatorReportService operatorReportService,
             IEdgeDeviceService edgeDeviceService,
             IEquipmentManagementService equipmentManagementService,
@@ -104,6 +106,7 @@ namespace QualityControlSystem.WPF.ViewModels
         {
             _operatorControlDataService = operatorControlDataService;
             _operatorInspectionSessionService = operatorInspectionSessionService;
+            _operatorInspectionResultService = operatorInspectionResultService;
             _operatorReportService = operatorReportService;
             _edgeDeviceService = edgeDeviceService;
             _equipmentManagementService = equipmentManagementService;
@@ -406,17 +409,26 @@ namespace QualityControlSystem.WPF.ViewModels
         private async Task RefreshResultsAsync()
         {
             var results = await _operatorInspectionSessionService.GetInspectionResultsAsync();
-            var ordered = NumberResults(results);
-            await ApplyFrameChecksAsync(ordered);
+            var selectedFrames = GetSelectedInspectionFrames();
+            var selectedFrameIds = selectedFrames
+                .Where(frame => frame.Id.HasValue)
+                .Select(frame => frame.Id!.Value)
+                .Distinct()
+                .ToList();
+
+            var templateFrameMap = await _operatorControlDataService.GetTemplateFrameMapAsync(selectedFrameIds);
+            var fallbackFrame = BuildFallbackFrameInfo(selectedFrames);
+            var items = _operatorInspectionResultService.BuildItems(results, templateFrameMap, fallbackFrame);
+            var summary = _operatorInspectionResultService.BuildSummary(items);
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 Results.Clear();
-                foreach (var result in ordered)
+                foreach (var result in items)
                     Results.Add(result);
 
-                InspectedFramesCount = ordered.Count;
-                PassedFramesCount = ordered.Count(IsPassedResult);
+                InspectedFramesCount = summary.TotalCount;
+                PassedFramesCount = summary.PassedCount;
             });
         }
 
@@ -567,75 +579,17 @@ namespace QualityControlSystem.WPF.ViewModels
             return selectedFrames;
         }
 
-        private async Task ApplyFrameChecksAsync(List<EdgeInspectionResultDto> results)
+        private static OperatorFrameInspectionInfoDto? BuildFallbackFrameInfo(IReadOnlyList<SelectableFrameDto> selectedFrames)
         {
-            var selectedFrames = GetSelectedInspectionFrames();
-            var selectedFrameIds = selectedFrames
-                .Where(frame => frame.Id.HasValue)
-                .Select(frame => frame.Id!.Value)
-                .Distinct()
-                .ToList();
+            if (selectedFrames.Count != 1 || selectedFrames[0].Id is not int frameId)
+                return null;
 
-            var templateFrameMap = await _operatorControlDataService.GetTemplateFrameMapAsync(selectedFrameIds);
-            var fallbackFrame = selectedFrames.Count == 1 ? selectedFrames[0] : null;
-
-            foreach (var result in results)
+            return new OperatorFrameInspectionInfoDto
             {
-                if (templateFrameMap.TryGetValue(result.TemplateId, out var frameInfo))
-                {
-                    result.FrameId = frameInfo.FrameId;
-                    result.FrameName = frameInfo.FrameName;
-                    result.ExpectedWeight = frameInfo.ExpectedWeight;
-                }
-                else if (fallbackFrame?.Id.HasValue == true)
-                {
-                    result.FrameId = fallbackFrame.Id;
-                    result.FrameName = fallbackFrame.Name;
-                    result.ExpectedWeight = fallbackFrame.Weight;
-                }
-
-                result.WeightTolerance = result.ExpectedWeight.HasValue
-                    ? EdgeInspectionResultDto.GetDefaultWeightTolerance(result.ExpectedWeight.Value)
-                    : null;
-            }
-        }
-
-        private static List<EdgeInspectionResultDto> NumberResults(IEnumerable<EdgeInspectionResultDto> results)
-        {
-            var chronological = results
-                .Where(result => result.RecordedAt != default)
-                .GroupBy(result => new { result.RecordedAt, result.Id })
-                .Select(group => group.First())
-                .OrderBy(result => result.RecordedAt)
-                .ThenBy(result => result.Id)
-                .ToList();
-
-            for (var index = 0; index < chronological.Count; index++)
-                chronological[index].ControlNumber = index + 1;
-
-            return chronological
-                .OrderByDescending(result => result.RecordedAt)
-                .ThenByDescending(result => result.Id)
-                .ToList();
-        }
-
-        private static bool IsPassedResult(EdgeInspectionResultDto result)
-        {
-            if (!IsPassedStatusForQualityResult(result.Status))
-                return false;
-
-            if (!result.ExpectedWeight.HasValue || !result.Weight.HasValue)
-                return false;
-
-            var tolerance = result.WeightTolerance ?? EdgeInspectionResultDto.GetDefaultWeightTolerance(result.ExpectedWeight.Value);
-            return Math.Abs(result.Weight.Value - result.ExpectedWeight.Value) <= tolerance;
-        }
-
-        private static bool IsPassedStatusForQualityResult(string? status)
-        {
-            return string.Equals(status, InspectionStatuses.Ok, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, InspectionStatuses.AcceptedRu, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(status, InspectionStatuses.Passed, StringComparison.OrdinalIgnoreCase);
+                FrameId = frameId,
+                FrameName = selectedFrames[0].Name,
+                ExpectedWeight = selectedFrames[0].Weight
+            };
         }
     }
 
