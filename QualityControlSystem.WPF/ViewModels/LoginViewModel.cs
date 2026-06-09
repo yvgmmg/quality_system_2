@@ -57,7 +57,5 @@ namespace QualityControlSystem.WPF.ViewModels
                 IsBusy = false;
             }
         }
-
-        private bool CanLogin() => !IsBusy && !string.IsNullOrWhiteSpace(Login) && !string.IsNullOrWhiteSpace(Password);
     }
 }
