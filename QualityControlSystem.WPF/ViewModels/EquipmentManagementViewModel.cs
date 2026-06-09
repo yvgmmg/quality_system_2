@@ -9,18 +9,17 @@ using CommunityToolkit.Mvvm.Input;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
-using QualityControlSystem.WPF.Validation;
 using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class EquipmentManagementViewModel : BaseViewModel
+public partial class EquipmentManagementViewModel : BaseViewModel, IAsyncInitializable
 {
     private const string AllWorkshopsFilter = UiFilterOptions.AllWorkshops;
 
     private readonly IEquipmentManagementService _equipmentService;
-    private readonly IEquipmentValidator _equipmentValidator;
     private readonly IDialogService _dialogService;
+    private bool _isInitialized;
 
     [ObservableProperty]
     private ObservableCollection<ProductionEquipmentDto> _equipment = new();
@@ -57,15 +56,21 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
     public EquipmentManagementViewModel(
         IEquipmentManagementService equipmentService,
-        IEquipmentValidator equipmentValidator,
         IDialogService dialogService)
     {
         _equipmentService = equipmentService;
-        _equipmentValidator = equipmentValidator;
         _dialogService = dialogService;
         EquipmentView = CollectionViewSource.GetDefaultView(Equipment);
         EquipmentView.Filter = FilterEquipment;
-        _ = LoadAsync();
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -191,7 +196,6 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
         await RunBusyAsync(async () =>
         {
-            EnsureEquipmentIsValid(newEquipment);
             await _equipmentService.AddEquipmentAsync(newEquipment);
             await LoadEquipmentAsync();
             StatusMessage = "Оборудование добавлено.";
@@ -222,7 +226,6 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
         await RunBusyAsync(async () =>
         {
-            EnsureEquipmentIsValid(editEquipment);
             await _equipmentService.UpdateEquipmentAsync(editEquipment);
             await LoadEquipmentAsync();
             StatusMessage = "Оборудование обновлено.";
@@ -306,16 +309,21 @@ public partial class EquipmentManagementViewModel : BaseViewModel
         }
     }
 
-    private void EnsureEquipmentIsValid(ProductionEquipmentDto equipment)
-    {
-        var result = _equipmentValidator.Validate(equipment);
-        if (!result.IsValid)
-            throw new InvalidOperationException(result.ErrorMessage ?? "Данные оборудования заполнены некорректно.");
-    }
-
     partial void OnSelectedEquipmentChanged(ProductionEquipmentDto? value)
     {
-        _ = LoadLinkOptionsAsync();
+        _ = LoadLinkOptionsSafeAsync();
+    }
+
+    private async Task LoadLinkOptionsSafeAsync()
+    {
+        try
+        {
+            await LoadLinkOptionsAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = GetErrorMessage(ex);
+        }
     }
 
     partial void OnSearchTextChanged(string value) => EquipmentView?.Refresh();
