@@ -11,11 +11,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TemplateSideValues = QualityControlSystem.WPF.Constants.TemplateSides;
 
@@ -27,13 +25,12 @@ namespace QualityControlSystem.WPF.ViewModels
         private readonly IOperatorInspectionSessionService _operatorInspectionSessionService;
         private readonly IOperatorInspectionResultService _operatorInspectionResultService;
         private readonly IOperatorReportService _operatorReportService;
-        private readonly IEdgeDeviceService _edgeDeviceService;
+        private readonly IOperatorVideoFrameService _operatorVideoFrameService;
         private readonly IEquipmentManagementService _equipmentManagementService;
         private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
         private readonly IEquipmentValidator _equipmentValidator;
         private readonly IDialogService _dialogService;
         private readonly INotificationService _notificationService;
-        private readonly HttpClient _videoClient = new() { Timeout = TimeSpan.FromSeconds(3) };
         private readonly DispatcherTimer _frameTimer;
         private readonly DispatcherTimer _resultTimer;
         private bool _isInitialized;
@@ -97,7 +94,7 @@ namespace QualityControlSystem.WPF.ViewModels
             IOperatorInspectionSessionService operatorInspectionSessionService,
             IOperatorInspectionResultService operatorInspectionResultService,
             IOperatorReportService operatorReportService,
-            IEdgeDeviceService edgeDeviceService,
+            IOperatorVideoFrameService operatorVideoFrameService,
             IEquipmentManagementService equipmentManagementService,
             IEquipmentWorkResultsService equipmentWorkResultsService,
             IEquipmentValidator equipmentValidator,
@@ -108,7 +105,7 @@ namespace QualityControlSystem.WPF.ViewModels
             _operatorInspectionSessionService = operatorInspectionSessionService;
             _operatorInspectionResultService = operatorInspectionResultService;
             _operatorReportService = operatorReportService;
-            _edgeDeviceService = edgeDeviceService;
+            _operatorVideoFrameService = operatorVideoFrameService;
             _equipmentManagementService = equipmentManagementService;
             _equipmentWorkResultsService = equipmentWorkResultsService;
             _equipmentValidator = equipmentValidator;
@@ -451,19 +448,9 @@ namespace QualityControlSystem.WPF.ViewModels
 
             try
             {
-                var url = IsPhotomakerRunning
-                    ? _edgeDeviceService.GetPhotomakerFrameUrl()
-                    : _edgeDeviceService.GetOperatingFrameUrl();
-
-                var bytes = await _videoClient.GetByteArrayAsync($"{url}?t={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}");
-                var image = new BitmapImage();
-                using var stream = new MemoryStream(bytes);
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = stream;
-                image.EndInit();
-                image.Freeze();
-                VideoFrame = image;
+                VideoFrame = IsPhotomakerRunning
+                    ? await _operatorVideoFrameService.GetPhotomakerFrameAsync()
+                    : await _operatorVideoFrameService.GetOperatingFrameAsync();
             }
             catch
             {
@@ -495,7 +482,6 @@ namespace QualityControlSystem.WPF.ViewModels
             _isDisposed = true;
             _frameTimer.Stop();
             _resultTimer.Stop();
-            _videoClient.Dispose();
 
             var stopPhotomaker = IsPhotomakerRunning;
             var stopOperating = IsOperatingRunning;

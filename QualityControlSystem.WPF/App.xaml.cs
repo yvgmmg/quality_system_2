@@ -59,6 +59,7 @@ namespace QualityControlSystem.WPF
                         services.AddScoped<IOperatorControlDataService, OperatorControlDataService>();
                         services.AddScoped<IOperatorInspectionSessionService, OperatorInspectionSessionService>();
                         services.AddScoped<IOperatorReportService, OperatorReportService>();
+                        services.AddScoped<IOperatorVideoFrameService, OperatorVideoFrameService>();
                         services.AddSingleton<IOperatorInspectionResultService, OperatorInspectionResultService>();
                         services.AddSingleton<IEquipmentValidator, EquipmentValidator>();
                         services.AddSingleton<IFrameCardValidator, FrameCardValidator>();
