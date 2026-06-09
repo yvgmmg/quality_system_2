@@ -1,8 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
-using QualityControlSystem.Infrastructure;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
@@ -23,9 +21,9 @@ using TemplateSideValues = QualityControlSystem.WPF.Constants.TemplateSides;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
-    public partial class OperatorControlViewModel : BaseViewModel, IDisposable
+    public partial class OperatorControlViewModel : BaseViewModel, IAsyncInitializable, IDisposable
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IOperatorControlDataService _operatorControlDataService;
         private readonly IEdgeDeviceService _edgeDeviceService;
         private readonly IEquipmentManagementService _equipmentManagementService;
         private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
@@ -35,6 +33,7 @@ namespace QualityControlSystem.WPF.ViewModels
         private readonly HttpClient _videoClient = new() { Timeout = TimeSpan.FromSeconds(3) };
         private readonly DispatcherTimer _frameTimer;
         private readonly DispatcherTimer _resultTimer;
+        private bool _isInitialized;
         private bool _isDisposed;
 
         [ObservableProperty]
@@ -91,7 +90,7 @@ namespace QualityControlSystem.WPF.ViewModels
         public ObservableCollection<EdgeInspectionResultDto> Results { get; } = new();
 
         public OperatorControlViewModel(
-            AppDbContext dbContext,
+            IOperatorControlDataService operatorControlDataService,
             IEdgeDeviceService edgeDeviceService,
             IEquipmentManagementService equipmentManagementService,
             IEquipmentWorkResultsService equipmentWorkResultsService,
@@ -99,7 +98,7 @@ namespace QualityControlSystem.WPF.ViewModels
             IDialogService dialogService,
             INotificationService notificationService)
         {
-            _dbContext = dbContext;
+            _operatorControlDataService = operatorControlDataService;
             _edgeDeviceService = edgeDeviceService;
             _equipmentManagementService = equipmentManagementService;
             _equipmentWorkResultsService = equipmentWorkResultsService;
@@ -112,8 +111,15 @@ namespace QualityControlSystem.WPF.ViewModels
 
             _resultTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _resultTimer.Tick += async (_, _) => await RefreshResultsSafeAsync();
+        }
 
-            _ = LoadFramesAsync();
+        public async Task InitializeAsync()
+        {
+            if (_isInitialized)
+                return;
+
+            _isInitialized = true;
+            await LoadFramesAsync();
         }
 
         private async Task LoadFramesAsync()
@@ -561,7 +567,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 .Distinct()
                 .ToList();
 
-            var templateFrameMap = await LoadTemplateFrameMapAsync(selectedFrameIds);
+            var templateFrameMap = await _operatorControlDataService.GetTemplateFrameMapAsync(selectedFrameIds);
             var fallbackFrame = selectedFrames.Count == 1 ? selectedFrames[0] : null;
 
             foreach (var result in results)
@@ -583,42 +589,6 @@ namespace QualityControlSystem.WPF.ViewModels
                     ? EdgeInspectionResultDto.GetDefaultWeightTolerance(result.ExpectedWeight.Value)
                     : null;
             }
-        }
-
-        private async Task<Dictionary<int, FrameInspectionInfo>> LoadTemplateFrameMapAsync(IReadOnlyCollection<int> frameIds)
-        {
-            if (frameIds.Count == 0)
-                return new Dictionary<int, FrameInspectionInfo>();
-
-            var rows = await (
-                from frame in _dbContext.Frames.AsNoTracking()
-                join frameLink in _dbContext.FrameTestFormFrames.AsNoTracking() on frame.FrameId equals frameLink.FrameId
-                join templateLink in _dbContext.FrameTestFormTemplates.AsNoTracking() on frameLink.FrameTestFormId equals templateLink.FrameTestFormId
-                join template in _dbContext.Templates.AsNoTracking() on templateLink.TemplateId equals template.TemplateId
-                where frameIds.Contains(frame.FrameId)
-                select new
-                {
-                    TemplateId = template.TemplateId,
-                    FrameId = frame.FrameId,
-                    FrameName = frame.Name,
-                    frame.Weight
-                })
-                .ToListAsync();
-
-            return rows
-                .GroupBy(row => row.TemplateId)
-                .ToDictionary(
-                    group => group.Key,
-                    group =>
-                    {
-                        var row = group.First();
-                        return new FrameInspectionInfo
-                        {
-                            FrameId = row.FrameId,
-                            FrameName = row.FrameName,
-                            ExpectedWeight = row.Weight.HasValue ? Convert.ToDouble(row.Weight.Value) : null
-                        };
-                    });
         }
 
         private static List<EdgeInspectionResultDto> NumberResults(IEnumerable<EdgeInspectionResultDto> results)
@@ -670,10 +640,4 @@ namespace QualityControlSystem.WPF.ViewModels
         private bool _isSelected;
     }
 
-    internal sealed class FrameInspectionInfo
-    {
-        public int FrameId { get; set; }
-        public string FrameName { get; set; } = string.Empty;
-        public double? ExpectedWeight { get; set; }
-    }
 }
