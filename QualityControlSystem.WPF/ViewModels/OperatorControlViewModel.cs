@@ -4,7 +4,6 @@ using Microsoft.Win32;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
-using QualityControlSystem.WPF.Validation;
 using QualityControlSystem.WPF.ViewModels.Base;
 using System;
 using System.Collections.Generic;
@@ -28,7 +27,6 @@ namespace QualityControlSystem.WPF.ViewModels
         private readonly IOperatorVideoFrameService _operatorVideoFrameService;
         private readonly IEquipmentManagementService _equipmentManagementService;
         private readonly IEquipmentWorkResultsService _equipmentWorkResultsService;
-        private readonly IEquipmentValidator _equipmentValidator;
         private readonly IDialogService _dialogService;
         private readonly INotificationService _notificationService;
         private readonly DispatcherTimer _frameTimer;
@@ -97,7 +95,6 @@ namespace QualityControlSystem.WPF.ViewModels
             IOperatorVideoFrameService operatorVideoFrameService,
             IEquipmentManagementService equipmentManagementService,
             IEquipmentWorkResultsService equipmentWorkResultsService,
-            IEquipmentValidator equipmentValidator,
             IDialogService dialogService,
             INotificationService notificationService)
         {
@@ -108,7 +105,6 @@ namespace QualityControlSystem.WPF.ViewModels
             _operatorVideoFrameService = operatorVideoFrameService;
             _equipmentManagementService = equipmentManagementService;
             _equipmentWorkResultsService = equipmentWorkResultsService;
-            _equipmentValidator = equipmentValidator;
             _dialogService = dialogService;
             _notificationService = notificationService;
 
@@ -159,15 +155,6 @@ namespace QualityControlSystem.WPF.ViewModels
             }
         }
 
-        private async Task LoadWorkshopOptionsAsync()
-        {
-            var workshops = await _equipmentManagementService.GetWorkshopOptionsAsync();
-
-            WorkshopOptions.Clear();
-            foreach (var workshop in workshops)
-                WorkshopOptions.Add(workshop);
-        }
-
         private async Task LoadProductionEquipmentAsync()
         {
             var selectedId = SelectedEquipment?.Id;
@@ -189,7 +176,6 @@ namespace QualityControlSystem.WPF.ViewModels
 
             await RunUiTaskAsync(async () =>
             {
-                EnsureEquipmentIsValid(newEquipment);
                 await _equipmentManagementService.AddEquipmentAsync(newEquipment);
                 await LoadProductionEquipmentAsync();
                 StatusMessage = "Оборудование добавлено.";
@@ -220,7 +206,6 @@ namespace QualityControlSystem.WPF.ViewModels
 
             await RunUiTaskAsync(async () =>
             {
-                EnsureEquipmentIsValid(editEquipment);
                 await _equipmentManagementService.UpdateEquipmentAsync(editEquipment);
                 await LoadProductionEquipmentAsync();
                 StatusMessage = "Оборудование обновлено.";
@@ -537,13 +522,6 @@ namespace QualityControlSystem.WPF.ViewModels
 
             return current.Message;
         }
-
-        private void EnsureEquipmentIsValid(ProductionEquipmentDto equipment)
-        {
-        var result = _equipmentValidator.Validate(equipment);
-        if (!result.IsValid)
-            throw new InvalidOperationException(result.ErrorMessage ?? "Данные оборудования заполнены некорректно.");
-    }
 
         private List<SelectableFrameDto> GetSelectedInspectionFrames()
         {
