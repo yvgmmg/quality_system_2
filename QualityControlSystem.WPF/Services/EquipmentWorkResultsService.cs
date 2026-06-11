@@ -4,6 +4,9 @@ using QualityControlSystem.Infrastructure.Entities;
 using QualityControlSystem.WPF.Constants;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
+using System.Globalization;
+using System.IO;
+using System.Text;
 
 namespace QualityControlSystem.WPF.Services;
 
@@ -22,6 +25,48 @@ public class EquipmentWorkResultsService : IEquipmentWorkResultsService
 
     public async Task<IReadOnlyList<EquipmentWorkResultDto>> GetResultsForEquipmentSpecialistAsync()
     {
+        return await LoadResultsForEquipmentSpecialistAsync(CancellationToken.None);
+    }
+
+    public async Task<int> ClearResultsForEquipmentSpecialistAsync(CancellationToken cancellationToken = default)
+    {
+        IQueryable<CheckNotification> query = _dbContext.CheckNotifications
+            .Include(notification => notification.ProductionEquipment);
+
+        if (_authService.CurrentUser?.WorkshopId is int workshopId)
+            query = query.Where(notification => notification.ProductionEquipment.WorkshopId == workshopId);
+
+        var notifications = await query.ToListAsync(cancellationToken);
+        if (notifications.Count == 0)
+            return 0;
+
+        _dbContext.CheckNotifications.RemoveRange(notifications);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return notifications.Count;
+    }
+
+    public async Task CreateEquipmentWorkResultsReportAsync(
+        string outputPath,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(outputPath))
+            throw new InvalidOperationException("Путь для сохранения отчета не указан.");
+
+        var results = await LoadResultsForEquipmentSpecialistAsync(cancellationToken);
+        if (results.Count == 0)
+            throw new InvalidOperationException("Нет уведомлений для формирования отчета.");
+
+        var reportText = BuildEquipmentWorkResultsReport(results);
+        var directory = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+
+        await File.WriteAllTextAsync(outputPath, reportText, Encoding.UTF8, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<EquipmentWorkResultDto>> LoadResultsForEquipmentSpecialistAsync(CancellationToken cancellationToken)
+    {
         IQueryable<CheckNotification> query = _dbContext.CheckNotifications
             .AsNoTracking()
             .Include(notification => notification.ProductionEquipment);
@@ -32,7 +77,7 @@ public class EquipmentWorkResultsService : IEquipmentWorkResultsService
         var rows = await query
             .OrderByDescending(notification => notification.CheckedAt ?? notification.NotificationDate.ToDateTime(TimeOnly.MinValue))
             .ThenByDescending(notification => notification.CheckNotificationId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var equipmentIds = rows
             .Select(notification => notification.ProductionEquipmentId)
@@ -55,7 +100,7 @@ public class EquipmentWorkResultsService : IEquipmentWorkResultsService
                 SensorCode = sensor.SensorType.Code,
                 Unit = sensor.MeasurementUnit.Symbol
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var sensorsByEquipment = linkedSensors
             .GroupBy(sensor => sensor.EquipmentId)
@@ -149,5 +194,74 @@ public class EquipmentWorkResultsService : IEquipmentWorkResultsService
         return string.Equals(status, InspectionStatuses.Ok, StringComparison.OrdinalIgnoreCase)
             || string.Equals(status, InspectionStatuses.AcceptedRu, StringComparison.OrdinalIgnoreCase)
             || string.Equals(status, InspectionStatuses.Passed, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildEquipmentWorkResultsReport(IReadOnlyList<EquipmentWorkResultDto> results)
+    {
+        var builder = new StringBuilder();
+        var equipmentCount = results
+            .Select(result => result.EquipmentId)
+            .Distinct()
+            .Count();
+        var defectValues = results
+            .Where(result => result.DefectPercentage.HasValue)
+            .Select(result => result.DefectPercentage!.Value)
+            .ToList();
+
+        builder.AppendLine("ОТЧЕТ О РЕЗУЛЬТАТАХ РАБОТЫ ОБОРУДОВАНИЯ");
+        builder.AppendLine($"Дата составления: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
+        builder.AppendLine();
+        builder.AppendLine("Итоги");
+        builder.AppendLine($"Всего уведомлений: {results.Count}");
+        builder.AppendLine($"Оборудования в отчете: {equipmentCount}");
+        builder.AppendLine($"Средний процент брака: {ReportDecimalPercent(defectValues.Count == 0 ? null : defectValues.Average())}");
+        builder.AppendLine($"Максимальный процент брака: {ReportDecimalPercent(defectValues.Count == 0 ? null : defectValues.Max())}");
+        builder.AppendLine();
+        builder.AppendLine("Результаты работы оборудования");
+        builder.AppendLine("№\tВремя проверки\tОборудование\tИнвентарный номер\tСерийный номер\tОКОФ\tПроцент брака\tДатчики");
+
+        for (var index = 0; index < results.Count; index++)
+        {
+            var result = results[index];
+            builder.AppendLine(
+                $"{index + 1}\t" +
+                $"{result.CheckedAt:dd.MM.yyyy HH:mm:ss}\t" +
+                $"{ReportText(result.EquipmentName)}\t" +
+                $"{ReportText(result.InventoryNumber)}\t" +
+                $"{ReportText(result.SerialNumber)}\t" +
+                $"{ReportText(result.OkofCode)}\t" +
+                $"{ReportDecimalPercent(result.DefectPercentage)}\t" +
+                $"{ReportSensorValues(result.SensorValues)}");
+        }
+
+        return builder.ToString();
+    }
+
+    private static string ReportText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "не указано" : value.Trim();
+    }
+
+    private static string ReportDecimalPercent(decimal? value)
+    {
+        return value.HasValue
+            ? string.Create(CultureInfo.GetCultureInfo("ru-RU"), $"{value.Value:0.##}%")
+            : "не указано";
+    }
+
+    private static string ReportSensorValues(IReadOnlyCollection<EquipmentSensorValueDto> sensors)
+    {
+        if (sensors.Count == 0)
+            return "не указаны";
+
+        return string.Join("; ", sensors.Select(sensor =>
+        {
+            var measuredAt = sensor.MeasuredAt.HasValue
+                ? $" ({sensor.MeasuredAt.Value:dd.MM.yyyy HH:mm:ss})"
+                : string.Empty;
+            var unit = string.IsNullOrWhiteSpace(sensor.Unit) ? string.Empty : $" {sensor.Unit}";
+
+            return $"{ReportText(sensor.SensorName)} [{ReportText(sensor.SensorCode)}]: {ReportText(sensor.Value)}{unit}{measuredAt}";
+        }));
     }
 }

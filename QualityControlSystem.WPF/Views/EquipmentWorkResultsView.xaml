@@ -13,11 +13,21 @@
                        FontSize="24"
                        FontWeight="Bold"
                        DockPanel.Dock="Left"/>
-            <Button Content="Обновить"
-                    Command="{Binding RefreshCommand}"
-                    Width="100"
-                    HorizontalAlignment="Right"
-                    DockPanel.Dock="Right"/>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        DockPanel.Dock="Right">
+                <Button Content="Выгрузить отчет"
+                        Command="{Binding ExportReportCommand}"
+                        Width="140"
+                        Margin="0,0,8,0"/>
+                <Button Content="Очистить список"
+                        Command="{Binding ClearNotificationsCommand}"
+                        Width="130"
+                        Margin="0,0,8,0"/>
+                <Button Content="Обновить"
+                        Command="{Binding RefreshCommand}"
+                        Width="100"/>
+            </StackPanel>
         </DockPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

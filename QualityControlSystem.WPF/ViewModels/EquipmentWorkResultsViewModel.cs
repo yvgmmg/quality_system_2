@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
@@ -13,6 +14,7 @@ public partial class EquipmentWorkResultsViewModel : BaseViewModel, IAsyncInitia
 {
     private readonly IEquipmentWorkResultsService _resultsService;
     private readonly INotificationService _notificationService;
+    private readonly IDialogService _dialogService;
     private bool _isInitialized;
 
     public ObservableCollection<EquipmentWorkResultDto> Results { get; } = new();
@@ -25,10 +27,12 @@ public partial class EquipmentWorkResultsViewModel : BaseViewModel, IAsyncInitia
 
     public EquipmentWorkResultsViewModel(
         IEquipmentWorkResultsService resultsService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IDialogService dialogService)
     {
         _resultsService = resultsService;
         _notificationService = notificationService;
+        _dialogService = dialogService;
     }
 
     public async Task InitializeAsync()
@@ -61,6 +65,88 @@ public partial class EquipmentWorkResultsViewModel : BaseViewModel, IAsyncInitia
         catch (Exception ex)
         {
             StatusMessage = $"Ошибка загрузки результатов: {GetErrorMessage(ex)}";
+            _notificationService.ShowError(StatusMessage);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ClearNotificationsAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (Results.Count == 0)
+        {
+            StatusMessage = "Список уведомлений уже пуст.";
+            _notificationService.ShowWarning(StatusMessage);
+            return;
+        }
+
+        if (!_dialogService.ShowConfirm("Очистить список уведомлений о результатах работы оборудования?"))
+            return;
+
+        IsBusy = true;
+        try
+        {
+            var removedCount = await _resultsService.ClearResultsForEquipmentSpecialistAsync();
+            Results.Clear();
+
+            StatusMessage = removedCount == 0
+                ? "Список уведомлений уже пуст."
+                : $"Удалено уведомлений: {removedCount}";
+
+            _notificationService.ShowSuccess(StatusMessage);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Ошибка очистки уведомлений: {GetErrorMessage(ex)}";
+            _notificationService.ShowError(StatusMessage);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportReportAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (Results.Count == 0)
+        {
+            StatusMessage = "Нет уведомлений для формирования отчета.";
+            _notificationService.ShowWarning(StatusMessage);
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            FileName = $"equipment_work_results_report_{DateTime.Now:yyyyMMdd_HHmmss}.txt",
+            Filter = "Текстовый отчет (*.txt)|*.txt|Все файлы (*.*)|*.*",
+            DefaultExt = ".txt",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            await _resultsService.CreateEquipmentWorkResultsReportAsync(dialog.FileName);
+            StatusMessage = $"Отчет сохранен: {dialog.FileName}";
+            _notificationService.ShowSuccess("Отчет о результатах работы оборудования сохранен.");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Ошибка формирования отчета: {GetErrorMessage(ex)}";
             _notificationService.ShowError(StatusMessage);
         }
         finally
