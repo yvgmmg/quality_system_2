@@ -46,7 +46,7 @@
                     <Button Content="Сохранить шаблон" Command="{Binding CaptureTemplateCommand}" Margin="0,0,0,8" Padding="10,8"/>
                     <Button Content="Остановить редактор шаблонов" Command="{Binding StopPhotomakerCommand}" Margin="0,0,0,18" Padding="10,8"/>
 
-                    <TextBlock Text="Контроль деталей" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Модуль контроля качества" FontWeight="Bold" Margin="0,0,0,8"/>
                     <TextBlock Text="Каркасы для проверки" Margin="0,0,0,4"/>
                     <ListBox ItemsSource="{Binding InspectionFrameOptions}"
                              MaxHeight="135"
@@ -111,7 +111,8 @@
             <DataGrid Grid.Row="1"
                       ItemsSource="{Binding Results}"
                       AutoGenerateColumns="False"
-                      IsReadOnly="True">
+                      IsReadOnly="True"
+                      HorizontalAlignment="Left">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="№" Binding="{Binding ControlNumber}" Width="55"/>
                     <DataGridTextColumn Header="Время" Binding="{Binding RecordedAt}" Width="145"/>
@@ -121,7 +122,7 @@
                     <DataGridTextColumn Header="Сходство" Binding="{Binding Similarity, StringFormat={}{0:F1}%}" Width="90"/>
                     <DataGridTextColumn Header="Вес" Binding="{Binding Weight, StringFormat={}{0:F0}}" Width="70"/>
                     <DataGridTextColumn Header="Результат шаблона" Binding="{Binding TemplateResultText}" Width="150"/>
-                    <DataGridTextColumn Header="Результат взвешивания" Binding="{Binding WeightResultText}" Width="*"/>
+                    <DataGridTextColumn Header="Результат взвешивания" Binding="{Binding WeightResultText}" Width="190"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

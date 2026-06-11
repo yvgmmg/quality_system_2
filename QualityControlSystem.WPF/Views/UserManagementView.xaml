@@ -15,7 +15,7 @@
             <Button Command="{Binding DeleteUserCommand}" Content="Удалить" Width="80" Margin="5"/>
         </StackPanel>
 
-        <DockPanel Grid.Row="1" Margin="5,0,5,10">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5,0,5,10">
             <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,6,0"/>
             <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                      Width="220"
@@ -29,10 +29,11 @@
             <ComboBox ItemsSource="{Binding WorkshopFilterOptions}"
                       SelectedItem="{Binding SelectedWorkshopFilter}"
                       Width="190"/>
-        </DockPanel>
+        </StackPanel>
 
         <DataGrid Grid.Row="2" ItemsSource="{Binding UsersView}" SelectedItem="{Binding SelectedUser}"
-                  AutoGenerateColumns="False" IsReadOnly="True">
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  HorizontalAlignment="Left">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                 <DataGridTextColumn Header="Фамилия" Binding="{Binding Surname}" Width="120"/>

@@ -28,7 +28,8 @@
                   ItemsSource="{Binding TemplatesView}"
                   SelectedItem="{Binding SelectedTemplate}"
                   AutoGenerateColumns="False"
-                  IsReadOnly="True">
+                  IsReadOnly="True"
+                  HorizontalAlignment="Left">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                 <DataGridTemplateColumn Header="Фото" Width="120">
@@ -42,7 +43,7 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="180"/>
                 <DataGridTextColumn Header="Сторона" Binding="{Binding Side}" Width="100"/>
-                <DataGridTextColumn Header="Путь к файлам шаблона" Binding="{Binding ImagePath}" Width="*"/>
+                <DataGridTextColumn Header="Путь к файлам шаблона" Binding="{Binding ImagePath}" Width="320"/>
             </DataGrid.Columns>
         </DataGrid>
 

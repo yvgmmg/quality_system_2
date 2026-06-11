@@ -15,7 +15,7 @@
             <Button Command="{Binding DeleteTestCommand}" Content="Удалить" Width="80" Margin="5"/>
         </StackPanel>
 
-        <DockPanel Grid.Row="1" Margin="5,0,5,10">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5,0,5,10">
             <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,6,0"/>
             <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                      Width="240"
@@ -24,18 +24,19 @@
             <ComboBox ItemsSource="{Binding FrameFilterOptions}"
                       SelectedItem="{Binding SelectedFrameFilter}"
                       Width="220"/>
-        </DockPanel>
+        </StackPanel>
 
         <DataGrid Grid.Row="2"
                   ItemsSource="{Binding TestsView}"
                   SelectedItem="{Binding SelectedTest}"
                   AutoGenerateColumns="False"
-                  IsReadOnly="True">
+                  IsReadOnly="True"
+                  HorizontalAlignment="Left">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="190"/>
                 <DataGridTextColumn Header="Каркас" Binding="{Binding FrameName}" Width="170"/>
-                <DataGridTextColumn Header="Шаблоны" Binding="{Binding TemplateSummary}" Width="*"/>
+                <DataGridTextColumn Header="Шаблоны" Binding="{Binding TemplateSummary}" Width="320"/>
             </DataGrid.Columns>
         </DataGrid>
 

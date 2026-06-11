@@ -319,7 +319,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 LastLog = await _operatorInspectionSessionService.StartOperatingForFramesAsync(selectedFrames.Select(frame => frame.Id!.Value));
                 IsOperatingRunning = true;
                 IsPhotomakerRunning = false;
-                CurrentMode = "Контроль деталей";
+                CurrentMode = "Модуль контроля качества";
                 StartVideo();
                 _resultTimer.Start();
                 StatusMessage = "Operating запущен. Результаты будут отображаться в таблице и попадут в отчет.";

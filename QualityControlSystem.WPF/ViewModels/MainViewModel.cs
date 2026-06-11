@@ -84,7 +84,7 @@ namespace QualityControlSystem.WPF.ViewModels
 
             if (HasRoleCode(RoleCodes.Operator))
             {
-                MenuItems.Add(new MenuItemViewModel { Header = "Контроль деталей", ViewModelType = typeof(OperatorControlViewModel) });
+                MenuItems.Add(new MenuItemViewModel { Header = "Модуль контроля качества", ViewModelType = typeof(OperatorControlViewModel) });
                 MenuItems.Add(new MenuItemViewModel { Header = "Шаблоны", ViewModelType = typeof(TemplatesViewModel) });
             }
 

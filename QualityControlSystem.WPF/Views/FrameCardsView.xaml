@@ -36,7 +36,8 @@
                   SelectedItem="{Binding SelectedFrame}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
-                  RowHeight="72">
+                  RowHeight="72"
+                  HorizontalAlignment="Left">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                 <DataGridTemplateColumn Header="Изображение" Width="110">

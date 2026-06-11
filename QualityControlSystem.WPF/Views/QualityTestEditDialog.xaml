@@ -56,7 +56,8 @@
                       x:Name="TemplatesDataGrid"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
-                      IsReadOnly="False">
+                      IsReadOnly="False"
+                      HorizontalAlignment="Left">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="Выбрать" Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
                     <DataGridTemplateColumn Header="Фото" Width="110" IsReadOnly="True">
@@ -70,7 +71,7 @@
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Имя" Binding="{Binding Template.Name}" Width="170" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Сторона" Binding="{Binding Template.Side}" Width="90" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Путь" Binding="{Binding Template.ImagePath}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Путь" Binding="{Binding Template.ImagePath}" Width="260" IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
