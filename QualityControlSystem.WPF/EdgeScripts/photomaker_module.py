@@ -30,7 +30,7 @@ FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
 CAMERA_WARMUP_SEC = 1.0
 
-# РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РІР·СЏС‚Р° РёР· РїСЂРёР»РѕР¶РµРЅРЅРѕРіРѕ template_config.json.
+# Конфигурация по умолчанию взята из приложенного template_config.json.
 DEFAULT_CONFIG = {
     "template_id": 2,
     "camera": "CSI-front",
@@ -106,12 +106,12 @@ def load_config():
         try:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 user_config = json.load(f)
-            cprint(Fore.GREEN, f"[OK] Р—Р°РіСЂСѓР¶РµРЅР° РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ: {CONFIG_PATH}")
+            cprint(Fore.GREEN, f"[OK] Загружена конфигурация: {CONFIG_PATH}")
             return merge_config(DEFAULT_CONFIG, user_config)
         except Exception as e:
-            cprint(Fore.YELLOW, f"[WARNING] РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ {CONFIG_PATH}: {e}. РСЃРїРѕР»СЊР·СѓСЋ DEFAULT_CONFIG.")
+            cprint(Fore.YELLOW, f"[WARNING] Не удалось прочитать {CONFIG_PATH}: {e}. Использую DEFAULT_CONFIG.")
     else:
-        cprint(Fore.CYAN, "[INFO] template_config.json СЂСЏРґРѕРј СЃРѕ СЃРєСЂРёРїС‚РѕРј РЅРµ РЅР°Р№РґРµРЅ. РСЃРїРѕР»СЊР·СѓСЋ DEFAULT_CONFIG РёР· РєРѕРґР°.")
+        cprint(Fore.CYAN, "[INFO] template_config.json рядом со скриптом не найден. Использую DEFAULT_CONFIG из кода.")
     return json.loads(json.dumps(DEFAULT_CONFIG))
 
 
@@ -163,7 +163,7 @@ def init_csi_camera():
     for i, cfg in enumerate(configs, start=1):
         picam2 = None
         try:
-            cprint(Fore.CYAN, f"[CSI] РџСЂРѕР±СѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
+            cprint(Fore.CYAN, f"[CSI] Пробую конфигурацию #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
             picam2 = Picamera2(0)
             camera_config = picam2.create_video_configuration(
                 main={"size": cfg["size"], "format": cfg["format"]},
@@ -315,8 +315,8 @@ def save_template(frame_full, template_num, config):
 def main():
     cprint(Fore.CYAN, f"=== {WINDOW_NAME} ===")
     config = load_config()
-    cprint(Fore.CYAN, "РџРѕР»Р·СѓРЅРєРѕРІ РЅРµС‚: РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ С„РёРєСЃРёСЂРѕРІР°РЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РёР· template_config.json/DEFAULT_CONFIG.")
-    cprint(Fore.CYAN, "Arduino РІ photomaker РЅРµ РїРѕРґРєР»СЋС‡Р°РµС‚СЃСЏ.")
+    cprint(Fore.CYAN, "Ползунков нет: используются фиксированные значения из template_config.json/DEFAULT_CONFIG.")
+    cprint(Fore.CYAN, "Arduino в photomaker не подключается.")
 
     cap_csi = init_csi_camera()
     if cap_csi is None:

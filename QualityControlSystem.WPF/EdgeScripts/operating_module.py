@@ -42,11 +42,11 @@ FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
 CAMERA_WARMUP_SEC = 1.0
 
-# Р’СЂРµРјСЏ РЅР° СѓСЃС‚Р°РЅРѕРІРєСѓ РґРµС‚Р°Р»Рё. Р’ С‚РµС‡РµРЅРёРµ СЌС‚РѕРіРѕ РІСЂРµРјРµРЅРё Р°РЅР°Р»РёР· РЅРµ РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ.
+# Время на установку детали. В течение этого времени анализ не выполняется.
 PLACEMENT_DELAY_SEC = 12.0
 
-# Arduino РёР· measure.ino: Serial.begin(9600)
-# None = РїРѕСЂС‚ РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё: /dev/ttyACM*, /dev/ttyUSB*, /dev/serial/by-id/*
+# Arduino из measure.ino: Serial.begin(9600)
+# None = порт определяется автоматически: /dev/ttyACM*, /dev/ttyUSB*, /dev/serial/by-id/*
 ARDUINO_PORT = None
 ARDUINO_BAUDRATE = 9600
 
@@ -128,9 +128,9 @@ def load_json(path, default=None):
 def load_base_config():
     user_config = load_json(CONFIG_PATH, None)
     if user_config:
-        cprint(Fore.GREEN, f"[OK] Р—Р°РіСЂСѓР¶РµРЅР° РѕР±С‰Р°СЏ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ: {CONFIG_PATH}")
+        cprint(Fore.GREEN, f"[OK] Загружена общая конфигурация: {CONFIG_PATH}")
         return merge_config(DEFAULT_CONFIG, user_config)
-    cprint(Fore.CYAN, "[INFO] template_config.json СЂСЏРґРѕРј СЃРѕ СЃРєСЂРёРїС‚РѕРј РЅРµ РЅР°Р№РґРµРЅ. РСЃРїРѕР»СЊР·СѓСЋ DEFAULT_CONFIG РёР· РєРѕРґР°.")
+    cprint(Fore.CYAN, "[INFO] template_config.json рядом со скриптом не найден. Использую DEFAULT_CONFIG из кода.")
     return json.loads(json.dumps(DEFAULT_CONFIG))
 
 
@@ -182,7 +182,7 @@ def init_csi_camera():
     for i, cfg in enumerate(configs, start=1):
         picam2 = None
         try:
-            cprint(Fore.CYAN, f"[CSI] РџСЂРѕР±СѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
+            cprint(Fore.CYAN, f"[CSI] Пробую конфигурацию #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
             picam2 = Picamera2(0)
             camera_config = picam2.create_video_configuration(
                 main={"size": cfg["size"], "format": cfg["format"]},
@@ -218,9 +218,9 @@ def init_csi_camera():
 
 class ArduinoSensors:
     """
-    Р§РёС‚Р°РµС‚ С„РѕСЂРјР°С‚ РёР· measure.ino:
-      Р’РµСЃ: <value>
-      РўРµРјРїРµСЂР°С‚СѓСЂР°: <value>
+    Читает формат из measure.ino:
+      Вес: <value>
+      Температура: <value>
     """
 
     def __init__(self, port=ARDUINO_PORT, baudrate=ARDUINO_BAUDRATE):
@@ -253,26 +253,26 @@ class ArduinoSensors:
     @staticmethod
     def candidate_ports():
         """
-        РС‰РµС‚ СЂРµР°Р»СЊРЅС‹Рµ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Рµ РїРѕСЂС‚С‹ Arduino/USB-UART.
-        РќР° СЂР°Р·РЅС‹С… РїР»Р°С‚Р°С… РїРѕСЂС‚ РјРѕР¶РµС‚ Р±С‹С‚СЊ /dev/ttyACM0, /dev/ttyUSB0
-        РёР»Рё СЃС‚Р°Р±РёР»СЊРЅР°СЏ СЃСЃС‹Р»РєР° /dev/serial/by-id/*.
+        Ищет реальные последовательные порты Arduino/USB-UART.
+        На разных платах порт может быть /dev/ttyACM0, /dev/ttyUSB0
+        или стабильная ссылка /dev/serial/by-id/*.
         """
         candidates = []
 
-        # РЎР°РјС‹Р№ СЃС‚Р°Р±РёР»СЊРЅС‹Р№ РІР°СЂРёР°РЅС‚ РІ Linux вЂ” СЃСЃС‹Р»РєР° СЃ РёРјРµРЅРµРј СѓСЃС‚СЂРѕР№СЃС‚РІР°.
+        # Самый стабильный вариант в Linux — ссылка с именем устройства.
         candidates.extend(sorted(glob.glob("/dev/serial/by-id/*")))
 
-        # Р§Р°СЃС‚С‹Рµ РёРјРµРЅР° Arduino Uno/Mega/Nano Every: ttyACM*.
+        # Частые имена Arduino Uno/Mega/Nano Every: ttyACM*.
         candidates.extend(sorted(glob.glob("/dev/ttyACM*")))
 
-        # Р§Р°СЃС‚С‹Рµ РёРјРµРЅР° Nano/РєР»РѕРЅРѕРІ С‡РµСЂРµР· CH340/CP210x/FTDI: ttyUSB*.
+        # Частые имена Nano/клонов через CH340/CP210x/FTDI: ttyUSB*.
         candidates.extend(sorted(glob.glob("/dev/ttyUSB*")))
 
-        # Р•СЃР»Рё pyserial СѓРјРµРµС‚ list_ports, РґРѕР±Р°РІР»СЏРµРј РЅР°Р№РґРµРЅРЅС‹Рµ РёРј СѓСЃС‚СЂРѕР№СЃС‚РІР°.
+        # Если pyserial умеет list_ports, добавляем найденные им устройства.
         try:
             from serial.tools import list_ports
             ports = list(list_ports.comports())
-            # РЎРЅР°С‡Р°Р»Р° СѓСЃС‚СЂРѕР№СЃС‚РІР°, РїРѕС…РѕР¶РёРµ РЅР° Arduino/USB Serial.
+            # Сначала устройства, похожие на Arduino/USB Serial.
             priority_words = ("arduino", "ch340", "cp210", "ftdi", "usb", "acm", "serial")
             scored = []
             for port in ports:
@@ -289,7 +289,7 @@ class ArduinoSensors:
 
     def connect(self):
         if serial is None:
-            cprint(Fore.YELLOW, "[Arduino] pyserial РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ. Р”Р°С‚С‡РёРєРё РЅРµРґРѕСЃС‚СѓРїРЅС‹. РЈСЃС‚Р°РЅРѕРІРёС‚Рµ: pip3 install pyserial")
+            cprint(Fore.YELLOW, "[Arduino] pyserial не установлен. Датчики недоступны. Установите: pip3 install pyserial")
             return False
 
         ports_to_try = []
@@ -302,18 +302,18 @@ class ArduinoSensors:
         ports_to_try = self._unique(ports_to_try)
 
         if not ports_to_try:
-            cprint(Fore.YELLOW, "[Arduino] РџРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Рµ USB-РїРѕСЂС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹. РџСЂРѕРІРµСЂСЊС‚Рµ: ls /dev/ttyACM* /dev/ttyUSB* /dev/serial/by-id/*")
+            cprint(Fore.YELLOW, "[Arduino] Последовательные USB-порты не найдены. Проверьте: ls /dev/ttyACM* /dev/ttyUSB* /dev/serial/by-id/*")
             return False
 
         errors = []
         for port in ports_to_try:
             try:
-                cprint(Fore.CYAN, f"[Arduino] РџСЂРѕР±СѓСЋ РїРѕСЂС‚ {port}...")
+                cprint(Fore.CYAN, f"[Arduino] Пробую порт {port}...")
                 self.ser = serial.Serial(port, self.baudrate, timeout=0.1)
                 time.sleep(2)
                 self.ser.reset_input_buffer()
                 self.port = port
-                cprint(Fore.GREEN, f"[OK] Arduino РїРѕРґРєР»СЋС‡С‘РЅ: {self.port}, {self.baudrate} Р±РѕРґ")
+                cprint(Fore.GREEN, f"[OK] Arduino подключён: {self.port}, {self.baudrate} бод")
                 return True
             except Exception as e:
                 errors.append(f"{port}: {e}")
@@ -324,10 +324,10 @@ class ArduinoSensors:
                     pass
                 self.ser = None
 
-        cprint(Fore.YELLOW, "[Arduino] РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ РЅРё Рє РѕРґРЅРѕРјСѓ РїРѕСЂС‚Сѓ:")
+        cprint(Fore.YELLOW, "[Arduino] Не удалось подключиться ни к одному порту:")
         for err in errors:
             cprint(Fore.YELLOW, f"  - {err}")
-        cprint(Fore.YELLOW, "[HINT] РџСЂРѕРІРµСЂСЊС‚Рµ РїСЂР°РІР°: sudo usermod -a -G dialout $USER, Р·Р°С‚РµРј РїРµСЂРµР»РѕРіРёРЅСЊС‚РµСЃСЊ.")
+        cprint(Fore.YELLOW, "[HINT] Проверьте права: sudo usermod -a -G dialout $USER, затем перелогиньтесь.")
         return False
 
     def close(self):
@@ -338,7 +338,7 @@ class ArduinoSensors:
             pass
 
     def discard_when_inactive(self):
-        """Р’РЅРµ РїСЂРѕРІРµСЂРєРё СЃС‚Р°СЂС‹Рµ СЃС‚СЂРѕРєРё РѕС‚ Arduino РЅРµ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ."""
+        """Вне проверки старые строки от Arduino не используются."""
         try:
             if self.ser is not None:
                 self.ser.reset_input_buffer()
@@ -365,8 +365,8 @@ class ArduinoSensors:
 
     def read_active(self):
         """
-        Р’С‹Р·С‹РІР°С‚СЊ С‚РѕР»СЊРєРѕ РІРѕ РІСЂРµРјСЏ Р°РєС‚РёРІРЅРѕР№ РїСЂРѕРІРµСЂРєРё Рё РєРѕРіРґР° РґРµС‚Р°Р»СЊ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РєР°РґСЂРµ.
-        Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕСЃР»РµРґРЅРёРµ РёРЅС‚РµСЂРїСЂРµС‚РёСЂРѕРІР°РЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ.
+        Вызывать только во время активной проверки и когда деталь присутствует в кадре.
+        Возвращает последние интерпретированные значения.
         """
         if self.ser is None:
             return self.values
@@ -416,7 +416,7 @@ class ArduinoSensors:
         if not active and self.values["updated_at"] is None:
             return ["Sensors: waiting for check"]
 
-        w = "вЂ”" if self.values["weight"] is None else f"{self.values['weight']:.0f} g"
+        w = "—" if self.values["weight"] is None else f"{self.values['weight']:.0f} g"
         return [f"Weight: {w}"]
 
 
@@ -733,8 +733,8 @@ def build_main_display(frame, roi_rect, roi_frame, state, part_present, countdow
 
     display_roi = roi_frame.copy()
 
-    # РќР° РѕСЃРЅРѕРІРЅРѕРµ РѕРєРЅРѕ РќР• РЅР°РєР»Р°РґС‹РІР°РµС‚СЃСЏ РјР°СЃРєР° С€Р°Р±Р»РѕРЅР°/РєР°СЂС‚Р° РѕС‚Р»РёС‡РёР№.
-    # РџРѕРєР°Р·С‹РІР°РµРј С‚РѕР»СЊРєРѕ С‚РµРєСѓС‰РёР№ РЅР°Р№РґРµРЅРЅС‹Р№ РєРѕРЅС‚СѓСЂ Рё С‚РµРєСЃС‚РѕРІС‹Рµ РјРµС‚СЂРёРєРё.
+    # На основное окно НЕ накладывается маска шаблона/карта отличий.
+    # Показываем только текущий найденный контур и текстовые метрики.
     draw_color = (255, 255, 255)
     if final_summary is not None:
         draw_color = final_summary["status_color"]
@@ -831,21 +831,21 @@ def main():
                 if part_present:
                     placement_started_at = time.time()
                     state = "PLACEMENT_WAIT"
-                    cprint(Fore.CYAN, f"[STATE] Р”РµС‚Р°Р»СЊ РѕР±РЅР°СЂСѓР¶РµРЅР°. Р–РґСѓ {PLACEMENT_DELAY_SEC} СЃРµРєСѓРЅРґ РїРµСЂРµРґ РїСЂРѕРІРµСЂРєРѕР№.")
+                    cprint(Fore.CYAN, f"[STATE] Деталь обнаружена. Жду {PLACEMENT_DELAY_SEC} секунд перед проверкой.")
 
             elif state == "PLACEMENT_WAIT":
                 sensors.discard_when_inactive()
                 if not part_present:
                     state = "WAITING"
                     placement_started_at = None
-                    cprint(Fore.YELLOW, "[STATE] Р”РµС‚Р°Р»СЊ СѓР±СЂР°РЅР° РґРѕ РЅР°С‡Р°Р»Р° РїСЂРѕРІРµСЂРєРё. Р’РѕР·РІСЂР°С‚ РІ РѕР¶РёРґР°РЅРёРµ.")
+                    cprint(Fore.YELLOW, "[STATE] Деталь убрана до начала проверки. Возврат в ожидание.")
                 else:
                     elapsed = time.time() - (placement_started_at or time.time())
                     countdown = max(0.0, PLACEMENT_DELAY_SEC - elapsed)
                     if countdown <= 0:
                         state = "ANALYZING"
                         history = []
-                        cprint(Fore.GREEN, "[STATE] Р—Р°РїСѓСЃРє РїСЂРѕРІРµСЂРєРё. Р—РЅР°С‡РµРЅРёСЏ Arduino СЃС‡РёС‚С‹РІР°СЋС‚СЃСЏ С‚РѕР»СЊРєРѕ СЃРµР№С‡Р°СЃ.")
+                        cprint(Fore.GREEN, "[STATE] Запуск проверки. Значения Arduino считываются только сейчас.")
 
             elif state == "ANALYZING":
                 if not part_present:
@@ -854,7 +854,7 @@ def main():
                     history = []
                     final_summary = None
                     sensors.discard_when_inactive()
-                    cprint(Fore.YELLOW, "[STATE] Р”РµС‚Р°Р»СЊ СѓР±СЂР°РЅР° РІРѕ РІСЂРµРјСЏ РїСЂРѕРІРµСЂРєРё. РџСЂРѕРІРµСЂРєР° РѕС‚РјРµРЅРµРЅР°.")
+                    cprint(Fore.YELLOW, "[STATE] Деталь убрана во время проверки. Проверка отменена.")
                 else:
                     active_sensor_read = True
                     sensors.read_active()
@@ -878,7 +878,7 @@ def main():
                         state = "HOLD_RESULT"
 
             elif state == "HOLD_RESULT":
-                # РќРѕРІС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РґР°С‚С‡РёРєРѕРІ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ РїСЂРѕРІРµСЂРєРё РЅРµ С‡РёС‚Р°РµРј.
+                # Новые значения датчиков после завершения проверки не читаем.
                 if not part_present:
                     state = "WAITING"
                     placement_started_at = None
@@ -886,7 +886,7 @@ def main():
                     final_summary = None
                     final_printed = False
                     sensors.discard_when_inactive()
-                    cprint(Fore.BLUE, "[STATE] Р”РµС‚Р°Р»СЊ СѓР±СЂР°РЅР°. Р“РѕС‚РѕРІ Рє СЃР»РµРґСѓСЋС‰РµР№ РїСЂРѕРІРµСЂРєРµ.")
+                    cprint(Fore.BLUE, "[STATE] Деталь убрана. Готов к следующей проверке.")
 
             full_display = build_main_display(
                 frame=frame,
@@ -905,7 +905,7 @@ def main():
             cv2.imshow("CSI Defect Detector", full_display)
             cv2.imshow("Presence / process mask", presence_mask)
 
-            # Debug-РѕРєРЅР° СЃ РѕС‚Р»РёС‡РёСЏРјРё РѕСЃС‚Р°РІР»РµРЅС‹ РѕС‚РґРµР»СЊРЅРѕ, РЅРѕ РЅРµ РЅР°РєР»Р°РґС‹РІР°СЋС‚СЃСЏ РЅР° РѕСЃРЅРѕРІРЅРѕР№ РІРёРґРµРѕРїРѕС‚РѕРє.
+            # Debug-окна с отличиями оставлены отдельно, но не накладываются на основной видеопоток.
             if current_result is not None:
                 cv2.imshow("Contour diff", current_result["contour_diff"])
                 cv2.imshow("Filled diff", current_result["filled_diff"])
