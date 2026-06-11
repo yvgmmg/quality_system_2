@@ -3,11 +3,16 @@ import numpy as np
 import os
 import json
 import time
+import argparse
 import logging
+import math
 import re
 import glob
+import threading
 from collections import deque, Counter
 from colorama import init, Fore, Style
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse
 
 try:
     import serial
@@ -22,6 +27,16 @@ TEMPLATE_DIR = "template"
 CONFIG_PATH = "template_config.json"
 WINDOW_NAME = "CSI Defect Detector v5 + Arduino auto-port sensors"
 EXIT_KEY = ord("q")
+HOST = "0.0.0.0"
+DEFAULT_PORT = 8082
+ENDPOINT_STATUS = "/status"
+ENDPOINT_RESULTS = "/results"
+ENDPOINT_FRAME = "/frame.jpg"
+ENDPOINT_STOP = "/stop"
+JSON_CONTENT_TYPE = "application/json; charset=utf-8"
+JPEG_CONTENT_TYPE = "image/jpeg"
+JPEG_QUALITY = 82
+FRAME_DELAY_SEC = 0.03
 
 FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
@@ -921,31 +936,50 @@ def main():
 
 
 # ==================== REMOTE SERVER WRAPPER ====================
-import argparse
-import json
-import math
-import threading
-import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+class OperatingState:
+    """Runtime state shared by the inspection loop and HTTP handler."""
 
-import cv2
-import numpy as np
+    def __init__(self):
+        self.latest_frame = None
+        self.latest_status = {"state": "starting", "message": ""}
+        self.results = []
+        self.stop_requested = threading.Event()
+        self.frame_lock = threading.Lock()
+        self.status_lock = threading.Lock()
+        self.results_lock = threading.Lock()
+
+    def update_status(self, **kwargs):
+        with self.status_lock:
+            self.latest_status.update(kwargs)
+
+    def get_status(self):
+        with self.status_lock:
+            return dict(self.latest_status)
+
+    def set_frame(self, frame):
+        with self.frame_lock:
+            self.latest_frame = frame
+
+    def get_frame(self):
+        with self.frame_lock:
+            return self.latest_frame
+
+    def get_results(self):
+        with self.results_lock:
+            return list(self.results)
+
+    def append_result(self, item):
+        with self.results_lock:
+            item["id"] = len(self.results) + 1
+            self.results.append(item)
+            del self.results[:-100]
 
 
-
-latest_frame = None
-latest_status = {"state": "starting", "message": ""}
-results = []
-stop_requested = threading.Event()
-frame_lock = threading.Lock()
-status_lock = threading.Lock()
-results_lock = threading.Lock()
+state = OperatingState()
 
 
 def set_status(**kwargs):
-    with status_lock:
-        latest_status.update(kwargs)
+    state.update_status(**kwargs)
 
 
 def clean_number(value):
@@ -959,61 +993,66 @@ def clean_number(value):
 
 
 def encode_frame(frame):
-    ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+    ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY])
     return buffer.tobytes() if ok else None
 
 
-class Handler(BaseHTTPRequestHandler):
+class JsonResponseMixin:
+    """HTTP response helpers used by module request handlers."""
+
+    def write_json(self, payload):
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", JSON_CONTENT_TYPE)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def write_jpeg(self, frame):
+        self.send_response(200)
+        self.send_header("Content-Type", JPEG_CONTENT_TYPE)
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(frame)
+
+
+class OperatingRequestHandler(JsonResponseMixin, BaseHTTPRequestHandler):
+    """HTTP handler exposing operating inspection endpoints."""
+
     def do_GET(self):
         path = urlparse(self.path).path
-        if path == "/status":
-            self.write_json(latest_status)
+        if path == ENDPOINT_STATUS:
+            self.write_json(state.get_status())
             return
 
-        if path == "/results":
-            with results_lock:
-                payload = list(results)
-            self.write_json(payload)
+        if path == ENDPOINT_RESULTS:
+            self.write_json(state.get_results())
             return
 
-        if path == "/frame.jpg":
-            with frame_lock:
-                frame = latest_frame
+        if path == ENDPOINT_FRAME:
+            frame = state.get_frame()
             if frame is None:
                 self.send_error(404, "frame is not ready")
                 return
-            self.send_response(200)
-            self.send_header("Content-Type", "image/jpeg")
-            self.send_header("Cache-Control", "no-cache")
-            self.end_headers()
-            self.wfile.write(frame)
+            self.write_jpeg(frame)
             return
 
         self.send_error(404)
 
     def do_POST(self):
-        if urlparse(self.path).path == "/stop":
-            stop_requested.set()
+        if urlparse(self.path).path == ENDPOINT_STOP:
+            state.stop_requested.set()
             self.write_json({"ok": True})
             return
         self.send_error(404)
-
-    def write_json(self, payload):
-        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
 
     def log_message(self, format, *args):
         return
 
 
-def append_result(summary, sensors):
+def append_result(summary, sensors, runtime_state):
     sensor_values = dict(getattr(sensors, "values", {}) or {})
     item = {
-        "id": len(results) + 1,
         "recordedAt": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime()),
         "status": summary.get("status"),
         "templateId": int(summary.get("template_id", 0)),
@@ -1027,12 +1066,20 @@ def append_result(summary, sensors):
         "lightPercent": clean_number(sensor_values.get("light_percent")),
         "lightAdc": clean_number(sensor_values.get("light_adc")),
     }
-    with results_lock:
-        results.append(item)
-        del results[:-100]
+    runtime_state.append_result(item)
 
 
-def camera_loop():
+class OperatingController:
+    """Main inspection loop for the operating module."""
+
+    def __init__(self, runtime_state):
+        self.state = runtime_state
+
+    def run(self):
+        camera_loop(self.state)
+
+
+def camera_loop(runtime_state):
     base_config = load_base_config()
     templates = load_templates(base_config)
     if not templates:
@@ -1057,7 +1104,7 @@ def camera_loop():
     set_status(state=state, message="operating is ready")
 
     try:
-        while not stop_requested.is_set():
+        while not runtime_state.stop_requested.is_set():
             try:
                 arr = cap_csi.capture_array()
                 frame = convert_picamera_array_to_bgr(arr)
@@ -1122,7 +1169,7 @@ def camera_loop():
 
             elif state == "HOLD_RESULT":
                 if final_summary is not None and not final_recorded:
-                    append_result(final_summary, sensors)
+                    append_result(final_summary, sensors, runtime_state)
                     final_recorded = True
                 if not part_present:
                     state = "WAITING"
@@ -1147,12 +1194,10 @@ def camera_loop():
             )
             encoded = encode_frame(full_display)
             if encoded is not None:
-                with frame_lock:
-                    global latest_frame
-                    latest_frame = encoded
+                runtime_state.set_frame(encoded)
 
             set_status(state=state, message="operating is running")
-            time.sleep(0.03)
+            time.sleep(FRAME_DELAY_SEC)
     finally:
         try:
             cap_csi.stop()
@@ -1163,18 +1208,33 @@ def camera_loop():
         set_status(state="stopped", message="operating stopped")
 
 
-def server_main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8082)
-    args = parser.parse_args()
+def create_server(host, port):
+    """Create the HTTP server for operating endpoints."""
 
-    thread = threading.Thread(target=camera_loop, daemon=True)
+    return ThreadingHTTPServer((host, port), OperatingRequestHandler)
+
+
+def parse_args():
+    """Parse command-line arguments for remote server mode."""
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default=HOST)
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    return parser.parse_args()
+
+
+def server_main():
+    """Script entrypoint used by EdgeDeviceService."""
+
+    args = parse_args()
+    controller = OperatingController(state)
+
+    thread = threading.Thread(target=controller.run, daemon=True)
     thread.start()
 
-    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    server = create_server(args.host, args.port)
     try:
-        while not stop_requested.is_set():
+        while not state.stop_requested.is_set():
             server.handle_request()
     finally:
         server.server_close()
