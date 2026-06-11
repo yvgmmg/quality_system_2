@@ -9,10 +9,11 @@ using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class EquipmentWorkResultsViewModel : BaseViewModel
+public partial class EquipmentWorkResultsViewModel : BaseViewModel, IAsyncInitializable
 {
     private readonly IEquipmentWorkResultsService _resultsService;
     private readonly INotificationService _notificationService;
+    private bool _isInitialized;
 
     public ObservableCollection<EquipmentWorkResultDto> Results { get; } = new();
 
@@ -28,7 +29,15 @@ public partial class EquipmentWorkResultsViewModel : BaseViewModel
     {
         _resultsService = resultsService;
         _notificationService = notificationService;
-        _ = RefreshAsync();
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await RefreshAsync();
     }
 
     [RelayCommand]

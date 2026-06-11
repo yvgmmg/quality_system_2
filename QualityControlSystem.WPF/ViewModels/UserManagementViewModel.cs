@@ -13,7 +13,7 @@ using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
-    public partial class UserManagementViewModel : BaseViewModel
+    public partial class UserManagementViewModel : BaseViewModel, IAsyncInitializable
     {
         private const string AllRolesFilter = UiFilterOptions.AllRoles;
         private const string AllWorkshopsFilter = UiFilterOptions.AllWorkshops;
@@ -21,6 +21,7 @@ namespace QualityControlSystem.WPF.ViewModels
         private readonly IUserManagementService _userService;
         private readonly IDialogService _dialogService;
         private readonly IAuthService _authService;
+        private bool _isInitialized;
 
         [ObservableProperty]
         private ObservableCollection<UserProfileDto> _users = new();
@@ -65,7 +66,15 @@ namespace QualityControlSystem.WPF.ViewModels
             _authService = authService;
             UsersView = CollectionViewSource.GetDefaultView(Users);
             UsersView.Filter = FilterUser;
-            _ = LoadUsersAsync();
+        }
+
+        public async Task InitializeAsync()
+        {
+            if (_isInitialized)
+                return;
+
+            _isInitialized = true;
+            await LoadUsersAsync();
         }
 
         private async Task LoadUsersAsync()

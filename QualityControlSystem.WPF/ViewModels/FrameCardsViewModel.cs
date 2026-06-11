@@ -14,7 +14,7 @@ namespace QualityControlSystem.WPF.ViewModels;
 
 public partial class FrameCardsViewModel : BaseViewModel, IAsyncInitializable
 {
-    private const string AllMaterialsFilter = "Все материалы";
+    private const string AllMaterialsFilter = UiFilterOptions.AllMaterials;
 
     private readonly IFrameCardService _frameCardService;
     private readonly IDialogService _dialogService;
