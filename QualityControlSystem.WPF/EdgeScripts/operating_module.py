@@ -517,8 +517,8 @@ def tolerant_diff(template_mask, current_mask, pixel_tolerance):
 
 
 def get_status(similarity, comparison):
-    ok_thr = float(comparison.get("ok_similarity", 80.0))
-    defect_thr = float(comparison.get("defect_similarity", 75.0))
+    ok_thr = float(comparison.get("ok_similarity", 95.0))
+    defect_thr = float(comparison.get("defect_similarity", 85.0))
     if similarity >= ok_thr:
         return "OK", (0, 255, 0), Fore.GREEN
     if similarity >= defect_thr:
