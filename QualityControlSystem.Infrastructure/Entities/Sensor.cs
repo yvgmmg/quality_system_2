@@ -32,9 +32,16 @@ public partial class Sensor
     [Column("measurement_unit_id")]
     public int MeasurementUnitId { get; set; }
 
+    [Column("production_equipment_id")]
+    public int? ProductionEquipmentId { get; set; }
+
     [ForeignKey("MeasurementUnitId")]
     [InverseProperty("Sensors")]
     public virtual MeasurementUnitClassifier MeasurementUnit { get; set; } = null!;
+
+    [ForeignKey("ProductionEquipmentId")]
+    [InverseProperty("Sensors")]
+    public virtual ProductionEquipment? ProductionEquipment { get; set; }
 
     [ForeignKey("SensorTypeId")]
     [InverseProperty("Sensors")]

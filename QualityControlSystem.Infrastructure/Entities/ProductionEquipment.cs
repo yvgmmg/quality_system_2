@@ -33,6 +33,12 @@ public partial class ProductionEquipment
     [InverseProperty("ProductionEquipment")]
     public virtual ICollection<CheckNotification> CheckNotifications { get; set; } = new List<CheckNotification>();
 
+    [InverseProperty("ProductionEquipment")]
+    public virtual ICollection<ProductionEquipmentFrame> ProductionEquipmentFrames { get; set; } = new List<ProductionEquipmentFrame>();
+
+    [InverseProperty("ProductionEquipment")]
+    public virtual ICollection<Sensor> Sensors { get; set; } = new List<Sensor>();
+
     [ForeignKey("WorkshopId")]
     [InverseProperty("ProductionEquipments")]
     public virtual Workshop Workshop { get; set; } = null!;

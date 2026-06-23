@@ -1,4 +1,4 @@
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +8,6 @@ namespace QualityControlSystem.WPF.Services.Interfaces
     public interface IEdgeDeviceService
     {
         Task<AnalysisResultDto> AnalyzeFrameAsync();
-        Task CaptureTemplateAsync(int templateNumber);
         Task<DeviceStatusDto> GetStatusAsync();
         string GetPhotomakerFrameUrl();
         string GetOperatingFrameUrl();
@@ -22,8 +21,10 @@ namespace QualityControlSystem.WPF.Services.Interfaces
         Task<string> SyncTemplatesAsync(CancellationToken cancellationToken = default);
         Task<string> StartOperatingAsync(CancellationToken cancellationToken = default);
         Task<string> StartOperatingForFrameAsync(int frameId, CancellationToken cancellationToken = default);
+        Task<string> StartOperatingForFramesAsync(IEnumerable<int> frameIds, CancellationToken cancellationToken = default);
         Task StopOperatingAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<EdgeInspectionResultDto>> GetInspectionResultsAsync(CancellationToken cancellationToken = default);
         Task<string> CreateQualityReportAsync(int frameId, IEnumerable<EdgeInspectionResultDto> results, string outputPath, CancellationToken cancellationToken = default);
+        Task<string> CreateQualityReportAsync(IEnumerable<int> frameIds, IEnumerable<EdgeInspectionResultDto> results, string outputPath, CancellationToken cancellationToken = default);
     }
 }

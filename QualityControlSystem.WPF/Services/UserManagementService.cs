@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QualityControlSystem.Infrastructure;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Constants;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using System.Data;
 using System.Data.Common;
@@ -22,12 +23,12 @@ namespace QualityControlSystem.WPF.Services
             ["quality controll opfficer"] = "quality control"
         };
 
-        private static readonly Dictionary<string, string> RoleCodes = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly Dictionary<string, string> RoleCodeByName = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["admin"] = "01000001",
-            ["operator"] = "02000001",
-            ["equipment specialist"] = "03000001",
-            ["quality control"] = "04000001"
+            ["admin"] = RoleCodes.Admin,
+            ["operator"] = RoleCodes.Operator,
+            ["equipment specialist"] = RoleCodes.EquipmentSpecialist,
+            ["quality control"] = RoleCodes.QualityControl
         };
 
         private static readonly Regex PersonNameRegex = new(@"^[А-ЯЁ][а-яё]+(-[А-ЯЁ][а-яё]+)*$", RegexOptions.Compiled);
@@ -57,9 +58,12 @@ namespace QualityControlSystem.WPF.Services
                     up.workshop_id,
                     up.personnel_number,
                     r.name AS role_name,
-                    r.role_code
+                    r.role_code,
+                    w.number AS workshop_number,
+                    w.purpose AS workshop_purpose
                 FROM public.user_profile up
                 INNER JOIN public."role" r ON r.role_id = up.role_id
+                LEFT JOIN public.workshop w ON w.workshop_id = up.workshop_id
                 ORDER BY up.user_profile_id;
                 """;
 
@@ -68,6 +72,21 @@ namespace QualityControlSystem.WPF.Services
                 users.Add(ReadUser(reader));
 
             return users;
+        }
+
+        public async Task<IReadOnlyList<LookupItemDto>> GetWorkshopOptionsAsync()
+        {
+            return await _dbContext.Workshops
+                .AsNoTracking()
+                .OrderBy(workshop => workshop.Number)
+                .Select(workshop => new LookupItemDto
+                {
+                    Id = workshop.WorkshopId,
+                    Name = string.IsNullOrWhiteSpace(workshop.Purpose)
+                        ? $"Цех {workshop.Number}"
+                        : $"Цех {workshop.Number} - {workshop.Purpose}"
+                })
+                .ToListAsync();
         }
 
         public async Task<UserProfileDto?> GetUserByIdAsync(int id)
@@ -84,9 +103,12 @@ namespace QualityControlSystem.WPF.Services
                     up.workshop_id,
                     up.personnel_number,
                     r.name AS role_name,
-                    r.role_code
+                    r.role_code,
+                    w.number AS workshop_number,
+                    w.purpose AS workshop_purpose
                 FROM public.user_profile up
                 INNER JOIN public."role" r ON r.role_id = up.role_id
+                LEFT JOIN public.workshop w ON w.workshop_id = up.workshop_id
                 WHERE up.user_profile_id = @id
                 LIMIT 1;
                 """;
@@ -196,7 +218,7 @@ namespace QualityControlSystem.WPF.Services
         private async Task<int> GetOrCreateRoleIdAsync(string role)
         {
             var connection = await GetOpenConnectionAsync();
-            var roleCode = RoleCodes.TryGetValue(role, out var code)
+            var roleCode = RoleCodeByName.TryGetValue(role, out var code)
                 ? code
                 : throw new InvalidOperationException($"Для роли {role} не задан код.");
 
@@ -248,6 +270,9 @@ namespace QualityControlSystem.WPF.Services
                 Name = reader.GetString(reader.GetOrdinal("first_name")),
                 Patron = reader.IsDBNull(reader.GetOrdinal("middle_name")) ? null : reader.GetString(reader.GetOrdinal("middle_name")),
                 WorkshopId = reader.IsDBNull(reader.GetOrdinal("workshop_id")) ? null : reader.GetInt32(reader.GetOrdinal("workshop_id")),
+                WorkshopName = FormatWorkshop(
+                    ReadNullableText(reader, "workshop_number"),
+                    ReadNullableText(reader, "workshop_purpose")),
                 PersonnelNumber = reader.GetString(reader.GetOrdinal("personnel_number")),
                 Role = reader.GetString(reader.GetOrdinal("role_name")),
                 RoleCode = reader.GetString(reader.GetOrdinal("role_code"))
@@ -271,6 +296,22 @@ namespace QualityControlSystem.WPF.Services
             parameter.ParameterName = name;
             parameter.Value = value ?? DBNull.Value;
             command.Parameters.Add(parameter);
+        }
+
+        private static string FormatWorkshop(string? number, string? purpose)
+        {
+            if (string.IsNullOrWhiteSpace(number))
+                return string.Empty;
+
+            return string.IsNullOrWhiteSpace(purpose)
+                ? $"Цех {number}"
+                : $"Цех {number} - {purpose}";
+        }
+
+        private static string? ReadNullableText(IDataRecord reader, string name)
+        {
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? null : Convert.ToString(reader.GetValue(ordinal));
         }
 
         private static string? NormalizeRole(string? role)

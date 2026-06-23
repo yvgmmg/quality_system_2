@@ -1,25 +1,43 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Constants;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 using System;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Data;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class QualityTestsViewModel : BaseViewModel
+public partial class QualityTestsViewModel : BaseViewModel, IAsyncInitializable
 {
+    private const string AllFramesFilter = UiFilterOptions.AllFrames;
+
     private readonly IQualityTestService _qualityTestService;
     private readonly IDialogService _dialogService;
+    private bool _isInitialized;
 
     [ObservableProperty]
     private ObservableCollection<QualityTestDto> _tests = new();
 
     [ObservableProperty]
+    private ICollectionView? _testsView;
+
+    [ObservableProperty]
+    private ObservableCollection<string> _frameFilterOptions = new();
+
+    [ObservableProperty]
     private QualityTestDto? _selectedTest;
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
+    [ObservableProperty]
+    private string _selectedFrameFilter = AllFramesFilter;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -31,7 +49,17 @@ public partial class QualityTestsViewModel : BaseViewModel
     {
         _qualityTestService = qualityTestService;
         _dialogService = dialogService;
-        _ = LoadAsync();
+        TestsView = CollectionViewSource.GetDefaultView(Tests);
+        TestsView.Filter = FilterTest;
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -45,6 +73,9 @@ public partial class QualityTestsViewModel : BaseViewModel
             Tests.Clear();
             foreach (var test in tests)
                 Tests.Add(test);
+
+            RebuildFrameFilters();
+            TestsView?.Refresh();
 
             StatusMessage = Tests.Count == 0 ? "Тесты не найдены." : $"Тестов: {Tests.Count}";
         }
@@ -157,5 +188,56 @@ public partial class QualityTestsViewModel : BaseViewModel
             current = current.InnerException;
 
         return current.Message;
+    }
+
+    private void RebuildFrameFilters()
+    {
+        FrameFilterOptions.Clear();
+        FrameFilterOptions.Add(AllFramesFilter);
+        foreach (var frame in Tests
+            .Select(test => test.FrameName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct())
+        {
+            FrameFilterOptions.Add(frame);
+        }
+
+        if (!FrameFilterOptions.Contains(SelectedFrameFilter))
+            SelectedFrameFilter = AllFramesFilter;
+    }
+
+    partial void OnSearchTextChanged(string value) => TestsView?.Refresh();
+
+    partial void OnSelectedFrameFilterChanged(string value) => TestsView?.Refresh();
+
+    private bool FilterTest(object item)
+    {
+        if (item is not QualityTestDto test)
+            return false;
+
+        var search = SearchText.Trim();
+        if (!string.IsNullOrWhiteSpace(search)
+            && !Contains(test.Name, search)
+            && !Contains(test.Description, search)
+            && !Contains(test.FrameName, search)
+            && !Contains(test.TemplateSummary, search))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedFrameFilter)
+            && SelectedFrameFilter != AllFramesFilter
+            && !string.Equals(test.FrameName, SelectedFrameFilter, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool Contains(string? value, string search)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains(search, StringComparison.OrdinalIgnoreCase);
     }
 }

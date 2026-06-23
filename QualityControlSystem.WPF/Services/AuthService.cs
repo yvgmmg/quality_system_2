@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using QualityControlSystem.Infrastructure;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using System.Data;
 
@@ -54,6 +54,7 @@ public class AuthService : IAuthService
                 Role = user.Role,
                 RoleCode = user.RoleCode,
                 WorkshopId = user.WorkshopId,
+                WorkshopName = user.WorkshopName,
                 PersonnelNumber = user.PersonnelNumber
             };
             OnCurrentUserChanged();
@@ -61,7 +62,8 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage($"Ошибка авторизации: {ex.Message}\n{ex.StackTrace}", "Auth Error");
+            Console.Error.WriteLine($"Auth error: {ex}");
+            _dialogService.ShowMessage("Не удалось выполнить вход. Проверьте подключение к базе данных и повторите попытку.", "Auth Error");
             return false;
         }
     }
@@ -89,9 +91,12 @@ public class AuthService : IAuthService
                 up.personnel_number,
                 up.password,
                 r.name AS role_name,
-                r.role_code
+                r.role_code,
+                w.number AS workshop_number,
+                w.purpose AS workshop_purpose
             FROM public.user_profile up
             INNER JOIN public."role" r ON r.role_id = up.role_id
+            LEFT JOIN public.workshop w ON w.workshop_id = up.workshop_id
             WHERE up.personnel_number = @personnel_number
             LIMIT 1;
             """;
@@ -108,6 +113,9 @@ public class AuthService : IAuthService
             Name = reader.GetString(reader.GetOrdinal("first_name")),
             Patron = reader.IsDBNull(reader.GetOrdinal("middle_name")) ? null : reader.GetString(reader.GetOrdinal("middle_name")),
             WorkshopId = reader.IsDBNull(reader.GetOrdinal("workshop_id")) ? null : reader.GetInt32(reader.GetOrdinal("workshop_id")),
+            WorkshopName = FormatWorkshop(
+                ReadNullableText(reader, "workshop_number"),
+                ReadNullableText(reader, "workshop_purpose")),
             PersonnelNumber = reader.GetString(reader.GetOrdinal("personnel_number")),
             Password = reader.GetString(reader.GetOrdinal("password")),
             Role = reader.GetString(reader.GetOrdinal("role_name")),
@@ -123,7 +131,7 @@ public class AuthService : IAuthService
         }
         catch
         {
-            return password == storedPassword;
+            return false;
         }
     }
 
@@ -135,6 +143,22 @@ public class AuthService : IAuthService
         command.Parameters.Add(parameter);
     }
 
+    private static string FormatWorkshop(string? number, string? purpose)
+    {
+        if (string.IsNullOrWhiteSpace(number))
+            return string.Empty;
+
+        return string.IsNullOrWhiteSpace(purpose)
+            ? $"Цех {number}"
+            : $"Цех {number} - {purpose}";
+    }
+
+    private static string? ReadNullableText(IDataRecord reader, string name)
+    {
+        var ordinal = reader.GetOrdinal(name);
+        return reader.IsDBNull(ordinal) ? null : Convert.ToString(reader.GetValue(ordinal));
+    }
+
     private sealed class UserAuthRow
     {
         public int Id { get; set; }
@@ -142,6 +166,7 @@ public class AuthService : IAuthService
         public string Name { get; set; } = string.Empty;
         public string? Patron { get; set; }
         public int? WorkshopId { get; set; }
+        public string WorkshopName { get; set; } = string.Empty;
         public string PersonnelNumber { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;

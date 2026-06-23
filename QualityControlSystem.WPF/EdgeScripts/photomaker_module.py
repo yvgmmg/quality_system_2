@@ -3,7 +3,11 @@ import numpy as np
 import os
 import json
 import time
+import argparse
+import threading
 from colorama import init, Fore, Style
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse
 
 # ==================== CONFIG ====================
 TEMPLATE_DIR = "template"
@@ -11,12 +15,22 @@ CONFIG_PATH = "template_config.json"
 WINDOW_NAME = "CSI Template Maker v4 default config"
 CAPTURE_KEY = ord("c")
 EXIT_KEY = ord("q")
+HOST = "0.0.0.0"
+DEFAULT_PORT = 8081
+ENDPOINT_STATUS = "/status"
+ENDPOINT_CAPTURE = "/capture"
+ENDPOINT_FRAME = "/frame.jpg"
+ENDPOINT_STOP = "/stop"
+JSON_CONTENT_TYPE = "application/json; charset=utf-8"
+JPEG_CONTENT_TYPE = "image/jpeg"
+JPEG_QUALITY = 82
+FRAME_DELAY_SEC = 0.03
 
 FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
 CAMERA_WARMUP_SEC = 1.0
 
-# РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РІР·СЏС‚Р° РёР· РїСЂРёР»РѕР¶РµРЅРЅРѕРіРѕ template_config.json.
+# Конфигурация по умолчанию взята из приложенного template_config.json.
 DEFAULT_CONFIG = {
     "template_id": 2,
     "camera": "CSI-front",
@@ -92,12 +106,12 @@ def load_config():
         try:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 user_config = json.load(f)
-            cprint(Fore.GREEN, f"[OK] Р—Р°РіСЂСѓР¶РµРЅР° РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ: {CONFIG_PATH}")
+            cprint(Fore.GREEN, f"[OK] Загружена конфигурация: {CONFIG_PATH}")
             return merge_config(DEFAULT_CONFIG, user_config)
         except Exception as e:
-            cprint(Fore.YELLOW, f"[WARNING] РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ {CONFIG_PATH}: {e}. РСЃРїРѕР»СЊР·СѓСЋ DEFAULT_CONFIG.")
+            cprint(Fore.YELLOW, f"[WARNING] Не удалось прочитать {CONFIG_PATH}: {e}. Использую DEFAULT_CONFIG.")
     else:
-        cprint(Fore.CYAN, "[INFO] template_config.json СЂСЏРґРѕРј СЃРѕ СЃРєСЂРёРїС‚РѕРј РЅРµ РЅР°Р№РґРµРЅ. РСЃРїРѕР»СЊР·СѓСЋ DEFAULT_CONFIG РёР· РєРѕРґР°.")
+        cprint(Fore.CYAN, "[INFO] template_config.json рядом со скриптом не найден. Использую DEFAULT_CONFIG из кода.")
     return json.loads(json.dumps(DEFAULT_CONFIG))
 
 
@@ -149,7 +163,7 @@ def init_csi_camera():
     for i, cfg in enumerate(configs, start=1):
         picam2 = None
         try:
-            cprint(Fore.CYAN, f"[CSI] РџСЂРѕР±СѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
+            cprint(Fore.CYAN, f"[CSI] Пробую конфигурацию #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
             picam2 = Picamera2(0)
             camera_config = picam2.create_video_configuration(
                 main={"size": cfg["size"], "format": cfg["format"]},
@@ -301,8 +315,8 @@ def save_template(frame_full, template_num, config):
 def main():
     cprint(Fore.CYAN, f"=== {WINDOW_NAME} ===")
     config = load_config()
-    cprint(Fore.CYAN, "РџРѕР»Р·СѓРЅРєРѕРІ РЅРµС‚: РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ С„РёРєСЃРёСЂРѕРІР°РЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РёР· template_config.json/DEFAULT_CONFIG.")
-    cprint(Fore.CYAN, "Arduino РІ photomaker РЅРµ РїРѕРґРєР»СЋС‡Р°РµС‚СЃСЏ.")
+    cprint(Fore.CYAN, "Ползунков нет: используются фиксированные значения из template_config.json/DEFAULT_CONFIG.")
+    cprint(Fore.CYAN, "Arduino в photomaker не подключается.")
 
     cap_csi = init_csi_camera()
     if cap_csi is None:
@@ -354,82 +368,111 @@ def main():
 
 
 # ==================== REMOTE SERVER WRAPPER ====================
-import argparse
-import json
-import threading
-import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+class PhotomakerState:
+    """Runtime state shared by the camera loop and HTTP handler."""
 
-import cv2
+    def __init__(self):
+        self.latest_frame = None
+        self.latest_status = {"state": "starting", "template": None, "message": ""}
+        self.capture_requested = threading.Event()
+        self.stop_requested = threading.Event()
+        self.frame_lock = threading.Lock()
+        self.status_lock = threading.Lock()
+
+    def update_status(self, **kwargs):
+        with self.status_lock:
+            self.latest_status.update(kwargs)
+
+    def get_status(self):
+        with self.status_lock:
+            return dict(self.latest_status)
+
+    def set_frame(self, frame):
+        with self.frame_lock:
+            self.latest_frame = frame
+
+    def get_frame(self):
+        with self.frame_lock:
+            return self.latest_frame
 
 
-
-latest_frame = None
-latest_status = {"state": "starting", "template": None, "message": ""}
-capture_requested = threading.Event()
-stop_requested = threading.Event()
-frame_lock = threading.Lock()
-status_lock = threading.Lock()
+state = PhotomakerState()
 
 
 def set_status(**kwargs):
-    with status_lock:
-        latest_status.update(kwargs)
+    state.update_status(**kwargs)
 
 
 def encode_frame(frame):
-    ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+    ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY])
     return buffer.tobytes() if ok else None
 
 
-class Handler(BaseHTTPRequestHandler):
+class JsonResponseMixin:
+    """HTTP response helpers used by module request handlers."""
+
+    def write_json(self, payload):
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", JSON_CONTENT_TYPE)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def write_jpeg(self, frame):
+        self.send_response(200)
+        self.send_header("Content-Type", JPEG_CONTENT_TYPE)
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(frame)
+
+
+class PhotomakerRequestHandler(JsonResponseMixin, BaseHTTPRequestHandler):
+    """HTTP handler exposing photomaker endpoints."""
+
     def do_GET(self):
         path = urlparse(self.path).path
-        if path == "/status":
-            self.write_json(latest_status)
+        if path == ENDPOINT_STATUS:
+            self.write_json(state.get_status())
             return
 
-        if path == "/capture":
-            capture_requested.set()
+        if path == ENDPOINT_CAPTURE:
+            state.capture_requested.set()
             self.write_json({"ok": True, "message": "capture requested"})
             return
 
-        if path == "/frame.jpg":
-            with frame_lock:
-                frame = latest_frame
+        if path == ENDPOINT_FRAME:
+            frame = state.get_frame()
             if frame is None:
                 self.send_error(404, "frame is not ready")
                 return
-            self.send_response(200)
-            self.send_header("Content-Type", "image/jpeg")
-            self.send_header("Cache-Control", "no-cache")
-            self.end_headers()
-            self.wfile.write(frame)
+            self.write_jpeg(frame)
             return
 
         self.send_error(404)
 
     def do_POST(self):
-        if urlparse(self.path).path == "/stop":
-            stop_requested.set()
+        if urlparse(self.path).path == ENDPOINT_STOP:
+            state.stop_requested.set()
             self.write_json({"ok": True})
             return
         self.send_error(404)
-
-    def write_json(self, payload):
-        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
 
     def log_message(self, format, *args):
         return
 
 
-def camera_loop():
+class PhotomakerController:
+    """Main capture loop for the photomaker module."""
+
+    def __init__(self, runtime_state):
+        self.state = runtime_state
+
+    def run(self):
+        camera_loop(self.state)
+
+
+def camera_loop(runtime_state):
     config = load_config()
     cap_csi = init_csi_camera()
     if cap_csi is None:
@@ -440,7 +483,7 @@ def camera_loop():
     set_status(state="running", template=template_num, message="photomaker is ready")
 
     try:
-        while not stop_requested.is_set():
+        while not runtime_state.stop_requested.is_set():
             try:
                 arr = cap_csi.capture_array()
                 frame = convert_picamera_array_to_bgr(arr)
@@ -463,17 +506,15 @@ def camera_loop():
 
             encoded = encode_frame(full_display)
             if encoded is not None:
-                with frame_lock:
-                    global latest_frame
-                    latest_frame = encoded
+                runtime_state.set_frame(encoded)
 
-            if capture_requested.is_set():
-                capture_requested.clear()
+            if runtime_state.capture_requested.is_set():
+                runtime_state.capture_requested.clear()
                 save_template(frame, template_num, config)
                 set_status(state="running", template=template_num, message=f"template #{template_num} saved")
                 template_num += 1
 
-            time.sleep(0.03)
+            time.sleep(FRAME_DELAY_SEC)
     finally:
         try:
             cap_csi.stop()
@@ -483,18 +524,33 @@ def camera_loop():
         set_status(state="stopped", message="photomaker stopped")
 
 
-def server_main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8081)
-    args = parser.parse_args()
+def create_server(host, port):
+    """Create the HTTP server for photomaker endpoints."""
 
-    thread = threading.Thread(target=camera_loop, daemon=True)
+    return ThreadingHTTPServer((host, port), PhotomakerRequestHandler)
+
+
+def parse_args():
+    """Parse command-line arguments for remote server mode."""
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default=HOST)
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    return parser.parse_args()
+
+
+def server_main():
+    """Script entrypoint used by EdgeDeviceService."""
+
+    args = parse_args()
+    controller = PhotomakerController(state)
+
+    thread = threading.Thread(target=controller.run, daemon=True)
     thread.start()
 
-    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    server = create_server(args.host, args.port)
     try:
-        while not stop_requested.is_set():
+        while not state.stop_requested.is_set():
             server.handle_request()
     finally:
         server.server_close()

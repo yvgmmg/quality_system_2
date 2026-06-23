@@ -33,8 +33,8 @@
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Роль:" FontWeight="Bold" Margin="5"/>
                 <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding User.Role}" Margin="5"/>
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Цех №:" FontWeight="Bold" Margin="5"/>
-                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding User.WorkshopId}" Margin="5"/>
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Цех:" FontWeight="Bold" Margin="5"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding User.WorkshopName}" Margin="5"/>
             </Grid>
         </StackPanel>
     </Border>

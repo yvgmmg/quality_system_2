@@ -1,13 +1,11 @@
-﻿using QualityControlSystem.WPF.Views;
 using System;
-using System.Windows.Controls;
+using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.Services.Interfaces
 {
     public interface INavigationService
     {
-        void Initialize(MainWindow mainWindow);
-        void NavigateTo<TView>() where TView : UserControl;
-        void NavigateTo(Type viewType);
+        void NavigateTo<TViewModel>() where TViewModel : BaseViewModel;
+        void NavigateTo(Type viewModelType);
     }
 }

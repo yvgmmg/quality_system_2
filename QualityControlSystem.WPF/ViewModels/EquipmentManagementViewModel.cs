@@ -1,31 +1,52 @@
 using System;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
-using QualityControlSystem.Infrastructure;
-using QualityControlSystem.Infrastructure.Entities;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Constants;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class EquipmentManagementViewModel : BaseViewModel
+public partial class EquipmentManagementViewModel : BaseViewModel, IAsyncInitializable
 {
-    private readonly AppDbContext _dbContext;
+    private const string AllWorkshopsFilter = UiFilterOptions.AllWorkshops;
+
+    private readonly IEquipmentManagementService _equipmentService;
     private readonly IDialogService _dialogService;
+    private bool _isInitialized;
 
     [ObservableProperty]
     private ObservableCollection<ProductionEquipmentDto> _equipment = new();
 
     [ObservableProperty]
+    private ICollectionView? _equipmentView;
+
+    [ObservableProperty]
     private ObservableCollection<LookupItemDto> _workshopOptions = new();
 
     [ObservableProperty]
+    private ObservableCollection<string> _workshopFilterOptions = new();
+
+    [ObservableProperty]
+    private ObservableCollection<SelectableLookupItemDto> _frameOptions = new();
+
+    [ObservableProperty]
+    private ObservableCollection<SelectableLookupItemDto> _sensorOptions = new();
+
+    [ObservableProperty]
     private ProductionEquipmentDto? _selectedEquipment;
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
+    [ObservableProperty]
+    private string _selectedWorkshopFilter = AllWorkshopsFilter;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -33,11 +54,23 @@ public partial class EquipmentManagementViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isBusy;
 
-    public EquipmentManagementViewModel(AppDbContext dbContext, IDialogService dialogService)
+    public EquipmentManagementViewModel(
+        IEquipmentManagementService equipmentService,
+        IDialogService dialogService)
     {
-        _dbContext = dbContext;
+        _equipmentService = equipmentService;
         _dialogService = dialogService;
-        _ = LoadAsync();
+        EquipmentView = CollectionViewSource.GetDefaultView(Equipment);
+        EquipmentView.Filter = FilterEquipment;
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -49,7 +82,10 @@ public partial class EquipmentManagementViewModel : BaseViewModel
         {
             await LoadWorkshopOptionsAsync();
             await LoadEquipmentAsync();
-            StatusMessage = Equipment.Count == 0 ? "Оборудование не найдено." : $"Оборудования: {Equipment.Count}";
+            await LoadLinkOptionsAsync();
+            StatusMessage = Equipment.Count == 0
+                ? "Оборудование не найдено."
+                : $"Оборудования: {Equipment.Count}";
         }
         catch (Exception ex)
         {
@@ -63,84 +99,104 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
     private async Task LoadWorkshopOptionsAsync()
     {
-        var workshops = await _dbContext.Workshops
-            .AsNoTracking()
-            .OrderBy(workshop => workshop.Number)
-            .Select(workshop => new LookupItemDto
-            {
-                Id = workshop.WorkshopId,
-                Name = string.IsNullOrWhiteSpace(workshop.Purpose)
-                    ? $"Цех {workshop.Number}"
-                    : $"Цех {workshop.Number} - {workshop.Purpose}"
-            })
-            .ToListAsync();
+        var workshops = await _equipmentService.GetWorkshopOptionsAsync();
 
         WorkshopOptions.Clear();
         foreach (var workshop in workshops)
             WorkshopOptions.Add(workshop);
+
+        WorkshopFilterOptions.Clear();
+        WorkshopFilterOptions.Add(AllWorkshopsFilter);
+        foreach (var workshop in workshops
+            .Select(item => item.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct())
+        {
+            WorkshopFilterOptions.Add(workshop);
+        }
+
+        if (!WorkshopFilterOptions.Contains(SelectedWorkshopFilter))
+            SelectedWorkshopFilter = AllWorkshopsFilter;
     }
 
     private async Task LoadEquipmentAsync()
     {
         var selectedId = SelectedEquipment?.Id;
-        var rows = await _dbContext.ProductionEquipments
-            .AsNoTracking()
-            .Include(item => item.Workshop)
-            .OrderBy(item => item.ProductionEquipmentId)
-            .Select(item => new
-            {
-                item.ProductionEquipmentId,
-                item.Name,
-                item.SerialNumber,
-                item.OkofCode,
-                item.InventoryNumber,
-                item.WorkshopId,
-                item.Workshop.Number,
-                item.Workshop.Purpose
-            })
-            .ToListAsync();
+        var rows = await _equipmentService.GetEquipmentAsync();
 
         Equipment.Clear();
         foreach (var item in rows)
-        {
-            Equipment.Add(new ProductionEquipmentDto
-            {
-                Id = item.ProductionEquipmentId,
-                Name = item.Name,
-                SerialNumber = item.SerialNumber,
-                OkofCode = item.OkofCode,
-                InventoryNumber = item.InventoryNumber,
-                WorkshopId = item.WorkshopId,
-                WorkshopName = string.IsNullOrWhiteSpace(item.Purpose)
-                    ? $"Цех {item.Number}"
-                    : $"Цех {item.Number} - {item.Purpose}"
-            });
-        }
+            Equipment.Add(item);
 
         SelectedEquipment = Equipment.FirstOrDefault(item => item.Id == selectedId);
+        EquipmentView?.Refresh();
+    }
+
+    private async Task LoadLinkOptionsAsync()
+    {
+        await LoadFrameLinksAsync();
+        await LoadSensorLinksAsync();
+    }
+
+    private async Task LoadFrameLinksAsync()
+    {
+        FrameOptions.Clear();
+
+        if (SelectedEquipment == null)
+            return;
+
+        var linked = await _equipmentService.GetFramesForEquipmentAsync(SelectedEquipment.Id);
+        var linkedIds = linked.Where(item => item.Id.HasValue).Select(item => item.Id!.Value).ToHashSet();
+        var frames = await _equipmentService.GetAvailableFramesAsync();
+
+        foreach (var frame in frames.Where(item => item.Id.HasValue))
+        {
+            FrameOptions.Add(new SelectableLookupItemDto
+            {
+                Id = frame.Id!.Value,
+                Name = frame.Name,
+                IsSelected = linkedIds.Contains(frame.Id.Value)
+            });
+        }
+    }
+
+    private async Task LoadSensorLinksAsync()
+    {
+        SensorOptions.Clear();
+
+        if (SelectedEquipment == null)
+            return;
+
+        var linked = await _equipmentService.GetSensorsForEquipmentAsync(SelectedEquipment.Id);
+        var linkedIds = linked.Select(item => item.Id).ToHashSet();
+        var sensors = await _equipmentService.GetAvailableEquipmentSensorsAsync();
+
+        foreach (var sensor in sensors)
+        {
+            SensorOptions.Add(new SelectableLookupItemDto
+            {
+                Id = sensor.Id,
+                Name = $"{sensor.Name} ({sensor.Code})",
+                IsSelected = linkedIds.Contains(sensor.Id)
+            });
+        }
     }
 
     [RelayCommand]
     private async Task AddEquipmentAsync()
     {
-        var newEquipment = new ProductionEquipmentDto();
+        var newEquipment = new ProductionEquipmentDto
+        {
+            WorkshopId = WorkshopOptions.Count == 1 && WorkshopOptions[0].Id is int workshopId
+                ? workshopId
+                : 0
+        };
         if (!_dialogService.ShowProductionEquipmentDialog(newEquipment, WorkshopOptions, false))
             return;
 
         await RunBusyAsync(async () =>
         {
-            ValidateEquipment(newEquipment);
-            var equipment = new ProductionEquipment
-            {
-                Name = newEquipment.Name.Trim(),
-                SerialNumber = NormalizeOptionalText(newEquipment.SerialNumber),
-                OkofCode = newEquipment.OkofCode.Trim(),
-                InventoryNumber = newEquipment.InventoryNumber.Trim(),
-                WorkshopId = newEquipment.WorkshopId
-            };
-
-            _dbContext.ProductionEquipments.Add(equipment);
-            await _dbContext.SaveChangesAsync();
+            await _equipmentService.AddEquipmentAsync(newEquipment);
             await LoadEquipmentAsync();
             StatusMessage = "Оборудование добавлено.";
         });
@@ -170,20 +226,7 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
         await RunBusyAsync(async () =>
         {
-            ValidateEquipment(editEquipment);
-            var equipment = await _dbContext.ProductionEquipments
-                .FirstOrDefaultAsync(item => item.ProductionEquipmentId == editEquipment.Id);
-
-            if (equipment == null)
-                throw new InvalidOperationException("Оборудование не найдено.");
-
-            equipment.Name = editEquipment.Name.Trim();
-            equipment.SerialNumber = NormalizeOptionalText(editEquipment.SerialNumber);
-            equipment.OkofCode = editEquipment.OkofCode.Trim();
-            equipment.InventoryNumber = editEquipment.InventoryNumber.Trim();
-            equipment.WorkshopId = editEquipment.WorkshopId;
-
-            await _dbContext.SaveChangesAsync();
+            await _equipmentService.UpdateEquipmentAsync(editEquipment);
             await LoadEquipmentAsync();
             StatusMessage = "Оборудование обновлено.";
         });
@@ -203,17 +246,45 @@ public partial class EquipmentManagementViewModel : BaseViewModel
 
         await RunBusyAsync(async () =>
         {
-            var equipment = await _dbContext.ProductionEquipments
-                .FirstOrDefaultAsync(item => item.ProductionEquipmentId == SelectedEquipment.Id);
-
-            if (equipment == null)
-                throw new InvalidOperationException("Оборудование не найдено.");
-
-            _dbContext.ProductionEquipments.Remove(equipment);
-            await _dbContext.SaveChangesAsync();
+            await _equipmentService.DeleteEquipmentAsync(SelectedEquipment.Id);
             SelectedEquipment = null;
             await LoadEquipmentAsync();
+            await LoadLinkOptionsAsync();
             StatusMessage = "Оборудование удалено.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task SaveFrameLinksAsync()
+    {
+        if (SelectedEquipment == null)
+        {
+            StatusMessage = "Выберите оборудование.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var frameIds = FrameOptions.Where(item => item.IsSelected).Select(item => item.Id).ToList();
+            await _equipmentService.UpdateFramesForEquipmentAsync(SelectedEquipment.Id, frameIds);
+            StatusMessage = "Связи оборудования с каркасами обновлены.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task SaveSensorLinksAsync()
+    {
+        if (SelectedEquipment == null)
+        {
+            StatusMessage = "Выберите оборудование.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var sensorIds = SensorOptions.Where(item => item.IsSelected).Select(item => item.Id).ToList();
+            await _equipmentService.UpdateSensorsForEquipmentAsync(SelectedEquipment.Id, sensorIds);
+            StatusMessage = "Связи оборудования с датчиками обновлены.";
         });
     }
 
@@ -238,36 +309,57 @@ public partial class EquipmentManagementViewModel : BaseViewModel
         }
     }
 
-    private static void ValidateEquipment(ProductionEquipmentDto equipment)
+    partial void OnSelectedEquipmentChanged(ProductionEquipmentDto? value)
     {
-        if (string.IsNullOrWhiteSpace(equipment.Name))
-            throw new InvalidOperationException("Укажите название оборудования.");
-
-        if (string.IsNullOrWhiteSpace(equipment.OkofCode))
-            throw new InvalidOperationException("Укажите код ОКОФ.");
-
-        if (string.IsNullOrWhiteSpace(equipment.InventoryNumber))
-            throw new InvalidOperationException("Укажите инвентарный номер.");
-
-        if (equipment.WorkshopId <= 0)
-            throw new InvalidOperationException("Выберите цех.");
-
-        if (equipment.Name.Trim().Length > 255)
-            throw new InvalidOperationException("Название оборудования не должно быть длиннее 255 символов.");
-
-        if (NormalizeOptionalText(equipment.SerialNumber)?.Length > 20)
-            throw new InvalidOperationException("Серийный номер не должен быть длиннее 20 символов.");
-
-        if (equipment.OkofCode.Trim().Length > 19)
-            throw new InvalidOperationException("Код ОКОФ не должен быть длиннее 19 символов.");
-
-        if (equipment.InventoryNumber.Trim().Length > 17)
-            throw new InvalidOperationException("Инвентарный номер не должен быть длиннее 17 символов.");
+        _ = LoadLinkOptionsSafeAsync();
     }
 
-    private static string? NormalizeOptionalText(string? value)
+    private async Task LoadLinkOptionsSafeAsync()
     {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        try
+        {
+            await LoadLinkOptionsAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = GetErrorMessage(ex);
+        }
+    }
+
+    partial void OnSearchTextChanged(string value) => EquipmentView?.Refresh();
+
+    partial void OnSelectedWorkshopFilterChanged(string value) => EquipmentView?.Refresh();
+
+    private bool FilterEquipment(object item)
+    {
+        if (item is not ProductionEquipmentDto equipment)
+            return false;
+
+        var search = SearchText.Trim();
+        if (!string.IsNullOrWhiteSpace(search)
+            && !Contains(equipment.Name, search)
+            && !Contains(equipment.SerialNumber, search)
+            && !Contains(equipment.OkofCode, search)
+            && !Contains(equipment.InventoryNumber, search)
+            && !Contains(equipment.WorkshopName, search))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedWorkshopFilter)
+            && SelectedWorkshopFilter != AllWorkshopsFilter
+            && !string.Equals(equipment.WorkshopName, SelectedWorkshopFilter, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool Contains(string? value, string search)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains(search, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetErrorMessage(Exception exception)

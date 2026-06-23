@@ -1,0 +1,94 @@
+<UserControl x:Class="QualityControlSystem.WPF.Views.EquipmentWorkResultsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,12">
+            <TextBlock Text="Результаты работы оборудования"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       DockPanel.Dock="Left"/>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        DockPanel.Dock="Right">
+                <Button Content="Выгрузить отчет"
+                        Command="{Binding ExportReportCommand}"
+                        Width="140"
+                        Margin="0,0,8,0"/>
+                <Button Content="Очистить список"
+                        Command="{Binding ClearNotificationsCommand}"
+                        Width="130"
+                        Margin="0,0,8,0"/>
+                <Button Content="Обновить"
+                        Command="{Binding RefreshCommand}"
+                        Width="100"/>
+            </StackPanel>
+        </DockPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Results}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#D0D0D0"
+                                BorderThickness="1"
+                                Padding="12"
+                                Margin="0,0,0,10"
+                                Background="White">
+                            <StackPanel>
+                                <TextBlock Text="{Binding EquipmentName}" FontWeight="Bold" FontSize="16"/>
+                                <WrapPanel Margin="0,4,0,0">
+                                    <TextBlock Text="Инвентарный номер: " FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding InventoryNumber}" Margin="0,0,14,0"/>
+                                    <TextBlock Text="Серийный номер: " FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding SerialNumber}" Margin="0,0,14,0"/>
+                                    <TextBlock Text="ОКОФ: " FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding OkofCode}"/>
+                                </WrapPanel>
+
+                                <WrapPanel Margin="0,8,0,0">
+                                    <TextBlock Text="Время проверки: " FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding CheckedAt, StringFormat={}{0:dd.MM.yyyy HH:mm:ss}}" Margin="0,0,14,0"/>
+                                    <TextBlock Text="Процент брака: " FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding DefectPercentage, StringFormat={}{0:0.##}%}"/>
+                                </WrapPanel>
+
+                                <ItemsControl ItemsSource="{Binding SensorValues}" Margin="0,8,0,0">
+                                    <ItemsControl.Style>
+                                        <Style TargetType="ItemsControl">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasSensorValues}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.Style>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <WrapPanel Margin="0,2,0,0">
+                                                <TextBlock Text="{Binding SensorName}" FontWeight="SemiBold"/>
+                                                <TextBlock Text=" [" />
+                                                <TextBlock Text="{Binding SensorCode}" />
+                                                <TextBlock Text="]: " />
+                                                <TextBlock Text="{Binding Value}" />
+                                                <TextBlock Text="{Binding Unit, StringFormat={} {0}}" />
+                                                <TextBlock Text="{Binding MeasuredAt, StringFormat={} ({0:dd.MM.yyyy HH:mm:ss})}" />
+                                            </WrapPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="0,10,0,0" Foreground="#555"/>
+    </Grid>
+</UserControl>

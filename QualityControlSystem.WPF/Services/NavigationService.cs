@@ -1,48 +1,49 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using QualityControlSystem.WPF.Services.Interfaces;
-using QualityControlSystem.WPF.ViewModels;
-using QualityControlSystem.WPF.Views;
 using System;
-using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using QualityControlSystem.WPF.Services.Interfaces;
+using QualityControlSystem.WPF.Services.Navigation;
+using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.Services
 {
     public class NavigationService : INavigationService
     {
-        private readonly IServiceProvider _serviceProvider;
-        private MainWindow? _mainWindow;
-        private MainViewModel? _mainViewModel;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly NavigationStore _navigationStore;
 
-        public event Action<UserControl>? CurrentViewChanged;
-
-        public NavigationService(IServiceProvider serviceProvider)
+        public NavigationService(IServiceScopeFactory scopeFactory, NavigationStore navigationStore)
         {
-            _serviceProvider = serviceProvider;
+            _scopeFactory = scopeFactory;
+            _navigationStore = navigationStore;
         }
 
-        public void Initialize(MainWindow mainWindow)
+        public void NavigateTo<TViewModel>() where TViewModel : BaseViewModel
         {
-            _mainWindow = mainWindow;
-            _mainViewModel = _mainWindow.DataContext as MainViewModel;
+            var scope = _scopeFactory.CreateScope();
+            var viewModel = scope.ServiceProvider.GetRequiredService<TViewModel>();
+            InitializeIfNeeded(viewModel);
+            _navigationStore.SetCurrentViewModel(viewModel, scope);
         }
 
-        public void NavigateTo<TView>() where TView : UserControl
+        public void NavigateTo(Type viewModelType)
         {
-            var view = _serviceProvider.GetRequiredService<TView>();
-            SetView(view);
+            if (!typeof(BaseViewModel).IsAssignableFrom(viewModelType))
+            {
+                throw new ArgumentException(
+                    $"Type '{viewModelType.FullName}' must inherit from {nameof(BaseViewModel)}.",
+                    nameof(viewModelType));
+            }
+
+            var scope = _scopeFactory.CreateScope();
+            var viewModel = (BaseViewModel)scope.ServiceProvider.GetRequiredService(viewModelType);
+            InitializeIfNeeded(viewModel);
+            _navigationStore.SetCurrentViewModel(viewModel, scope);
         }
 
-        public void NavigateTo(Type viewType)
+        private static void InitializeIfNeeded(BaseViewModel viewModel)
         {
-            var view = _serviceProvider.GetRequiredService(viewType) as UserControl;
-            if (view != null)
-                SetView(view);
-        }
-        private void SetView(UserControl view)
-        {
-            if (_mainViewModel != null)
-                _mainViewModel.CurrentView = view;
-            CurrentViewChanged?.Invoke(view);
+            if (viewModel is IAsyncInitializable initializable)
+                _ = initializable.InitializeAsync();
         }
     }
 }

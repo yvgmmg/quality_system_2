@@ -1,7 +1,8 @@
-﻿bin/
+bin/
 obj/
 .vs/
 *.user
+*.Backup.tmp
 *.suo
 *.userosscache
 *.sln.docstates
@@ -10,3 +11,9 @@ TestResults/
 *.nupkg
 __pycache__/
 *.py[cod]
+
+# Local application settings
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.example.json
+!**/appsettings.template.json

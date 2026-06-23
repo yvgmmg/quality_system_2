@@ -1,28 +1,24 @@
 using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
-using QualityControlSystem.Infrastructure;
-using QualityControlSystem.Infrastructure.Entities;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Constants;
+using QualityControlSystem.WPF.Dtos;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
 
 namespace QualityControlSystem.WPF.ViewModels;
 
-public partial class FrameCardsViewModel : BaseViewModel
+public partial class FrameCardsViewModel : BaseViewModel, IAsyncInitializable
 {
-    private static readonly string[] SupportedImageExtensions = [".png", ".jpg", ".jpeg"];
+    private const string AllMaterialsFilter = UiFilterOptions.AllMaterials;
 
-    private readonly AppDbContext _dbContext;
+    private readonly IFrameCardService _frameCardService;
     private readonly IDialogService _dialogService;
+    private bool _isInitialized;
 
     [ObservableProperty]
     private ObservableCollection<FrameCardDto> _frames = new();
@@ -54,13 +50,23 @@ public partial class FrameCardsViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isBusy;
 
-    public FrameCardsViewModel(AppDbContext dbContext, IDialogService dialogService)
+    public FrameCardsViewModel(
+        IFrameCardService frameCardService,
+        IDialogService dialogService)
     {
-        _dbContext = dbContext;
+        _frameCardService = frameCardService;
         _dialogService = dialogService;
         FramesView = CollectionViewSource.GetDefaultView(Frames);
         FramesView.Filter = FilterFrame;
-        _ = LoadAsync();
+    }
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+
+        _isInitialized = true;
+        await LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -91,89 +97,34 @@ public partial class FrameCardsViewModel : BaseViewModel
         var materialFilter = SelectedMaterialFilter?.Id;
         var workshopFilter = SelectedWorkshopFilter?.Id;
 
-        var materials = await _dbContext.MaterialTypes
-            .AsNoTracking()
-            .OrderBy(material => material.Name)
-            .Select(material => new LookupItemDto
-            {
-                Id = material.MaterialTypeId,
-                Name = material.Name
-            })
-            .ToListAsync();
-
-        var workshops = await _dbContext.Workshops
-            .AsNoTracking()
-            .OrderBy(workshop => workshop.Number)
-            .Select(workshop => new LookupItemDto
-            {
-                Id = workshop.WorkshopId,
-                Name = string.IsNullOrWhiteSpace(workshop.Purpose)
-                    ? $"Цех {workshop.Number}"
-                    : $"Цех {workshop.Number} - {workshop.Purpose}"
-            })
-            .ToListAsync();
+        var materials = await _frameCardService.GetMaterialTypesAsync();
+        var workshops = await _frameCardService.GetWorkshopsAsync();
 
         MaterialOptions.Clear();
-        MaterialOptions.Add(new LookupItemDto { Id = null, Name = "Все материалы" });
+        MaterialOptions.Add(new LookupItemDto { Id = null, Name = AllMaterialsFilter });
         foreach (var material in materials)
             MaterialOptions.Add(material);
 
         WorkshopOptions.Clear();
-        WorkshopOptions.Add(new LookupItemDto { Id = null, Name = "Все цеха" });
+        if (_frameCardService.CurrentWorkshopId is null)
+            WorkshopOptions.Add(new LookupItemDto { Id = null, Name = UiFilterOptions.AllWorkshops });
         foreach (var workshop in workshops)
             WorkshopOptions.Add(workshop);
 
         SelectedMaterialFilter = MaterialOptions.FirstOrDefault(item => item.Id == materialFilter) ?? MaterialOptions.FirstOrDefault();
-        SelectedWorkshopFilter = WorkshopOptions.FirstOrDefault(item => item.Id == workshopFilter) ?? WorkshopOptions.FirstOrDefault();
+        SelectedWorkshopFilter = _frameCardService.CurrentWorkshopId is int userWorkshopId
+            ? WorkshopOptions.FirstOrDefault(item => item.Id == userWorkshopId)
+            : WorkshopOptions.FirstOrDefault(item => item.Id == workshopFilter) ?? WorkshopOptions.FirstOrDefault();
     }
 
     private async Task LoadFramesAsync()
     {
         var selectedId = SelectedFrame?.Id;
-        var frames = await _dbContext.Frames
-            .AsNoTracking()
-            .Include(frame => frame.MaterialType)
-            .Include(frame => frame.Workshop)
-            .OrderBy(frame => frame.FrameId)
-            .Select(frame => new
-            {
-                frame.FrameId,
-                frame.Name,
-                frame.MaterialTypeId,
-                MaterialName = frame.MaterialType.Name,
-                frame.WorkshopId,
-                frame.Workshop.Number,
-                frame.Workshop.Purpose,
-                frame.Weight,
-                frame.Length,
-                frame.Width,
-                frame.Height,
-                frame.ImagePath
-            })
-            .ToListAsync();
+        var frames = await _frameCardService.GetFramesAsync();
 
         Frames.Clear();
         foreach (var frame in frames)
-        {
-            Frames.Add(new FrameCardDto
-            {
-                Id = frame.FrameId,
-                Name = frame.Name,
-                MaterialTypeId = frame.MaterialTypeId,
-                MaterialName = frame.MaterialName,
-                WorkshopId = frame.WorkshopId,
-                WorkshopNumber = frame.Number,
-                WorkshopName = string.IsNullOrWhiteSpace(frame.Purpose)
-                    ? $"Цех {frame.Number}"
-                    : $"Цех {frame.Number} - {frame.Purpose}",
-                Weight = frame.Weight,
-                Length = frame.Length,
-                Width = frame.Width,
-                Height = frame.Height,
-                ImagePath = frame.ImagePath,
-                ImagePreview = LoadImagePreview(frame.ImagePath)
-            });
-        }
+            Frames.Add(frame);
 
         SelectedFrame = Frames.FirstOrDefault(frame => frame.Id == selectedId);
         FramesView?.Refresh();
@@ -182,7 +133,10 @@ public partial class FrameCardsViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddFrameAsync()
     {
-        var newFrame = new FrameCardDto();
+        var newFrame = new FrameCardDto
+        {
+            WorkshopId = _frameCardService.CurrentWorkshopId.GetValueOrDefault()
+        };
         if (!_dialogService.ShowFrameDialog(newFrame, MaterialOptions.Where(item => item.Id.HasValue), WorkshopOptions.Where(item => item.Id.HasValue), false))
             return;
 
@@ -191,21 +145,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
         try
         {
-            ValidateFrame(newFrame);
-            var frame = new Frame
-            {
-                Name = newFrame.Name.Trim(),
-                MaterialTypeId = newFrame.MaterialTypeId,
-                WorkshopId = newFrame.WorkshopId,
-                Weight = newFrame.Weight,
-                Length = newFrame.Length,
-                Width = newFrame.Width,
-                Height = newFrame.Height,
-                ImagePath = NormalizeImagePath(newFrame.ImagePath)
-            };
-
-            _dbContext.Frames.Add(frame);
-            await _dbContext.SaveChangesAsync();
+            await _frameCardService.AddFrameAsync(newFrame);
             await LoadFramesAsync();
             StatusMessage = "Карточка каркаса добавлена.";
         }
@@ -251,21 +191,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
         try
         {
-            ValidateFrame(editFrame);
-            var frame = await _dbContext.Frames.FirstOrDefaultAsync(item => item.FrameId == editFrame.Id);
-            if (frame == null)
-                throw new InvalidOperationException("Каркас не найден.");
-
-            frame.Name = editFrame.Name.Trim();
-            frame.MaterialTypeId = editFrame.MaterialTypeId;
-            frame.WorkshopId = editFrame.WorkshopId;
-            frame.Weight = editFrame.Weight;
-            frame.Length = editFrame.Length;
-            frame.Width = editFrame.Width;
-            frame.Height = editFrame.Height;
-            frame.ImagePath = NormalizeImagePath(editFrame.ImagePath);
-
-            await _dbContext.SaveChangesAsync();
+            await _frameCardService.UpdateFrameAsync(editFrame);
             await LoadFramesAsync();
             StatusMessage = "Карточка каркаса обновлена.";
         }
@@ -298,12 +224,7 @@ public partial class FrameCardsViewModel : BaseViewModel
 
         try
         {
-            var frame = await _dbContext.Frames.FirstOrDefaultAsync(item => item.FrameId == SelectedFrame.Id);
-            if (frame == null)
-                throw new InvalidOperationException("Каркас не найден.");
-
-            _dbContext.Frames.Remove(frame);
-            await _dbContext.SaveChangesAsync();
+            await _frameCardService.DeleteFrameAsync(SelectedFrame.Id);
             SelectedFrame = null;
             await LoadFramesAsync();
             StatusMessage = "Карточка каркаса удалена.";
@@ -342,62 +263,9 @@ public partial class FrameCardsViewModel : BaseViewModel
             || frame.Id.ToString().Contains(search, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void ValidateFrame(FrameCardDto frame)
-    {
-        if (string.IsNullOrWhiteSpace(frame.Name))
-            throw new InvalidOperationException("Укажите название каркаса.");
-
-        if (frame.MaterialTypeId <= 0)
-            throw new InvalidOperationException("Выберите материал.");
-
-        if (frame.WorkshopId <= 0)
-            throw new InvalidOperationException("Выберите цех.");
-
-        var imagePath = NormalizeImagePath(frame.ImagePath);
-        if (imagePath != null && !IsSupportedImagePath(imagePath))
-            throw new InvalidOperationException("Путь к изображению должен указывать на PNG или JPEG файл.");
-    }
-
-    private static string? NormalizeImagePath(string? imagePath)
-    {
-        return string.IsNullOrWhiteSpace(imagePath) ? null : imagePath.Trim();
-    }
-
     private static bool Contains(string? value, string search)
     {
         return value?.Contains(search, StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    private static bool IsSupportedImagePath(string path)
-    {
-        var extension = Path.GetExtension(path);
-        return SupportedImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static ImageSource? LoadImagePreview(string? imagePath)
-    {
-        if (string.IsNullOrWhiteSpace(imagePath) || !IsSupportedImagePath(imagePath))
-            return null;
-
-        try
-        {
-            var absolutePath = Path.GetFullPath(imagePath);
-            if (!File.Exists(absolutePath))
-                return null;
-
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.DecodePixelWidth = 96;
-            image.UriSource = new Uri(absolutePath, UriKind.Absolute);
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     private static string GetErrorMessage(Exception exception)

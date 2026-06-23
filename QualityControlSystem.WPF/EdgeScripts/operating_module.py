@@ -3,11 +3,16 @@ import numpy as np
 import os
 import json
 import time
+import argparse
 import logging
+import math
 import re
 import glob
+import threading
 from collections import deque, Counter
 from colorama import init, Fore, Style
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse
 
 try:
     import serial
@@ -22,16 +27,26 @@ TEMPLATE_DIR = "template"
 CONFIG_PATH = "template_config.json"
 WINDOW_NAME = "CSI Defect Detector v5 + Arduino auto-port sensors"
 EXIT_KEY = ord("q")
+HOST = "0.0.0.0"
+DEFAULT_PORT = 8082
+ENDPOINT_STATUS = "/status"
+ENDPOINT_RESULTS = "/results"
+ENDPOINT_FRAME = "/frame.jpg"
+ENDPOINT_STOP = "/stop"
+JSON_CONTENT_TYPE = "application/json; charset=utf-8"
+JPEG_CONTENT_TYPE = "image/jpeg"
+JPEG_QUALITY = 82
+FRAME_DELAY_SEC = 0.03
 
 FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
 CAMERA_WARMUP_SEC = 1.0
 
-# Р’СЂРµРјСЏ РЅР° СѓСЃС‚Р°РЅРѕРІРєСѓ РґРµС‚Р°Р»Рё. Р’ С‚РµС‡РµРЅРёРµ СЌС‚РѕРіРѕ РІСЂРµРјРµРЅРё Р°РЅР°Р»РёР· РЅРµ РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ.
+# Время на установку детали. В течение этого времени анализ не выполняется.
 PLACEMENT_DELAY_SEC = 12.0
 
-# Arduino РёР· measure.ino: Serial.begin(9600)
-# None = РїРѕСЂС‚ РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё: /dev/ttyACM*, /dev/ttyUSB*, /dev/serial/by-id/*
+# Arduino из measure.ino: Serial.begin(9600)
+# None = порт определяется автоматически: /dev/ttyACM*, /dev/ttyUSB*, /dev/serial/by-id/*
 ARDUINO_PORT = None
 ARDUINO_BAUDRATE = 9600
 
@@ -113,9 +128,9 @@ def load_json(path, default=None):
 def load_base_config():
     user_config = load_json(CONFIG_PATH, None)
     if user_config:
-        cprint(Fore.GREEN, f"[OK] Р—Р°РіСЂСѓР¶РµРЅР° РѕР±С‰Р°СЏ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ: {CONFIG_PATH}")
+        cprint(Fore.GREEN, f"[OK] Загружена общая конфигурация: {CONFIG_PATH}")
         return merge_config(DEFAULT_CONFIG, user_config)
-    cprint(Fore.CYAN, "[INFO] template_config.json СЂСЏРґРѕРј СЃРѕ СЃРєСЂРёРїС‚РѕРј РЅРµ РЅР°Р№РґРµРЅ. РСЃРїРѕР»СЊР·СѓСЋ DEFAULT_CONFIG РёР· РєРѕРґР°.")
+    cprint(Fore.CYAN, "[INFO] template_config.json рядом со скриптом не найден. Использую DEFAULT_CONFIG из кода.")
     return json.loads(json.dumps(DEFAULT_CONFIG))
 
 
@@ -167,7 +182,7 @@ def init_csi_camera():
     for i, cfg in enumerate(configs, start=1):
         picam2 = None
         try:
-            cprint(Fore.CYAN, f"[CSI] РџСЂРѕР±СѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
+            cprint(Fore.CYAN, f"[CSI] Пробую конфигурацию #{i}: {cfg['size'][0]}x{cfg['size'][1]} {cfg['format']}")
             picam2 = Picamera2(0)
             camera_config = picam2.create_video_configuration(
                 main={"size": cfg["size"], "format": cfg["format"]},
@@ -203,9 +218,9 @@ def init_csi_camera():
 
 class ArduinoSensors:
     """
-    Р§РёС‚Р°РµС‚ С„РѕСЂРјР°С‚ РёР· measure.ino:
-      Р’РµСЃ: <value>
-      РўРµРјРїРµСЂР°С‚СѓСЂР°: <value>
+    Читает формат из measure.ino:
+      Вес: <value>
+      Температура: <value>
     """
 
     def __init__(self, port=ARDUINO_PORT, baudrate=ARDUINO_BAUDRATE):
@@ -214,6 +229,7 @@ class ArduinoSensors:
         self.ser = None
         self.values = {
             "weight": None,
+            "temperature_c": None,
             "light_adc": None,
             "light_percent": None,
             "updated_at": None,
@@ -237,26 +253,26 @@ class ArduinoSensors:
     @staticmethod
     def candidate_ports():
         """
-        РС‰РµС‚ СЂРµР°Р»СЊРЅС‹Рµ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Рµ РїРѕСЂС‚С‹ Arduino/USB-UART.
-        РќР° СЂР°Р·РЅС‹С… РїР»Р°С‚Р°С… РїРѕСЂС‚ РјРѕР¶РµС‚ Р±С‹С‚СЊ /dev/ttyACM0, /dev/ttyUSB0
-        РёР»Рё СЃС‚Р°Р±РёР»СЊРЅР°СЏ СЃСЃС‹Р»РєР° /dev/serial/by-id/*.
+        Ищет реальные последовательные порты Arduino/USB-UART.
+        На разных платах порт может быть /dev/ttyACM0, /dev/ttyUSB0
+        или стабильная ссылка /dev/serial/by-id/*.
         """
         candidates = []
 
-        # РЎР°РјС‹Р№ СЃС‚Р°Р±РёР»СЊРЅС‹Р№ РІР°СЂРёР°РЅС‚ РІ Linux вЂ” СЃСЃС‹Р»РєР° СЃ РёРјРµРЅРµРј СѓСЃС‚СЂРѕР№СЃС‚РІР°.
+        # Самый стабильный вариант в Linux — ссылка с именем устройства.
         candidates.extend(sorted(glob.glob("/dev/serial/by-id/*")))
 
-        # Р§Р°СЃС‚С‹Рµ РёРјРµРЅР° Arduino Uno/Mega/Nano Every: ttyACM*.
+        # Частые имена Arduino Uno/Mega/Nano Every: ttyACM*.
         candidates.extend(sorted(glob.glob("/dev/ttyACM*")))
 
-        # Р§Р°СЃС‚С‹Рµ РёРјРµРЅР° Nano/РєР»РѕРЅРѕРІ С‡РµСЂРµР· CH340/CP210x/FTDI: ttyUSB*.
+        # Частые имена Nano/клонов через CH340/CP210x/FTDI: ttyUSB*.
         candidates.extend(sorted(glob.glob("/dev/ttyUSB*")))
 
-        # Р•СЃР»Рё pyserial СѓРјРµРµС‚ list_ports, РґРѕР±Р°РІР»СЏРµРј РЅР°Р№РґРµРЅРЅС‹Рµ РёРј СѓСЃС‚СЂРѕР№СЃС‚РІР°.
+        # Если pyserial умеет list_ports, добавляем найденные им устройства.
         try:
             from serial.tools import list_ports
             ports = list(list_ports.comports())
-            # РЎРЅР°С‡Р°Р»Р° СѓСЃС‚СЂРѕР№СЃС‚РІР°, РїРѕС…РѕР¶РёРµ РЅР° Arduino/USB Serial.
+            # Сначала устройства, похожие на Arduino/USB Serial.
             priority_words = ("arduino", "ch340", "cp210", "ftdi", "usb", "acm", "serial")
             scored = []
             for port in ports:
@@ -273,7 +289,7 @@ class ArduinoSensors:
 
     def connect(self):
         if serial is None:
-            cprint(Fore.YELLOW, "[Arduino] pyserial РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ. Р”Р°С‚С‡РёРєРё РЅРµРґРѕСЃС‚СѓРїРЅС‹. РЈСЃС‚Р°РЅРѕРІРёС‚Рµ: pip3 install pyserial")
+            cprint(Fore.YELLOW, "[Arduino] pyserial не установлен. Датчики недоступны. Установите: pip3 install pyserial")
             return False
 
         ports_to_try = []
@@ -286,18 +302,18 @@ class ArduinoSensors:
         ports_to_try = self._unique(ports_to_try)
 
         if not ports_to_try:
-            cprint(Fore.YELLOW, "[Arduino] РџРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Рµ USB-РїРѕСЂС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹. РџСЂРѕРІРµСЂСЊС‚Рµ: ls /dev/ttyACM* /dev/ttyUSB* /dev/serial/by-id/*")
+            cprint(Fore.YELLOW, "[Arduino] Последовательные USB-порты не найдены. Проверьте: ls /dev/ttyACM* /dev/ttyUSB* /dev/serial/by-id/*")
             return False
 
         errors = []
         for port in ports_to_try:
             try:
-                cprint(Fore.CYAN, f"[Arduino] РџСЂРѕР±СѓСЋ РїРѕСЂС‚ {port}...")
+                cprint(Fore.CYAN, f"[Arduino] Пробую порт {port}...")
                 self.ser = serial.Serial(port, self.baudrate, timeout=0.1)
                 time.sleep(2)
                 self.ser.reset_input_buffer()
                 self.port = port
-                cprint(Fore.GREEN, f"[OK] Arduino РїРѕРґРєР»СЋС‡С‘РЅ: {self.port}, {self.baudrate} Р±РѕРґ")
+                cprint(Fore.GREEN, f"[OK] Arduino подключён: {self.port}, {self.baudrate} бод")
                 return True
             except Exception as e:
                 errors.append(f"{port}: {e}")
@@ -308,10 +324,10 @@ class ArduinoSensors:
                     pass
                 self.ser = None
 
-        cprint(Fore.YELLOW, "[Arduino] РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ РЅРё Рє РѕРґРЅРѕРјСѓ РїРѕСЂС‚Сѓ:")
+        cprint(Fore.YELLOW, "[Arduino] Не удалось подключиться ни к одному порту:")
         for err in errors:
             cprint(Fore.YELLOW, f"  - {err}")
-        cprint(Fore.YELLOW, "[HINT] РџСЂРѕРІРµСЂСЊС‚Рµ РїСЂР°РІР°: sudo usermod -a -G dialout $USER, Р·Р°С‚РµРј РїРµСЂРµР»РѕРіРёРЅСЊС‚РµСЃСЊ.")
+        cprint(Fore.YELLOW, "[HINT] Проверьте права: sudo usermod -a -G dialout $USER, затем перелогиньтесь.")
         return False
 
     def close(self):
@@ -322,7 +338,7 @@ class ArduinoSensors:
             pass
 
     def discard_when_inactive(self):
-        """Р’РЅРµ РїСЂРѕРІРµСЂРєРё СЃС‚Р°СЂС‹Рµ СЃС‚СЂРѕРєРё РѕС‚ Arduino РЅРµ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ."""
+        """Вне проверки старые строки от Arduino не используются."""
         try:
             if self.ser is not None:
                 self.ser.reset_input_buffer()
@@ -349,8 +365,8 @@ class ArduinoSensors:
 
     def read_active(self):
         """
-        Р’С‹Р·С‹РІР°С‚СЊ С‚РѕР»СЊРєРѕ РІРѕ РІСЂРµРјСЏ Р°РєС‚РёРІРЅРѕР№ РїСЂРѕРІРµСЂРєРё Рё РєРѕРіРґР° РґРµС‚Р°Р»СЊ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РєР°РґСЂРµ.
-        Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕСЃР»РµРґРЅРёРµ РёРЅС‚РµСЂРїСЂРµС‚РёСЂРѕРІР°РЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ.
+        Вызывать только во время активной проверки и когда деталь присутствует в кадре.
+        Возвращает последние интерпретированные значения.
         """
         if self.ser is None:
             return self.values
@@ -366,8 +382,23 @@ class ArduinoSensors:
                 if value is None:
                     continue
 
-                if self._matches_label(low, ("вес", "weight", "ves", "р’рµсѓ", "рІрµсЃ")):
+                if self._matches_label(low, ("вес", "weight", "ves", "scale", "р’рµсѓ", "рІрµсЃ", "р’рµсЃ")):
                     self.values["weight"] = value
+                elif self._matches_label(low, (
+                    "температура",
+                    "темп",
+                    "temperature",
+                    "temp",
+                    "thermo",
+                    "celsius",
+                    "°c",
+                    " t:",
+                    "t=",
+                    "рўрµрјрїрµсђр°с‚сѓсђр°",
+                    "рўрµрјрїрµсЂр°с‚ур°",
+                    "рўрµрјрїрµсЂр°с‚сѓсЂр°",
+                )):
+                    self.values["temperature_c"] = value
                 elif self._matches_label(low, ("свет", "light", "рЎрІрµс‚", "сѓрірµс‚")):
                     adc = max(0.0, min(1023.0, value))
                     self.values["light_adc"] = adc
@@ -385,7 +416,7 @@ class ArduinoSensors:
         if not active and self.values["updated_at"] is None:
             return ["Sensors: waiting for check"]
 
-        w = "вЂ”" if self.values["weight"] is None else f"{self.values['weight']:.0f} g"
+        w = "—" if self.values["weight"] is None else f"{self.values['weight']:.0f} g"
         return [f"Weight: {w}"]
 
 
@@ -486,8 +517,8 @@ def tolerant_diff(template_mask, current_mask, pixel_tolerance):
 
 
 def get_status(similarity, comparison):
-    ok_thr = float(comparison.get("ok_similarity", 80.0))
-    defect_thr = float(comparison.get("defect_similarity", 75.0))
+    ok_thr = float(comparison.get("ok_similarity", 95.0))
+    defect_thr = float(comparison.get("defect_similarity", 85.0))
     if similarity >= ok_thr:
         return "OK", (0, 255, 0), Fore.GREEN
     if similarity >= defect_thr:
@@ -702,8 +733,8 @@ def build_main_display(frame, roi_rect, roi_frame, state, part_present, countdow
 
     display_roi = roi_frame.copy()
 
-    # РќР° РѕСЃРЅРѕРІРЅРѕРµ РѕРєРЅРѕ РќР• РЅР°РєР»Р°РґС‹РІР°РµС‚СЃСЏ РјР°СЃРєР° С€Р°Р±Р»РѕРЅР°/РєР°СЂС‚Р° РѕС‚Р»РёС‡РёР№.
-    # РџРѕРєР°Р·С‹РІР°РµРј С‚РѕР»СЊРєРѕ С‚РµРєСѓС‰РёР№ РЅР°Р№РґРµРЅРЅС‹Р№ РєРѕРЅС‚СѓСЂ Рё С‚РµРєСЃС‚РѕРІС‹Рµ РјРµС‚СЂРёРєРё.
+    # На основное окно НЕ накладывается маска шаблона/карта отличий.
+    # Показываем только текущий найденный контур и текстовые метрики.
     draw_color = (255, 255, 255)
     if final_summary is not None:
         draw_color = final_summary["status_color"]
@@ -800,21 +831,21 @@ def main():
                 if part_present:
                     placement_started_at = time.time()
                     state = "PLACEMENT_WAIT"
-                    cprint(Fore.CYAN, f"[STATE] Р”РµС‚Р°Р»СЊ РѕР±РЅР°СЂСѓР¶РµРЅР°. Р–РґСѓ {PLACEMENT_DELAY_SEC} СЃРµРєСѓРЅРґ РїРµСЂРµРґ РїСЂРѕРІРµСЂРєРѕР№.")
+                    cprint(Fore.CYAN, f"[STATE] Деталь обнаружена. Жду {PLACEMENT_DELAY_SEC} секунд перед проверкой.")
 
             elif state == "PLACEMENT_WAIT":
                 sensors.discard_when_inactive()
                 if not part_present:
                     state = "WAITING"
                     placement_started_at = None
-                    cprint(Fore.YELLOW, "[STATE] Р”РµС‚Р°Р»СЊ СѓР±СЂР°РЅР° РґРѕ РЅР°С‡Р°Р»Р° РїСЂРѕРІРµСЂРєРё. Р’РѕР·РІСЂР°С‚ РІ РѕР¶РёРґР°РЅРёРµ.")
+                    cprint(Fore.YELLOW, "[STATE] Деталь убрана до начала проверки. Возврат в ожидание.")
                 else:
                     elapsed = time.time() - (placement_started_at or time.time())
                     countdown = max(0.0, PLACEMENT_DELAY_SEC - elapsed)
                     if countdown <= 0:
                         state = "ANALYZING"
                         history = []
-                        cprint(Fore.GREEN, "[STATE] Р—Р°РїСѓСЃРє РїСЂРѕРІРµСЂРєРё. Р—РЅР°С‡РµРЅРёСЏ Arduino СЃС‡РёС‚С‹РІР°СЋС‚СЃСЏ С‚РѕР»СЊРєРѕ СЃРµР№С‡Р°СЃ.")
+                        cprint(Fore.GREEN, "[STATE] Запуск проверки. Значения Arduino считываются только сейчас.")
 
             elif state == "ANALYZING":
                 if not part_present:
@@ -823,7 +854,7 @@ def main():
                     history = []
                     final_summary = None
                     sensors.discard_when_inactive()
-                    cprint(Fore.YELLOW, "[STATE] Р”РµС‚Р°Р»СЊ СѓР±СЂР°РЅР° РІРѕ РІСЂРµРјСЏ РїСЂРѕРІРµСЂРєРё. РџСЂРѕРІРµСЂРєР° РѕС‚РјРµРЅРµРЅР°.")
+                    cprint(Fore.YELLOW, "[STATE] Деталь убрана во время проверки. Проверка отменена.")
                 else:
                     active_sensor_read = True
                     sensors.read_active()
@@ -847,7 +878,7 @@ def main():
                         state = "HOLD_RESULT"
 
             elif state == "HOLD_RESULT":
-                # РќРѕРІС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РґР°С‚С‡РёРєРѕРІ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ РїСЂРѕРІРµСЂРєРё РЅРµ С‡РёС‚Р°РµРј.
+                # Новые значения датчиков после завершения проверки не читаем.
                 if not part_present:
                     state = "WAITING"
                     placement_started_at = None
@@ -855,7 +886,7 @@ def main():
                     final_summary = None
                     final_printed = False
                     sensors.discard_when_inactive()
-                    cprint(Fore.BLUE, "[STATE] Р”РµС‚Р°Р»СЊ СѓР±СЂР°РЅР°. Р“РѕС‚РѕРІ Рє СЃР»РµРґСѓСЋС‰РµР№ РїСЂРѕРІРµСЂРєРµ.")
+                    cprint(Fore.BLUE, "[STATE] Деталь убрана. Готов к следующей проверке.")
 
             full_display = build_main_display(
                 frame=frame,
@@ -874,7 +905,7 @@ def main():
             cv2.imshow("CSI Defect Detector", full_display)
             cv2.imshow("Presence / process mask", presence_mask)
 
-            # Debug-РѕРєРЅР° СЃ РѕС‚Р»РёС‡РёСЏРјРё РѕСЃС‚Р°РІР»РµРЅС‹ РѕС‚РґРµР»СЊРЅРѕ, РЅРѕ РЅРµ РЅР°РєР»Р°РґС‹РІР°СЋС‚СЃСЏ РЅР° РѕСЃРЅРѕРІРЅРѕР№ РІРёРґРµРѕРїРѕС‚РѕРє.
+            # Debug-окна с отличиями оставлены отдельно, но не накладываются на основной видеопоток.
             if current_result is not None:
                 cv2.imshow("Contour diff", current_result["contour_diff"])
                 cv2.imshow("Filled diff", current_result["filled_diff"])
@@ -905,31 +936,50 @@ def main():
 
 
 # ==================== REMOTE SERVER WRAPPER ====================
-import argparse
-import json
-import math
-import threading
-import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+class OperatingState:
+    """Runtime state shared by the inspection loop and HTTP handler."""
 
-import cv2
-import numpy as np
+    def __init__(self):
+        self.latest_frame = None
+        self.latest_status = {"state": "starting", "message": ""}
+        self.results = []
+        self.stop_requested = threading.Event()
+        self.frame_lock = threading.Lock()
+        self.status_lock = threading.Lock()
+        self.results_lock = threading.Lock()
+
+    def update_status(self, **kwargs):
+        with self.status_lock:
+            self.latest_status.update(kwargs)
+
+    def get_status(self):
+        with self.status_lock:
+            return dict(self.latest_status)
+
+    def set_frame(self, frame):
+        with self.frame_lock:
+            self.latest_frame = frame
+
+    def get_frame(self):
+        with self.frame_lock:
+            return self.latest_frame
+
+    def get_results(self):
+        with self.results_lock:
+            return list(self.results)
+
+    def append_result(self, item):
+        with self.results_lock:
+            item["id"] = len(self.results) + 1
+            self.results.append(item)
+            del self.results[:-100]
 
 
-
-latest_frame = None
-latest_status = {"state": "starting", "message": ""}
-results = []
-stop_requested = threading.Event()
-frame_lock = threading.Lock()
-status_lock = threading.Lock()
-results_lock = threading.Lock()
+state = OperatingState()
 
 
 def set_status(**kwargs):
-    with status_lock:
-        latest_status.update(kwargs)
+    state.update_status(**kwargs)
 
 
 def clean_number(value):
@@ -943,61 +993,66 @@ def clean_number(value):
 
 
 def encode_frame(frame):
-    ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+    ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY])
     return buffer.tobytes() if ok else None
 
 
-class Handler(BaseHTTPRequestHandler):
+class JsonResponseMixin:
+    """HTTP response helpers used by module request handlers."""
+
+    def write_json(self, payload):
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", JSON_CONTENT_TYPE)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def write_jpeg(self, frame):
+        self.send_response(200)
+        self.send_header("Content-Type", JPEG_CONTENT_TYPE)
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(frame)
+
+
+class OperatingRequestHandler(JsonResponseMixin, BaseHTTPRequestHandler):
+    """HTTP handler exposing operating inspection endpoints."""
+
     def do_GET(self):
         path = urlparse(self.path).path
-        if path == "/status":
-            self.write_json(latest_status)
+        if path == ENDPOINT_STATUS:
+            self.write_json(state.get_status())
             return
 
-        if path == "/results":
-            with results_lock:
-                payload = list(results)
-            self.write_json(payload)
+        if path == ENDPOINT_RESULTS:
+            self.write_json(state.get_results())
             return
 
-        if path == "/frame.jpg":
-            with frame_lock:
-                frame = latest_frame
+        if path == ENDPOINT_FRAME:
+            frame = state.get_frame()
             if frame is None:
                 self.send_error(404, "frame is not ready")
                 return
-            self.send_response(200)
-            self.send_header("Content-Type", "image/jpeg")
-            self.send_header("Cache-Control", "no-cache")
-            self.end_headers()
-            self.wfile.write(frame)
+            self.write_jpeg(frame)
             return
 
         self.send_error(404)
 
     def do_POST(self):
-        if urlparse(self.path).path == "/stop":
-            stop_requested.set()
+        if urlparse(self.path).path == ENDPOINT_STOP:
+            state.stop_requested.set()
             self.write_json({"ok": True})
             return
         self.send_error(404)
-
-    def write_json(self, payload):
-        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
 
     def log_message(self, format, *args):
         return
 
 
-def append_result(summary, sensors):
+def append_result(summary, sensors, runtime_state):
     sensor_values = dict(getattr(sensors, "values", {}) or {})
     item = {
-        "id": len(results) + 1,
         "recordedAt": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime()),
         "status": summary.get("status"),
         "templateId": int(summary.get("template_id", 0)),
@@ -1007,15 +1062,24 @@ def append_result(summary, sensors):
         "shapeScore": clean_number(summary.get("median_shape")),
         "reason": summary.get("reason"),
         "weight": clean_number(sensor_values.get("weight")),
+        "temperatureC": clean_number(sensor_values.get("temperature_c")),
         "lightPercent": clean_number(sensor_values.get("light_percent")),
         "lightAdc": clean_number(sensor_values.get("light_adc")),
     }
-    with results_lock:
-        results.append(item)
-        del results[:-100]
+    runtime_state.append_result(item)
 
 
-def camera_loop():
+class OperatingController:
+    """Main inspection loop for the operating module."""
+
+    def __init__(self, runtime_state):
+        self.state = runtime_state
+
+    def run(self):
+        camera_loop(self.state)
+
+
+def camera_loop(runtime_state):
     base_config = load_base_config()
     templates = load_templates(base_config)
     if not templates:
@@ -1040,7 +1104,7 @@ def camera_loop():
     set_status(state=state, message="operating is ready")
 
     try:
-        while not stop_requested.is_set():
+        while not runtime_state.stop_requested.is_set():
             try:
                 arr = cap_csi.capture_array()
                 frame = convert_picamera_array_to_bgr(arr)
@@ -1105,7 +1169,7 @@ def camera_loop():
 
             elif state == "HOLD_RESULT":
                 if final_summary is not None and not final_recorded:
-                    append_result(final_summary, sensors)
+                    append_result(final_summary, sensors, runtime_state)
                     final_recorded = True
                 if not part_present:
                     state = "WAITING"
@@ -1130,12 +1194,10 @@ def camera_loop():
             )
             encoded = encode_frame(full_display)
             if encoded is not None:
-                with frame_lock:
-                    global latest_frame
-                    latest_frame = encoded
+                runtime_state.set_frame(encoded)
 
             set_status(state=state, message="operating is running")
-            time.sleep(0.03)
+            time.sleep(FRAME_DELAY_SEC)
     finally:
         try:
             cap_csi.stop()
@@ -1146,18 +1208,33 @@ def camera_loop():
         set_status(state="stopped", message="operating stopped")
 
 
-def server_main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8082)
-    args = parser.parse_args()
+def create_server(host, port):
+    """Create the HTTP server for operating endpoints."""
 
-    thread = threading.Thread(target=camera_loop, daemon=True)
+    return ThreadingHTTPServer((host, port), OperatingRequestHandler)
+
+
+def parse_args():
+    """Parse command-line arguments for remote server mode."""
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default=HOST)
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    return parser.parse_args()
+
+
+def server_main():
+    """Script entrypoint used by EdgeDeviceService."""
+
+    args = parse_args()
+    controller = OperatingController(state)
+
+    thread = threading.Thread(target=controller.run, daemon=True)
     thread.start()
 
-    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    server = create_server(args.host, args.port)
     try:
-        while not stop_requested.is_set():
+        while not state.stop_requested.is_set():
             server.handle_request()
     finally:
         server.server_close()

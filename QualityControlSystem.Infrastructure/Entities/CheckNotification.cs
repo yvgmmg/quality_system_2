@@ -16,6 +16,9 @@ public partial class CheckNotification
     [Column("notification_date")]
     public DateOnly NotificationDate { get; set; }
 
+    [Column("checked_at", TypeName = "timestamp without time zone")]
+    public DateTime? CheckedAt { get; set; }
+
     [Column("defect_percentage", TypeName = "numeric(6, 2)")]
     public decimal? DefectPercentage { get; set; }
 

@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QualityControlSystem.WPF.Services.Interfaces;
 using QualityControlSystem.WPF.ViewModels.Base;
-using QualityControlSystem.WPF.Views;
 
 namespace QualityControlSystem.WPF.ViewModels
 {
@@ -42,7 +41,7 @@ namespace QualityControlSystem.WPF.ViewModels
                 var success = await _authService.LoginAsync(Login, Password);
                 if (success)
                 {
-                    _navigationService.NavigateTo<ProfileView>();
+                    _navigationService.NavigateTo<ProfileViewModel>();
                 }
                 else
                 {
@@ -58,7 +57,5 @@ namespace QualityControlSystem.WPF.ViewModels
                 IsBusy = false;
             }
         }
-
-        private bool CanLogin() => !IsBusy && !string.IsNullOrWhiteSpace(Login) && !string.IsNullOrWhiteSpace(Password);
     }
 }

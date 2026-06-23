@@ -4,31 +4,103 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
             <Button Command="{Binding AddEquipmentCommand}" Content="Добавить" Width="80" Margin="5"/>
-            <Button Command="{Binding EditEquipmentCommand}" Content="Редактировать" Width="100" Margin="5"/>
+            <Button Command="{Binding EditEquipmentCommand}" Content="Редактировать" Width="110" Margin="5"/>
             <Button Command="{Binding DeleteEquipmentCommand}" Content="Удалить" Width="80" Margin="5"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding Equipment}"
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5,0,5,10">
+            <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Width="240"
+                     Margin="0,0,12,0"/>
+            <TextBlock Text="Цех:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox ItemsSource="{Binding WorkshopFilterOptions}"
+                      SelectedItem="{Binding SelectedWorkshopFilter}"
+                      Width="220"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding EquipmentView}"
                   SelectedItem="{Binding SelectedEquipment}"
                   AutoGenerateColumns="False"
-                  IsReadOnly="True">
+                  IsReadOnly="True"
+                  HorizontalAlignment="Left">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="180"/>
                 <DataGridTextColumn Header="Серийный номер" Binding="{Binding SerialNumber}" Width="130"/>
                 <DataGridTextColumn Header="ОКОФ" Binding="{Binding OkofCode}" Width="130"/>
                 <DataGridTextColumn Header="Инвентарный номер" Binding="{Binding InventoryNumber}" Width="150"/>
-                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopName}" Width="*"/>
+                <DataGridTextColumn Header="Цех" Binding="{Binding WorkshopName}" Width="170"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Margin="5" Foreground="Red"/>
+        <TextBlock Grid.Row="3"
+                   Text="Выберите оборудование, затем отметьте каркасы и датчики с кодом 02."
+                   Margin="5,10,5,8"
+                   Foreground="#555"/>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Производимые каркасы">
+                <DockPanel Margin="8">
+                    <Button DockPanel.Dock="Bottom"
+                            Command="{Binding SaveFrameLinksCommand}"
+                            Content="Сохранить каркасы"
+                            HorizontalAlignment="Right"
+                            Width="150"
+                            Margin="0,8,0,0"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding FrameOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,0,6"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Column="2" Header="Датчики оборудования">
+                <DockPanel Margin="8">
+                    <Button DockPanel.Dock="Bottom"
+                            Command="{Binding SaveSensorLinksCommand}"
+                            Content="Сохранить датчики"
+                            HorizontalAlignment="Right"
+                            Width="150"
+                            Margin="0,8,0,0"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SensorOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="0,0,0,6"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </GroupBox>
+        </Grid>
+
+        <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Margin="5" Foreground="Red" TextWrapping="Wrap"/>
     </Grid>
 </UserControl>

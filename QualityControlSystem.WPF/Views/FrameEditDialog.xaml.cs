@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using Microsoft.Win32;
-using QualityControlSystem.WPF.Models;
+using QualityControlSystem.WPF.Dtos;
 
 namespace QualityControlSystem.WPF.Views;
 
